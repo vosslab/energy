@@ -61,7 +61,7 @@ class SmartMiner(object):
 				print "data is too old, waiting for current data"
 				self.disable()
 				return None
-		print "Current Price %.2f"%(float(data[0]['price']))
+		print "Most Recent Price %.2f"%(float(data[0]['price']))
 
 		#--------------------------------------
 		x = []
@@ -82,7 +82,12 @@ class SmartMiner(object):
 			print "    %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
 			x.append(xhour)
 			currentPrices.append(price)
-			
+
+		#--------------------------------------
+		if len(currentPrices) == 0:
+			print "no rates for this hour yet, using most recent"
+			return float(data[0]['price'])
+
 		#--------------------------------------
 		yarray = numpy.array(currentPrices, dtype=numpy.float64)
 		ymean = yarray.mean()
