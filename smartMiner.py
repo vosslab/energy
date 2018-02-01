@@ -13,9 +13,11 @@ import subprocess
 badHours = [5, 6, 17, 18]
 miningCutoffPrice = 3.0
 
-class AutoMonero(object):
+#======================================
+#======================================
+class SmartMiner(object):
 	def __init__(self):
-		self.monerocmd = "~/devel/monero.sh"
+		self.minercmd = "~/devel/monero.sh"
 		self.proc = None
 		return
 
@@ -36,7 +38,7 @@ class AutoMonero(object):
 				fails+=2
 				time.sleep(random.random()+ fails**2)
 				continue
-	
+
 		if fails >= 3:
 			print "ERROR: too many failed requests"
 			sys.exit(1)
@@ -44,14 +46,14 @@ class AutoMonero(object):
 		time.sleep(random.random())
 		return data
 
-
 	#======================================
 	def getCurrentComedRate(self):
 		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		data = self.getUrl(comedurl)
 		firsttime = int(data[0]['millisUTC'])
 		comedtime = datetime.datetime.fromtimestamp(firsttime/1000.)
-		print comedtime
+
+		#--------------------------------------
 		now = datetime.datetime.now()
 		if now.hour != comedtime.hour:
 			print "warning new hour has started, price unknown"
@@ -59,10 +61,11 @@ class AutoMonero(object):
 				print "data is too old, waiting for current data"
 				self.disable()
 				return None
+		print "Current Price %.2f"%(float(data[0]['price']))
+
+		#--------------------------------------
 		x = []
 		currentPrices = []
-		mintime = int(data[-1]['millisUTC'])
-		print "Current Price %.2f"%(float(data[0]['price']))
 		for p in data:
 			ms = int(p['millisUTC'])
 			price = float(p['price'])
@@ -79,7 +82,8 @@ class AutoMonero(object):
 			print "    %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
 			x.append(xhour)
 			currentPrices.append(price)
-
+			
+		#--------------------------------------
 		yarray = numpy.array(currentPrices, dtype=numpy.float64)
 		ymean = yarray.mean()
 		ystd = yarray.std()
@@ -92,16 +96,17 @@ class AutoMonero(object):
 		finalrate = datapoints.mean()
 		return finalrate
 
+	#======================================
 	def enable(self):
 		if self.proc is None:
-			cmd = "nice -+19 %s"%(self.monerocmd)
+			cmd = "nice -+19 %s"%(self.minercmd)
 			self.proc = subprocess.Popen(cmd, shell=True,
 				stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
-			print "started monero miner, pid %d"%(self.proc.pid)
+			print "started miner program, pid %d"%(self.proc.pid)
 			return
+		print "miner already running, pid %d"%(self.proc.pid)
 
-		print "monero already running, pid %d"%(self.proc.pid)
-		
+	#======================================
 	def disable(self):
 		if self.proc is not None:
 			print "killing miner"
@@ -111,6 +116,7 @@ class AutoMonero(object):
 			self.proc = None
 		pass
 
+	#======================================
 	def __del__(self):
 		self.disable()
 		pass
@@ -119,47 +125,57 @@ class AutoMonero(object):
 if __name__ == '__main__':
 	count = 0
 	refreshTime = 300
-	autominer = AutoMonero()
+	smartminer = SmartMiner()
 	while(True):
+		#--------------------------------------
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414
-			sleepTime = refreshTime*factor 
+			sleepTime = refreshTime*factor
 			print("Sleep %d seconds"%(sleepTime))
 			time.sleep(sleepTime)
 		count += 1
+
+		#--------------------------------------
 		now = datetime.datetime.now()
 		hour = now.hour
 		if hour in badHours:
 			if now.minute < 20:
 				print "mining disabled, bad hour, sleep until %d:20"%(hour)
-				autominer.disable()
-				minutesToSleep = 20 - now.minute - 2
-				sleepTime = minutesToSleep*60
+				smartminer.disable()
+				minutesToSleep = 20 - now.minute
+				sleepTime = minutesToSleep*60 - refreshTime
 				if sleepTime > 0:
 					time.sleep(sleepTime)
 				continue
 		else:
 			print "good hour %d"%(hour)
-		rate = autominer.getCurrentComedRate()
+
+		#--------------------------------------
+		rate = smartminer.getCurrentComedRate()
 		if rate is None:
 			continue
 		print("final rate %.2f"%(rate))
-		if rate > 2.0*miningCutoffPrice and now.minute >20:
+
+		#--------------------------------------
+		if rate > 2.0*miningCutoffPrice and now.minute > 20:
 			print "mining disable over six cents per kWh ( %.2f )"%(rate)
-			autominer.disable()
+			smartminer.disable()
 			print "wait out the rest of the hour"
-			minutesToSleep = 60 - now.minute - 2
-			sleepTime = minutesToSleep*60
+			minutesToSleep = 60 - now.minute
+			sleepTime = minutesToSleep*60 - refreshTime
 			if sleepTime > 0:
 				time.sleep(sleepTime)
 			continue
+
+		#--------------------------------------
 		if rate > float(miningCutoffPrice):
 			print "mining disabled, rate too high, %.2f cents per kWh"%(rate)
-			autominer.disable()
-
+			smartminer.disable()
 			continue
-		print "mining enabled"
-		autominer.enable()
 
-	
+		#--------------------------------------
+		print "mining enabled"
+		smartminer.enable()
+
+
 
