@@ -76,7 +76,7 @@ class AutoMonero(object):
 				continue
 			if comedtime.hour != now.hour:
 				continue
-			print "   %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
+			print "    %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
 			x.append(xhour)
 			currentPrices.append(price)
 
