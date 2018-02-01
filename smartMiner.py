@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import json
 import math
@@ -48,49 +49,48 @@ class AutoMonero(object):
 	def getCurrentComedRate(self):
 		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		data = self.getUrl(comedurl)
+		firsttime = int(data[0]['millisUTC'])
+		comedtime = datetime.datetime.fromtimestamp(firsttime/1000.)
+		print comedtime
+		now = datetime.datetime.now()
+		if now.hour != comedtime.hour:
+			print "warning new hour has started, price unknown"
+			if (now.hour - comedtime.hour) > 1 or now.minute > 8:
+				print "data is too old, waiting for current data"
+				self.disable()
+				return None
 		x = []
-		yvalues = {}
-		y = []
+		currentPrices = []
 		mintime = int(data[-1]['millisUTC'])
-		day = None
 		print "Current Price %.2f"%(float(data[0]['price']))
 		for p in data:
 			ms = int(p['millisUTC'])
 			price = float(p['price'])
-			#print ms, price
-			timestruct = list(time.localtime(ms/1000.))
-			if day is None:
-				day = timestruct[2]
-	
+
+			comedtime = datetime.datetime.fromtimestamp(ms/1000.)
+			day = comedtime.day
+
 			#print timestruct
-			hours = timestruct[3] + timestruct[4]/60.
-			if timestruct[2] != day:
-				hours -= 24.
-			hour = int(hours)+1
-			hour2 = float(hour) - 0.99
-			try:
-				yvalues[hour].append(price)
-				yvalues[hour2].append(price)
-			except KeyError:
-				yvalues[hour] = [price,]
-				yvalues[hour2] = [price,]
-			#hours = (ms - mintime)/1000./60./60.
-			x.append(hours)
-			y.append(price)
-	
-		y2 = []
-		x2 = yvalues.keys()
-		x2.sort()
-		
-		key = x2[-1]
-		ylist = yvalues[key]
-		yarray = numpy.array(ylist, dtype=numpy.float64)
+			xhour = float(comedtime.hour) + comedtime.minute/60.
+			if comedtime.day != now.day:
+				continue
+			if comedtime.hour != now.hour:
+				continue
+			print "   %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
+			x.append(xhour)
+			currentPrices.append(price)
+
+		yarray = numpy.array(currentPrices, dtype=numpy.float64)
 		ymean = yarray.mean()
 		ystd = yarray.std()
-		if abs(key - float(int(key))) < 0.001:
-			print "%03d:00 -> %2.2f +- %2.2f -> %.1f/%.1f"%(key, ymean, ystd, yarray.min(), yarray.max())
-			pass
-		return ymean+ystd
+		ymedian = numpy.median(yarray)
+		ymax = yarray.max()
+		print ("avg %d:00 -> %2.2f +- %2.2f -> %.1f/%.1f"
+			%(int(x[0]), ymean, ystd, yarray.min(), ymax))
+		datapoints = numpy.array([ymean, ymax, ymedian], dtype=numpy.float64)
+		print datapoints
+		finalrate = datapoints.mean()
+		return finalrate
 
 	def enable(self):
 		if self.proc is None:
@@ -106,7 +106,13 @@ class AutoMonero(object):
 		if self.proc is not None:
 			print "killing miner"
 			self.proc.kill()
+			# wait for kill to finish?
+			self.proc.communicate()
 			self.proc = None
+		pass
+
+	def __del__(self):
+		self.disable()
 		pass
 
 #======================================
@@ -118,7 +124,7 @@ if __name__ == '__main__':
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414
 			sleepTime = refreshTime*factor 
-			print "Sleep %d seconds"%(sleepTime)
+			print("Sleep %d seconds"%(sleepTime))
 			time.sleep(sleepTime)
 		count += 1
 		now = datetime.datetime.now()
@@ -135,7 +141,9 @@ if __name__ == '__main__':
 		else:
 			print "good hour %d"%(hour)
 		rate = autominer.getCurrentComedRate()
-		print "rate %.2f"%(rate)
+		if rate is None:
+			continue
+		print("final rate %.2f"%(rate))
 		if rate > 2.0*miningCutoffPrice and now.minute >20:
 			print "mining disable over six cents per kWh ( %.2f )"%(rate)
 			autominer.disable()
