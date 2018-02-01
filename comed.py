@@ -7,6 +7,9 @@ import random
 import requests
 
 comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
+#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed&datestart=201801030005&dateend=201801032300"
+#supplycharge = 3.6
+supplycharge = 0.0
 
 #======================================
 def getUrl(url):
@@ -43,7 +46,7 @@ if __name__ == '__main__':
 	day = None
 	for p in data:
 		ms = int(p['millisUTC'])
-		price = float(p['price'])
+		price = float(p['price']) + supplycharge
 		timestruct = list(time.localtime(ms/1000.))
 		if day is None:
 			day = timestruct[2]
