@@ -8,6 +8,7 @@ import numpy
 import random
 import requests
 import datetime
+import commonlib
 import subprocess
 
 badHours = [5, 6, 17, 18]
@@ -19,7 +20,16 @@ class SmartMiner(object):
 	def __init__(self):
 		self.minercmd = "~/devel/monero.sh"
 		self.proc = None
+		self.cl = commonlib.CommonLib()
 		return
+
+	#======================================
+	def printStatus(self):
+		sys.stderr.write("miner is ")
+		if self.proc is None:
+			sys.stderr.write(self.cl.colorString("[ disabled ] ", 'red'))
+		else:
+			sys.stderr.write(self.cl.colorString("[ enabled ] ", 'green'))
 
 	#======================================
 	def getUrl(self, url):
@@ -79,7 +89,7 @@ class SmartMiner(object):
 				continue
 			if comedtime.hour != now.hour:
 				continue
-			print "    %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
+			#print "    %d:%02d -- %.2f"%(comedtime.hour, comedtime.minute, price)
 			x.append(xhour)
 			currentPrices.append(price)
 
@@ -87,17 +97,19 @@ class SmartMiner(object):
 		if len(currentPrices) == 0:
 			print "no rates for this hour yet, using most recent"
 			return float(data[0]['price'])
+		print "Hourly Prices: ", numpy.around(currentPrices, 1)
 
 		#--------------------------------------
 		yarray = numpy.array(currentPrices, dtype=numpy.float64)
+		yrecent = yarray[0]
 		ymean = yarray.mean()
 		ystd = yarray.std()
 		ymedian = numpy.median(yarray)
 		ymax = yarray.max()
-		print ("avg %d:00 -> %2.2f +- %2.2f -> %.1f/%.1f"
+		print ("Hour %d:00 | %2.2f +- %2.2f | %.1f <> %.1f"
 			%(int(x[0]), ymean, ystd, yarray.min(), ymax))
-		datapoints = numpy.array([ymean, ymax, ymedian], dtype=numpy.float64)
-		print datapoints
+		datapoints = numpy.array([ymean, ymax, ymedian, yrecent], dtype=numpy.float64)
+		print "Data Points: ", numpy.around(datapoints, 2)
 		finalrate = datapoints.mean()
 		return finalrate
 
@@ -134,9 +146,10 @@ if __name__ == '__main__':
 	while(True):
 		#--------------------------------------
 		if count > 0:
-			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414
+			smartminer.printStatus()
+			factor = random.gauss(1, 0.1)
 			sleepTime = refreshTime*factor
-			print("Sleep %d seconds"%(sleepTime))
+			print("sleeping %d seconds"%(sleepTime))
 			time.sleep(sleepTime)
 		count += 1
 
