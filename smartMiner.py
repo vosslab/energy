@@ -128,8 +128,8 @@ class SmartMiner(object):
 		if self.proc is not None:
 			print "killing miner"
 			self.proc.kill()
-			# wait for kill to finish?
-			self.proc.communicate()
+			# wait for kill to finish? - stalls program
+			#self.proc.communicate()
 			self.proc = None
 		pass
 
