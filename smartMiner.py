@@ -35,31 +35,30 @@ class SmartMiner(object):
 	def getUrl(self, url):
 		fails = 0
 		data = None
-		while(fails < 3):
+		while(fails < 3 and data is None):
+			time.sleep(random.random()+ fails**2)
 			try:
 				resp = requests.get(url, timeout=1)
-				break
 			except requests.exceptions.ReadTimeout:
 				print "FAILED request"
 				fails+=1
-				time.sleep(random.random()+ fails**2)
 				continue
 			except requests.exceptions.ConnectTimeout:
 				print "FAILED connect"
 				fails+=1
-				time.sleep(random.random()+ fails**2)
 				continue
+
 			try:
 				data = json.loads(resp.text)
 			except ValueError:
 				print "FAILED json decode"
 				fails+=1
-				time.sleep(random.random()+ fails**2)
 				continue
 
 		if fails >= 3:
 			print "ERROR: too many failed requests"
 			return None
+
 		time.sleep(random.random())
 		return data
 
@@ -68,6 +67,7 @@ class SmartMiner(object):
 		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		data = self.getUrl(comedurl)
 		if data is None:
+			print "getUrl() returned None"
 			return None
 		firsttime = int(data[0]['millisUTC'])
 		comedtime = datetime.datetime.fromtimestamp(firsttime/1000.)
