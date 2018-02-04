@@ -136,11 +136,34 @@ class SmartMiner(object):
 	def disable(self):
 		if self.proc is not None:
 			print "killing miner"
-			self.proc.kill()
-			# wait for kill to finish? - stalls program
-			#self.proc.communicate()
+			self.kill()
 			self.proc = None
 		pass
+
+	#============================
+	def kill(self):
+		print "Kill Requested ID %d"%(self.proc.pid)
+		try:
+			self.proc.kill()
+		except OSError:
+			pass
+		while self.status() is not 'dead':
+			print "process not dead"
+			time.sleep(1)
+		return
+
+	#============================
+	def status(self):
+		if self.proc is None:
+			print "self.proc = None"
+			return 'dead'
+		poll = self.proc.poll()
+		if poll is not None:
+			print 'dead poll'
+			return 'dead'
+		time.sleep(0.1)
+
+		### use ps -ef to find miners and kill them
 
 	#======================================
 	def __del__(self):
