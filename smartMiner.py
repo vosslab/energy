@@ -45,14 +45,20 @@ class SmartMiner(object):
 				continue
 			except requests.exceptions.ConnectTimeout:
 				print "FAILED connect"
-				fails+=2
+				fails+=1
+				time.sleep(random.random()+ fails**2)
+				continue
+			try ValueError:
+				data = json.loads(resp.text)
+			except:
+				print "FAILED json decode"
+				fails+=1
 				time.sleep(random.random()+ fails**2)
 				continue
 
 		if fails >= 3:
 			print "ERROR: too many failed requests"
-			sys.exit(1)
-		data = json.loads(resp.text)
+			return None
 		time.sleep(random.random())
 		return data
 
@@ -60,6 +66,8 @@ class SmartMiner(object):
 	def getCurrentComedRate(self):
 		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		data = self.getUrl(comedurl)
+		if data is None:
+			return None
 		firsttime = int(data[0]['millisUTC'])
 		comedtime = datetime.datetime.fromtimestamp(firsttime/1000.)
 
