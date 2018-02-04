@@ -34,6 +34,7 @@ class SmartMiner(object):
 	#======================================
 	def getUrl(self, url):
 		fails = 0
+		data = None
 		while(fails < 3):
 			try:
 				resp = requests.get(url, timeout=1)
@@ -48,9 +49,9 @@ class SmartMiner(object):
 				fails+=1
 				time.sleep(random.random()+ fails**2)
 				continue
-			try ValueError:
+			try:
 				data = json.loads(resp.text)
-			except:
+			except ValueError:
 				print "FAILED json decode"
 				fails+=1
 				time.sleep(random.random()+ fails**2)
