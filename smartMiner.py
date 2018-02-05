@@ -143,6 +143,9 @@ class SmartMiner(object):
 	#============================
 	def kill(self):
 		print "Kill Requested ID %d"%(self.proc.pid)
+		cmd = "kill %d"%(self.proc.pid)
+		killproc = subprocess.Popen(cmd, shell=True)
+		killproc.communicate()
 		try:
 			self.proc.kill()
 		except OSError:
