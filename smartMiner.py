@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import time
 import json
@@ -18,7 +19,7 @@ miningCutoffPrice = 3.0
 #======================================
 class SmartMiner(object):
 	def __init__(self):
-		self.minercmd = "~/devel/monero.sh"
+		self.minercmd = "~/devel/xmr-stak-nvidia/bin/xmr-stak-nvidia ~/devel/config-monero.txt"
 		self.proc = None
 		self.cl = commonlib.CommonLib()
 		return
@@ -143,9 +144,7 @@ class SmartMiner(object):
 	#============================
 	def kill(self):
 		print "Kill Requested ID %d"%(self.proc.pid)
-		cmd = "kill %d"%(self.proc.pid)
-		killproc = subprocess.Popen(cmd, shell=True)
-		killproc.communicate()
+		pid = self.proc.pid
 		try:
 			self.proc.kill()
 		except OSError:
@@ -153,6 +152,17 @@ class SmartMiner(object):
 		while self.status() is not 'dead':
 			print "process not dead"
 			time.sleep(1)
+
+		cmd = "kill %d"%(pid)
+		killproc = subprocess.Popen(cmd, shell=True)
+		killproc.communicate()
+
+		basecmd = self.minercmd.split(' ')[0]
+		basecmd = os.path.basename(basecmd)
+		cmd = "killall %s"%(basecmd)
+		killproc = subprocess.Popen(cmd, shell=True)
+		killproc.communicate()
+
 		return
 
 	#============================
