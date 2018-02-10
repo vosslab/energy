@@ -149,9 +149,6 @@ class SmartMiner(object):
 			self.proc.kill()
 		except OSError:
 			pass
-		while self.status() is not 'dead':
-			print "process not dead"
-			time.sleep(1)
 
 		cmd = "kill %d"%(pid)
 		killproc = subprocess.Popen(cmd, shell=True)
