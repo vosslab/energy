@@ -48,11 +48,12 @@ time.sleep(0.5)
 # PECMAC125A address, 0x2A(42)
 # Read data back from 0x55(85), No. of Channels * 3 bytes
 # current MSB1, current MSB, current LSB
-data1 = bus.read_i2c_block_data(0x2A, 0x55, noOfChannel*3)
+data1 = bus.read_i2c_block_data(0x2A, 0x55, noOfChannel*3+3)
 
 # Convert the data
 totalCurrent = 0
 currents = []
+print data1
 for i in range(0, noOfChannel) :
 	msb1 = data1[i * 3]
 	msb = data1[1 + i * 3]
@@ -62,18 +63,22 @@ for i in range(0, noOfChannel) :
 	current = (msb1 * 65536 + msb * 256 + lsb) / 1000.0
 
 	# Output data to screen
-	print "Channel no : %d " %(i + 1)
-	print "Current Value : %.3f A" %current
+	print "Channel no : %d " %(i+1)
+	print "  Current : %.2f A"%(current)
+	print "  Usage   : %.2f kW"%(current*0.12)
 	currents.append(current)
 	totalCurrent += current
 
-print ""
-print "Total Current %.3f A"%(totalCurrent)
-print "Total Usage %.3f kW"%(totalCurrent*0.120)
+print "TOTAL"
+print "  Current : %.2f A"%(totalCurrent)
+print "  Usage   : %.2f kW"%(totalCurrent*0.120)
 
 import time
-f = open("usage.log", "a")
-f.write("%d,%.4f,%.4f,%.4f,%.4f\n"%
-	(time.time(), totalCurrent, totalCurrent*0.120,
+datestamp = time.strftime("%Y-%m%b-%d-%a").lower()
+logname = "usage/%s.log"%(datestamp)
+
+f = open(logname, "a")
+f.write("%d,%.4f,%.4f,%.4f\n"%
+	(time.time(), totalCurrent,
 	currents[0], currents[1]))
 f.close()
