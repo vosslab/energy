@@ -60,7 +60,6 @@ class ComedSmartWemoPlug(object):
 		time.sleep(random.random())
 		return data
 
-
 	#======================================
 	def getCurrentComedRate(self):
 		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
@@ -80,7 +79,7 @@ class ComedSmartWemoPlug(object):
 			timestruct = list(time.localtime(ms/1000.))
 			if day is None:
 				day = timestruct[2]
-	
+
 			#print timestruct
 			hours = timestruct[3] + timestruct[4]/60.
 			if timestruct[2] != day:
@@ -96,21 +95,24 @@ class ComedSmartWemoPlug(object):
 			#hours = (ms - mintime)/1000./60./60.
 			x.append(hours)
 			y.append(price)
-	
+
 		y2 = []
 		x2 = yvalues.keys()
 		x2.sort()
-		
+
 		key = x2[-1]
 		ylist = yvalues[key]
 		yarray = numpy.array(ylist, dtype=numpy.float64)
 		ymean = yarray.mean()
-		ystd = yarray.std()
+		ypositive = numpy.where(yarray < 1.0, 1.0, yarray)
+		ystd = ypositive.std()
+		weight = (13-len(ylist))/13.
 		if abs(key - float(int(key))) < 0.001:
-			print "%03d:00 -> %2.2f +- %2.2f -> %.1f/%.1f"%(key, ymean, ystd, yarray.min(), yarray.max())
+			print "%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max())
 			pass
-		return ymean+ystd
+		return ymean + ystd*weight
 
+	#======================================
 	def enable(self):
 		if self.device.get_state() == 0:
 			self.device.toggle()
@@ -125,6 +127,7 @@ class ComedSmartWemoPlug(object):
 		self.enable()
 		return
 
+	#======================================
 	def disable(self):
 		if self.device.get_state() == 1:
 			self.device.toggle()
