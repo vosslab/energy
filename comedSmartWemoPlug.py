@@ -4,6 +4,7 @@ import time
 import json
 import math
 import numpy
+import pywemo
 import commonlib
 import random
 import requests
@@ -15,13 +16,20 @@ CL = commonlib.CommonLib()
 #badHours = [5, 6, 17, 18]
 #badHours = [17, 18]
 badHours = []
-miningCutoffPrice = 3.5
+chargingCutoffPrice = 2.3
+wemoIpAddress = "192.168.2.161"
 
-class AutoMonero(object):
+class ComedSmartWemoPlug(object):
 	def __init__(self):
-		self.monerocmd = "~/devel/monero.sh"
-		self.proc = None
+		self.connectToWemo()
 		return
+
+	#======================================
+	def connectToWemo(self):
+		self.address = wemoIpAddress
+		self.port = pywemo.ouimeaux_device.probe_wemo(self.address)
+		self.wemoUrl = 'http://%s:%i/setup.xml' % (self.address, self.port)
+		self.device = pywemo.discovery.device_from_description(self.wemoUrl, None)
 
 	#======================================
 	def getUrl(self, url):
@@ -104,31 +112,37 @@ class AutoMonero(object):
 		return ymean+ystd
 
 	def enable(self):
-		if self.proc is None:
-			cmd = "screen -dmS mine %s"%(self.monerocmd)
-			self.proc = True
-			subprocess.Popen(cmd, shell=True)
-			mystr = "started monero miner, screen -x mine"
+		if self.device.get_state() == 0:
+			self.device.toggle()
+			mystr = "started wemo plug"
 			print CL.colorString(mystr, "green")
+		else:
+			print "charging already active"
+		time.sleep(5)
+		if self.device.get_state() == 1:
 			return
-
-		print "monero already running, screen -x mine"
+		print CL.colorString("ERROR: starting charging", "red")
+		self.enable()
+		return
 
 	def disable(self):
-		if self.proc is not None:
-			print CL.colorString("killing miner", "red")
-			self.proc = None
-			cmd = "pkill xmr-stak"
-			subprocess.Popen(cmd, shell=True)
-			cmd = "screen -S mine -X quit"
-			subprocess.Popen(cmd, shell=True)
-		pass
+		if self.device.get_state() == 1:
+			self.device.toggle()
+			print CL.colorString("turning off charging", "red")
+		else:
+			print "charging already disabled"
+		time.sleep(5)
+		if self.device.get_state() == 0:
+			return
+		print CL.colorString("ERROR: turning off charging", "red")
+		self.disable()
+		return
 
 #======================================
 if __name__ == '__main__':
 	count = 0
 	refreshTime = 300
-	autominer = AutoMonero()
+	wemoplug = ComedSmartWemoPlug()
 	while(True):
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414
@@ -140,9 +154,9 @@ if __name__ == '__main__':
 		hour = now.hour
 		if hour in badHours:
 			if now.minute < 20:
-				mystr = "mining disabled, bad hour, sleep until %d:20"%(hour)
+				mystr = "charging disabled, bad hour, sleep until %d:20"%(hour)
 				print CL.colorString(mystr, "red")
-				autominer.disable()
+				wemoplug.disable()
 				minutesToSleep = 20 - now.minute - 2
 				sleepTime = minutesToSleep*60
 				if sleepTime > 0:
@@ -151,25 +165,25 @@ if __name__ == '__main__':
 		else:
 			#print "good hour %d"%(hour)
 			pass
-		rate = autominer.getCurrentComedRate()
+		rate = wemoplug.getCurrentComedRate()
 		#print "rate %.2f"%(rate)
-		if rate > 2.0*miningCutoffPrice and now.minute >20:
-			mystr = "mining disable over six cents per kWh ( %.2f )"%(rate)
+		if rate > 2.0*chargingCutoffPrice and now.minute >20:
+			mystr = "charging disable over six cents per kWh ( %.2f )"%(rate)
 			print CL.colorString(mystr, "red")
-			autominer.disable()
+			wemoplug.disable()
 			#print "wait out the rest of the hour"
 			minutesToSleep = 60 - now.minute - 2
 			sleepTime = minutesToSleep*60
 			if sleepTime > 0:
 				time.sleep(sleepTime)
 			continue
-		if rate > float(miningCutoffPrice):
-			mystr = "mining disabled, rate too high, %.2f cents per kWh"%(rate)
+		if rate > float(chargingCutoffPrice):
+			mystr = "charging disabled, rate too high, %.2f cents per kWh"%(rate)
 			print CL.colorString(mystr, "red")
 
-			autominer.disable()
+			wemoplug.disable()
 
 			continue
-		print CL.colorString("mining enabled", "green")
-		autominer.enable()
+		print CL.colorString("charging enabled", "green")
+		wemoplug.enable()
 
