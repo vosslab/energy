@@ -115,12 +115,14 @@ class ComedSmartWemoPlug(object):
 	#======================================
 	def enable(self):
 		if self.device.get_state() == 0:
-			self.device.toggle()
-			mystr = "started wemo plug"
+			mystr = "turning ON wemo plug, start charging"
 			print CL.colorString(mystr, "green")
+			self.device.toggle()
+			time.sleep(15)
+			self.writeToLogFile("begin charging")
 		else:
 			print "charging already active"
-		time.sleep(5)
+		time.sleep(15)
 		if self.device.get_state() == 1:
 			return
 		print CL.colorString("ERROR: starting charging", "red")
@@ -130,16 +132,24 @@ class ComedSmartWemoPlug(object):
 	#======================================
 	def disable(self):
 		if self.device.get_state() == 1:
+			mystr = "turning OFF wemo plug, stop charging"
+			print CL.colorString(mystr, "red")
 			self.device.toggle()
-			print CL.colorString("turning off charging", "red")
+			time.sleep(15)
+			self.writeToLogFile("stop charging")
 		else:
 			print "charging already disabled"
-		time.sleep(5)
 		if self.device.get_state() == 0:
 			return
 		print CL.colorString("ERROR: turning off charging", "red")
 		self.disable()
 		return
+
+	#======================================
+	def writeToLogFile(self, msg):
+		f = open("wemo_car_charging-log.csv", "a")
+		f.write("%d\t%s\t%s\n", time.time(), time.asctime(), msg)
+		f.close()
 
 #======================================
 if __name__ == '__main__':
@@ -149,12 +159,14 @@ if __name__ == '__main__':
 	while(True):
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414
-			sleepTime = refreshTime*factor 
+			sleepTime = refreshTime*factor
 			#print "Sleep %d seconds"%(sleepTime)
 			time.sleep(sleepTime)
 		count += 1
 		now = datetime.datetime.now()
 		hour = now.hour
+
+		### special condition where it is assumed to be a high price
 		if hour in badHours:
 			if now.minute < 20:
 				mystr = "charging disabled, bad hour, sleep until %d:20"%(hour)
@@ -168,9 +180,11 @@ if __name__ == '__main__':
 		else:
 			#print "good hour %d"%(hour)
 			pass
+
+		### get the comed rate
 		rate = wemoplug.getCurrentComedRate()
 		#print "rate %.2f"%(rate)
-		if rate > 2.0*chargingCutoffPrice and now.minute >20:
+		if rate > 2.0*chargingCutoffPrice and now.minute > 20:
 			mystr = "charging disable over six cents per kWh ( %.2f )"%(rate)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
@@ -180,13 +194,13 @@ if __name__ == '__main__':
 			if sleepTime > 0:
 				time.sleep(sleepTime)
 			continue
+
 		if rate > float(chargingCutoffPrice):
 			mystr = "charging disabled, rate too high, %.2f cents per kWh"%(rate)
 			print CL.colorString(mystr, "red")
-
 			wemoplug.disable()
-
 			continue
+
 		print CL.colorString("charging enabled", "green")
 		wemoplug.enable()
 
