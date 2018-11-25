@@ -13,6 +13,10 @@ import subprocess
 
 CL = commonlib.CommonLib()
 
+### TODO
+# add initial comment to log file
+# keep track of length of time charged or off
+
 #badHours = [5, 6, 17, 18]
 #badHours = [17, 18]
 badHours = []
