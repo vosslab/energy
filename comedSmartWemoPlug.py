@@ -16,7 +16,7 @@ CL = commonlib.CommonLib()
 #badHours = [5, 6, 17, 18]
 #badHours = [17, 18]
 badHours = []
-chargingCutoffPrice = 2.3
+chargingCutoffPrice = 2.99
 wemoIpAddress = "192.168.2.161"
 
 class ComedSmartWemoPlug(object):
@@ -148,7 +148,7 @@ class ComedSmartWemoPlug(object):
 	#======================================
 	def writeToLogFile(self, msg):
 		f = open("wemo_car_charging-log.csv", "a")
-		f.write("%d\t%s\t%s\n", time.time(), time.asctime(), msg)
+		f.write("%d\t%s\t%s\n"%(time.time(), time.asctime(), msg))
 		f.close()
 
 #======================================
@@ -165,6 +165,11 @@ if __name__ == '__main__':
 		count += 1
 		now = datetime.datetime.now()
 		hour = now.hour
+
+		### always enable before 5AM
+		if hour < 5:
+			wemoplug.enable()
+			continue
 
 		### special condition where it is assumed to be a high price
 		if hour in badHours:
