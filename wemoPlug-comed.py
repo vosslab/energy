@@ -20,8 +20,8 @@ CL = commonlib.CommonLib()
 #badHours = [5, 6, 17, 18]
 #badHours = [17, 18]
 badHours = []
-chargingCutoffPrice = 2.99
-wemoIpAddress = "192.168.2.161"
+chargingCutoffPrice = 3.99
+wemoIpAddress = "192.168.2.166"
 
 class ComedSmartWemoPlug(object):
 	def __init__(self):
@@ -151,7 +151,7 @@ class ComedSmartWemoPlug(object):
 
 	#======================================
 	def writeToLogFile(self, msg):
-		f = open("wemo_car_charging-log.csv", "a")
+		f = open("car_charging-wemo_log.csv", "a")
 		f.write("%d\t%s\t%s\n"%(time.time(), time.asctime(), msg))
 		f.close()
 
