@@ -4,12 +4,15 @@ import sys
 import time
 import json
 import numpy
-import commonlib
 import random
 import requests
+import datetime
+import commonlib
 
 CL = commonlib.CommonLib()
 
+#======================================
+#======================================
 class ComedLib(object):
 	def __init__(self):
 		pass
@@ -32,7 +35,6 @@ class ComedLib(object):
 				fails+=2
 				time.sleep(random.random()+ fails**2)
 				continue
-
 		if fails >= 9:
 			print "ERROR: too many failed requests"
 			sys.exit(1)
@@ -45,8 +47,18 @@ class ComedLib(object):
 		return data
 
 	#======================================
-	def getCurrentComedRate(self):
+	def getTodayUrl(self):
 		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
+		#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed&datestart=201801030005&dateend=201801032300"
+		now = datetime.datetime.now()
+		timecode = "%04d%02d%02d0000"%(now.year, now.month, now.day)
+		print timecode
+		comedurl += "&datestart="+timecode
+		return comedurl
+
+	#======================================
+	def getCurrentComedRate(self):
+		comedurl = self.getTodayUrl()
 		data = None
 		while data is None:
 			data = self.getUrl(comedurl)
@@ -93,7 +105,8 @@ class ComedLib(object):
 			pass
 		return ymean + ystd*weight
 
-
+#======================================
+#======================================
 if __name__ == '__main__':
 	comedlib = ComedLib()
 	comedlib.getCurrentComedRate()
