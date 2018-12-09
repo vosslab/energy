@@ -5,46 +5,19 @@ import time
 import json
 import math
 import numpy
-import commonlib
 import random
 import requests
+import comedlib
+import commonlib
 
 comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 
 
-#======================================
-def getUrl(url):
-	fails = 0
-	while(fails < 9):
-		try:
-			resp = requests.get(url, timeout=1)
-			break
-		except requests.exceptions.ReadTimeout:
-			#print "FAILED request"
-			fails+=1
-			time.sleep(random.random()+ fails**2)
-			continue
-		except requests.exceptions.ConnectTimeout:
-			#print "FAILED connect"
-			fails+=2
-			time.sleep(random.random()+ fails**2)
-			continue
-
-	if fails >= 9:
-		print "ERROR: too many failed requests"
-		sys.exit(1)
-	try:
-		data = json.loads(resp.text)
-	except ValueError:
-		time.sleep(300 + 100*random.random())
-		data = getUrl(url)
-	time.sleep(random.random())
-	return data
-
-
 if __name__ == '__main__':
 	CL = commonlib.CommonLib()
-	data = getUrl(comedurl)
+	comlib = comedlib.ComedLib()
+	comedurl = comlib.getTodayUrl()
+	data = comlib.getUrl(comedurl)
 	x = []
 	yvalues = {}
 	y = []
