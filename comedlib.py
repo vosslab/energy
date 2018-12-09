@@ -11,13 +11,31 @@ import commonlib
 
 CL = commonlib.CommonLib()
 
+### TODO
+# add caching
+# take median from last three days
+
 #======================================
 #======================================
 class ComedLib(object):
 	def __init__(self):
-		pass
+		self.cachefile = "comed_cache_file.yml"
+		self.baseurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
+		#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed&datestart=201801030005&dateend=201801032300"
 		return
 	
+	#======================================
+	def writeCache(self):
+		f = open(self.cachefile, "w")
+		f.close()
+		pass
+
+	#======================================
+	def readCache(self):
+		f = open(self.cachefile, "r")
+		f.close()
+		pass
+
 	#======================================
 	def getUrl(self, url):
 		fails = 0
@@ -48,17 +66,23 @@ class ComedLib(object):
 
 	#======================================
 	def getTodayUrl(self):
-		comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
-		#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed&datestart=201801030005&dateend=201801032300"
 		now = datetime.datetime.now()
 		timecode = "%04d%02d%02d0000"%(now.year, now.month, now.day)
 		print timecode
-		comedurl += "&datestart="+timecode
+		comedurl = self.baseurl+"&datestart="+timecode
+		return comedurl
+
+	#======================================
+	def getHourUrl(self):
+		now = datetime.datetime.now()
+		timecode = "%04d%02d%02d%02d00"%(now.year, now.month, now.day, now.hour)
+		print timecode
+		comedurl = self.baseurl+"&datestart="+timecode
 		return comedurl
 
 	#======================================
 	def getCurrentComedRate(self):
-		comedurl = self.getTodayUrl()
+		comedurl = self.getHourUrl()
 		data = None
 		while data is None:
 			data = self.getUrl(comedurl)

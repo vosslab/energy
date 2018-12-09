@@ -10,8 +10,7 @@ import requests
 import comedlib
 import commonlib
 
-comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
-
+#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 
 if __name__ == '__main__':
 	CL = commonlib.CommonLib()
