@@ -2,11 +2,8 @@
 
 import sys
 import time
-import json
 import math
 import numpy
-import random
-import requests
 import comedlib
 import commonlib
 
@@ -15,8 +12,8 @@ import commonlib
 if __name__ == '__main__':
 	CL = commonlib.CommonLib()
 	comlib = comedlib.ComedLib()
-	comedurl = comlib.getTodayUrl()
-	data = comlib.getUrl(comedurl)
+	comedurl = comlib.getUrl()
+	data = comlib.downloadComedJsonData(comedurl)
 	x = []
 	yvalues = {}
 	y = []
@@ -78,6 +75,7 @@ if __name__ == '__main__':
 			print("%s -> %s   +- %2.1f -> %.1f/%.1f (%d)"
 				%(keyst, ypstr, ypstd, yarray.min(), yarray.max(), len(yarray)))
 		y2.append(yp)
+	comlib.getMedianComedRate()
 
 	from matplotlib import pyplot
 	#pyplot.xkcd()
