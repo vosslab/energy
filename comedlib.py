@@ -21,6 +21,7 @@ CL = commonlib.CommonLib()
 #======================================
 class ComedLib(object):
 	def __init__(self):
+		self.msg = True
 		scriptdir = os.path.dirname(__file__)
 		filename = "comed_cache_file.yml"
 		self.cachefile = os.path.join(scriptdir, filename)
@@ -30,7 +31,8 @@ class ComedLib(object):
 	
 	#======================================
 	def writeCache(self, data):
-		print("saving data to %s"%(self.cachefile))
+		if self.msg is True:
+			print("saving data to %s"%(self.cachefile))
 		f = open(self.cachefile, "w")
 		fulldata = {
 			'timestamp': int(time.time()),
@@ -44,7 +46,8 @@ class ComedLib(object):
 	def readCache(self):
 		if not os.path.exists(self.cachefile):
 			return None
-		print("reading data from %s"%(self.cachefile))
+		if self.msg is True:
+			print("reading data from %s"%(self.cachefile))
 		f = open(self.cachefile, "r")
 		fulldata = yaml.load(f)
 		f.close()
@@ -80,10 +83,12 @@ class ComedLib(object):
 	def downloadComedJsonData(self, url=None):
 		data = self.readCache()
 		if isinstance(data, list):
-			print("Using comed data from cache")
+			if self.msg is True:
+				print("Using comed data from cache")
 			return data
 		else:
-			print("Downloading comed new data")
+			if self.msg is True:
+				print("Downloading comed new data")
 		if url is None:
 			url = self.getUrl()
 		resp = self.safeDownloadWebpage(url)
@@ -159,8 +164,9 @@ class ComedLib(object):
 		ystd = ypositive.std()
 		weight = (13-len(ylist))/13.
 		if abs(key - float(int(key))) < 0.001:
-			print("%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
-				%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max()))
+			if self.msg is True:
+				print("%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
+					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max()))
 			pass
 		return ymean + ystd*weight
 
@@ -175,7 +181,8 @@ class ComedLib(object):
 		parray = numpy.array(prices, dtype=numpy.float64)
 		median = numpy.median(parray)
 		std = numpy.std(parray)
-		print("24 hour median price: %.3f +/- %.3f"%(median, std))
+		if self.msg is True:
+			print("24 hour median price: %.3f +/- %.3f"%(median, std))
 		return median, std
 
 #======================================

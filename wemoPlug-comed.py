@@ -24,6 +24,7 @@ class ComedSmartWemoPlug(object):
 	def __init__(self):
 		self.connectToWemo()
 		self.comlib = comedlib.ComedLib()
+		self.comlib.msg = False
 		return
 
 	#======================================
@@ -118,14 +119,14 @@ if __name__ == '__main__':
 		### get the comed rate
 		rate = wemoplug.getCurrentComedRate()
 		median, std = wemoplug.getMedianComedRate()
-		reasonableCutoff = median + std/10.
+		reasonableCutoff = median + std/6.
 
 		cutoff = (chargingCutoffPrice+reasonableCutoff)/2.0
-		print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
+		#print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
 
 		#print "rate %.2f"%(rate)
 		if rate > 2.0*cutoff and now.minute > 20:
-			mystr = "charging disable over six cents per kWh ( %.2f )"%(rate)
+			mystr = "charging disable over six cents per kWh ( %.2f | cutoff = %.2f )"%(rate, cutoff)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
 			#print "wait out the rest of the hour"
@@ -136,7 +137,7 @@ if __name__ == '__main__':
 			continue
 
 		if rate > float(cutoff):
-			mystr = "charging disabled, rate too high, %.2f cents per kWh"%(rate)
+			mystr = "charging disabled, rate too high, %.2f cents per kWh | cutoff = %.2f"%(rate, cutoff)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
 			continue
