@@ -75,7 +75,7 @@ if __name__ == '__main__':
 			print("%s -> %s   +- %2.1f -> %.1f/%.1f (%d)"
 				%(keyst, ypstr, ypstd, yarray.min(), yarray.max(), len(yarray)))
 		y2.append(yp)
-	comlib.getMedianComedRate()
+	median, std = comlib.getMedianComedRate()
 
 	from matplotlib import pyplot
 	#pyplot.xkcd()
