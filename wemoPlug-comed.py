@@ -113,8 +113,14 @@ if __name__ == '__main__':
 
 		### get the comed rate
 		rate = wemoplug.getCurrentComedRate()
+		median, std = comlib.getMedianComedRate()
+		reasonableCutoff = median + std/10.
+
+		cutoff = (chargingCutoffPrice+reasonableCutoff)/2.0
+		print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
+
 		#print "rate %.2f"%(rate)
-		if rate > 2.0*chargingCutoffPrice and now.minute > 20:
+		if rate > 2.0*cutoff and now.minute > 20:
 			mystr = "charging disable over six cents per kWh ( %.2f )"%(rate)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
@@ -125,7 +131,7 @@ if __name__ == '__main__':
 				time.sleep(sleepTime)
 			continue
 
-		if rate > float(chargingCutoffPrice):
+		if rate > float(cutoff):
 			mystr = "charging disabled, rate too high, %.2f cents per kWh"%(rate)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
