@@ -51,7 +51,8 @@ class ComedSmartWemoPlug(object):
 			time.sleep(15)
 			self.writeToLogFile("begin charging")
 		else:
-			print "charging already active"
+			#print "charging already active"
+			pass
 		time.sleep(15)
 		if self.device.get_state() == 1:
 			return
@@ -68,7 +69,8 @@ class ComedSmartWemoPlug(object):
 			time.sleep(15)
 			self.writeToLogFile("stop charging")
 		else:
-			print "charging already disabled"
+			#print "charging already disabled"
+			pass
 		if self.device.get_state() == 0:
 			return
 		print CL.colorString("ERROR: turning off charging", "red")
@@ -126,7 +128,7 @@ if __name__ == '__main__':
 
 		#print "rate %.2f"%(rate)
 		if rate > 2.0*cutoff and now.minute > 20:
-			mystr = "charging disable over six cents per kWh ( %.2f | cutoff = %.2f )"%(rate, cutoff)
+			mystr = "charging LONG disable over double price per kWh ( %.2f | cutoff = %.2f )"%(rate, cutoff)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
 			#print "wait out the rest of the hour"
@@ -142,6 +144,8 @@ if __name__ == '__main__':
 			wemoplug.disable()
 			continue
 
+		mystr = "charging enabled ( %.2f kWh | cutoff = %.2f )"%(rate, cutoff)
+		print CL.colorString(mystr, "green")
 		print CL.colorString("charging enabled", "green")
 		wemoplug.enable()
 
