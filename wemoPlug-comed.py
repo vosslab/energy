@@ -97,6 +97,7 @@ if __name__ == '__main__':
 		count += 1
 		now = datetime.datetime.now()
 		hour = now.hour
+		timestr = "%02d:%02d"%(now.hour, now.minute)
 
 		### always enable before 5AM
 		if hour < 5:
@@ -128,7 +129,7 @@ if __name__ == '__main__':
 
 		#print "rate %.2f"%(rate)
 		if rate > 2.0*cutoff and now.minute > 20:
-			mystr = "charging LONG disable over double price per kWh ( %.2f | cutoff = %.2f )"%(rate, cutoff)
+			mystr = "%s: charging LONG disable over double price per kWh ( %.2f | cutoff = %.2f )"%(timestr, rate, cutoff)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
 			#print "wait out the rest of the hour"
@@ -139,12 +140,12 @@ if __name__ == '__main__':
 			continue
 
 		if rate > float(cutoff):
-			mystr = "charging disabled, rate too high, %.2f cents per kWh | cutoff = %.2f"%(rate, cutoff)
+			mystr = "%s: charging disabled, rate too high, %.2f cents per kWh | cutoff = %.2f"%(timestr, rate, cutoff)
 			print CL.colorString(mystr, "red")
 			wemoplug.disable()
 			continue
 
-		mystr = "charging enabled ( %.2f kWh | cutoff = %.2f )"%(rate, cutoff)
+		mystr = "%s: charging enabled ( %.2f kWh | cutoff = %.2f )"%(timestr, rate, cutoff)
 		print CL.colorString(mystr, "green")
 		wemoplug.enable()
 
