@@ -146,6 +146,5 @@ if __name__ == '__main__':
 
 		mystr = "charging enabled ( %.2f kWh | cutoff = %.2f )"%(rate, cutoff)
 		print CL.colorString(mystr, "green")
-		print CL.colorString("charging enabled", "green")
 		wemoplug.enable()
 
