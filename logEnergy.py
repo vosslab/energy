@@ -7,6 +7,7 @@
 
 import time
 import smbus
+import solarProduction
 
 # Get I2C bus
 bus = smbus.SMBus(1)
@@ -15,7 +16,7 @@ noOfChannel = 2
 command1 = [0x6A, 0x01, 0x01, 0x0C, 0x00, 0x00, 0x0A]
 bus.write_i2c_block_data(0x2A, 0x92, command1)
 
-time.sleep(0.5)
+time.sleep(0.1)
 
 data1 = bus.read_i2c_block_data(0x2A, 0x55, noOfChannel*3 + 3)
 
@@ -27,13 +28,9 @@ for i in range(0, noOfChannel) :
 	msb = data1[1 + i * 3]
 	lsb = data1[2 + i * 3]
 
-	# Convert the data to ampere
-	current = (msb1 * 65536 + msb * 256 + lsb) / 1000.0
+	# Convert the data to milliamperes
+	current = (msb1 * 65536 + msb * 256 + lsb)
 
-	# Output data to screen
-	#print "Channel no : %d " %(i+1)
-	#print "  Current : %.2f A"%(current)
-	#print "  Usage   : %.2f kW"%(current*0.12)
 	currents.append(current)
 	totalCurrent += current
 
@@ -41,12 +38,17 @@ for i in range(0, noOfChannel) :
 #print "  Current : %.2f A"%(totalCurrent)
 #print "  Usage   : %.2f kW"%(totalCurrent*0.120)
 
+solardata = solarProduction.getSolarUsage()
+solarValue = float(solardata['Current Production']['Value'])
+solarKilowatts = solarValue/1000.
+solarcurrent = solarValue*1000*120
+
 datestamp = time.strftime("%Y-%m%b-%d-%a").lower()
 logname = "usage/%s.log"%(datestamp)
-print("Usage: %.2f kW --> %s"%(totalCurrent*0.120, logname))
+print("Usage: %.3f kW use / %.3f kW solar --> %s"%(totalCurrent*120/1e6, solarKilowatts, logname))
 
 f = open(logname, "a")
-f.write("%d,%.4f,%.4f,%.4f\n"%
+f.write("%d,%d,%d,%d,%d\n"%
 	(time.time(), totalCurrent,
-	currents[0], currents[1]))
+	currents[0], currents[1], solarcurrent))
 f.close()

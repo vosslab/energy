@@ -44,15 +44,16 @@ def getSolarData():
 	resp = safeDownloadWebpage(inverter_url)
 	#print dir(resp)
 	bulktables = json.loads(resp.text)
-	data = bulktables['Body']['Data']
+	data = dict(bulktables['Body']['Data'])
 	return data
 
 #======================================
 def getSolarUsage():
 	data = getSolarData()
 	returnList = {}
+	defvalue = { 'Value': 0, 'Unit': 'W', }
 	for key in dataMap:
-		returnList[dataMap[key]] = data[key]
+		returnList[dataMap[key]] = data.get(key, defvalue)
 	return returnList
 
 #======================================
@@ -64,6 +65,6 @@ if __name__ == '__main__':
 	#pprint.pprint(data)
 	
 	for key in dataMap:
-		print("%s: %.2f k%s"%(dataMap[key], int(data[key]['Value'])/1000., data[key]['Unit']))
+		print("%s: %.2f k%s"%(dataMap[key], int(data[key]['Value'])/1000., data[key].get('Unit',0)))
 	print('\n')
 	
