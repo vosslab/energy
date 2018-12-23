@@ -23,6 +23,7 @@ def safeDownloadWebpage(url):
 			continue
 		except requests.exceptions.ConnectTimeout:
 			#print "FAILED connect"
+			return None
 			fails+=2
 			time.sleep(random.random()+ fails**2)
 			continue
@@ -42,6 +43,8 @@ def getSolarData():
 	params = "Scope=Device&DeviceId=1&DataCollection=CommonInverterData"
 	inverter_url = "http://%s/solar_api/v1/GetInverterRealtimeData.cgi?%s"%(inverter_ip, params)
 	resp = safeDownloadWebpage(inverter_url)
+	if resp is None:
+		return {}
 	#print dir(resp)
 	bulktables = json.loads(resp.text)
 	data = dict(bulktables['Body']['Data'])
