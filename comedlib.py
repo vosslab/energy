@@ -22,6 +22,7 @@ CL = commonlib.CommonLib()
 class ComedLib(object):
 	def __init__(self):
 		self.msg = True
+		self.useCache = True
 		scriptdir = os.path.dirname(__file__)
 		filename = "comed_cache_file.yml"
 		self.cachefile = os.path.join(scriptdir, filename)
@@ -31,6 +32,8 @@ class ComedLib(object):
 	
 	#======================================
 	def writeCache(self, data):
+		if self.useCache is False:
+			return
 		if self.msg is True:
 			print("saving data to %s"%(self.cachefile))
 		f = open(self.cachefile, "w")
@@ -44,6 +47,8 @@ class ComedLib(object):
 
 	#======================================
 	def readCache(self):
+		if self.useCache is False:
+			return None
 		if not os.path.exists(self.cachefile):
 			return None
 		if self.msg is True:
