@@ -31,11 +31,13 @@ def safeDownloadWebpage(url):
 		sys.exit(1)
 	return resp
 
+#======================================
 dataMap = {
 	'PAC': 'Current Production',
 	'DAY_ENERGY': "Today's Production",
 }
 
+#======================================
 def getSolarData():
 	params = "Scope=Device&DeviceId=1&DataCollection=CommonInverterData"
 	inverter_url = "http://%s/solar_api/v1/GetInverterRealtimeData.cgi?%s"%(inverter_ip, params)
@@ -45,12 +47,16 @@ def getSolarData():
 	data = bulktables['Body']['Data']
 	return data
 
+#======================================
 def getSolarUsage():
+	data = getSolarData()
 	returnList = {}
 	for key in dataMap:
 		returnList[dataMap[key]] = data[key]
 	return returnList
 
+#======================================
+#======================================
 if __name__ == '__main__':
 	data = getSolarData()
 	#print(data.keys())

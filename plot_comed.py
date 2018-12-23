@@ -106,7 +106,7 @@ pyplot.tight_layout()
 #fig = pyplot.figure()
 #figdata = io.StringIO()
 figdata = io.BytesIO()
-pyplot.savefig(figdata, format=format, dpi=100)
+pyplot.savefig(figdata, format=format, dpi=80)
 if testmode: print("<li>save fig completed</li>")
 
 #if testmode: pyplot.savefig("comed.png", format=format, dpi=200)

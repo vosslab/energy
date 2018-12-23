@@ -9,9 +9,6 @@ import numpy
 import random
 import requests
 import datetime
-import commonlib
-
-CL = commonlib.CommonLib()
 
 ### TODO
 # add caching
@@ -122,7 +119,9 @@ class ComedLib(object):
 		#return comedurl
 
 	#======================================
-	def parseComedData(self, data):
+	def parseComedData(self, data=None):
+		if data is None:
+			return None
 		#x = []
 		#y = []
 		yvalues = {}
@@ -153,8 +152,7 @@ class ComedLib(object):
 		return yvalues
 
 	#======================================
-	def getCurrentComedRate(self):
-		data = None
+	def getCurrentComedRate(self, data=None):
 		while data is None:
 			data = self.downloadComedJsonData()
 		yvalues = self.parseComedData(data)
@@ -176,8 +174,7 @@ class ComedLib(object):
 		return ymean + ystd*weight
 
 	#======================================
-	def getMedianComedRate(self):
-		data = None
+	def getMedianComedRate(self, data=None):
 		while data is None:
 			data = self.downloadComedJsonData()
 		prices = []
