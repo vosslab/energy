@@ -41,7 +41,8 @@ for i in range(0, noOfChannel) :
 solardata = solarProduction.getSolarUsage()
 solarValue = float(solardata['Current Production']['Value'])
 solarKilowatts = solarValue/1000.
-solarcurrent = solarValue*1000*120
+#convert from watts to milliamps
+solarcurrent = int(round(solarValue/0.12))
 
 datestamp = time.strftime("%Y-%m%b-%d-%a").lower()
 logname = "usage/%s.log"%(datestamp)
