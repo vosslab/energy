@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+
+import io
+import sys
+import time
+import numpy
+from matplotlib import use
+use('Agg')
+from matplotlib import pyplot
+
+
+def dict2listpairs(biglist, key):
+	mintime = biglist[0]['timepoint']
+	day = None
+	x = []
+	y = []
+	for itemdict in biglist:
+		hours = (itemdict['timepoint'] - mintime)/3600.
+		x.append(hours)
+		yvalue = itemdict[key]
+		y.append(yvalue)
+	yarray = numpy.array(y)
+	return x, yarray
+
+
+#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
+testmode = False
+
+if testmode is True:
+	print "Content-Type: text/html"
+	print("\n")
+	print "<title>CGI script output</title>"
+	print "<h1>This is my first CGI script</h1>"
+	print("<ul>")
+	print("<li> time: %s</li>"%(time.asctime()))
+
+datestamp = time.strftime("%Y-%m%b-%d-%a").lower()
+logname = "/home/pi/energy/usage/%s.log"%(datestamp)
+
+if testmode: print("<li>reading log file</li>")
+
+f = open(logname, "r")
+datatree = []
+for line in f:
+	bits = line.split(",")
+	dataline = {
+		'timepoint': 	int(bits[0]),
+		'totalcurrent': int(bits[1]),
+		'current1': 	int(bits[2]),
+		'current2': 	int(bits[3]),
+		'solarcurrent': int(bits[4]),
+	}
+	datatree.append(dataline)
+f.close()
+
+if testmode: print("<li>finished reading log file</li>")
+#if testmode: print(datatree)
+
+
+if testmode: print("<li>sort the data</li>")
+
+x, totalCurrent = dict2listpairs(datatree, 'totalcurrent')
+x, current1 = dict2listpairs(datatree, 'current1')
+x, current2 = dict2listpairs(datatree, 'current2')
+x, solarCurrent = dict2listpairs(datatree, 'solarcurrent')
+
+if testmode: print("<li>finish sort the data</li>")
+
+#median, std = comlib.getMedianComedRate()
+pyplot.ioff()
+pyplot.plot(x, totalCurrent*120/1e6, '.-', color='darkred')
+pyplot.plot(x, solarCurrent*120/1e6, '.-', color='darkorange')
+pyplot.xticks(numpy.arange(int(min(x)), max(x), 1))
+#peakvalue = max(peakvalue, 4)
+#pyplot.ylim(ymin=0, ymax=peakvalue)
+
+if testmode: print("<li>pyplot part one of comed data</li>")
+
+ax = pyplot.gca()
+ax.xaxis.grid() # vertical lines
+ax.yaxis.grid() # horizontal lines
+
+pyplot.xlabel('Time (hours since midnight)')
+pyplot.ylabel('kW')
+
+if testmode: print("<li>pyplot part two of comed data</li>")
+
+
+format = "png"
+pyplot.tight_layout()
+#fig = pyplot.figure()
+#figdata = io.StringIO()
+figdata = io.BytesIO()
+pyplot.savefig(figdata, format=format, dpi=80)
+if testmode: print("<li>save fig completed</li>")
+
+#if testmode: pyplot.savefig("comed.png", format=format, dpi=200)
+
+if not testmode: print("Content-Type: image/%s\n"%(format))
+if not testmode: sys.stdout.write(figdata.getvalue())
+
+print("<li> time: %s</li>"%(time.asctime()))
+if testmode: print("<li>ready to write image...</li>")
+if testmode: print("</ul>")
+if testmode:
+	print("<img src='data:image/png;base64,%s'/>"
+		%(figdata.getvalue().encode("base64").strip()))
+if testmode: print("</body></html>")
+
+
