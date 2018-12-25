@@ -4,8 +4,10 @@ import os
 import sys
 import time
 import json
+import ephem
 import random
 import requests
+import datetime
 
 inverter_ip = "192.168.2.188"
 
@@ -22,11 +24,9 @@ def safeDownloadWebpage(url):
 			time.sleep(random.random()+ fails**2)
 			continue
 		except requests.exceptions.ConnectTimeout:
-			#print "FAILED connect"
 			return None
-			fails+=2
-			time.sleep(random.random()+ fails**2)
-			continue
+		except requests.exceptions.ConnectionError:
+			return None
 	if fails >= 9:
 		print "ERROR: too many failed requests"
 		sys.exit(1)
@@ -52,7 +52,10 @@ def getSolarData():
 
 #======================================
 def getSolarUsage():
-	data = getSolarData()
+	if isDaytime() is True:
+		data = getSolarData()
+	else:
+		data = {}
 	returnList = {}
 	defvalue = { 'Value': 0, 'Unit': 'W', }
 	for key in dataMap:
@@ -60,14 +63,46 @@ def getSolarUsage():
 	return returnList
 
 #======================================
+def isDaytime(msg=False):
+	somewhere = ephem.Observer()
+	somewhere.lat = '42.12364'
+	somewhere.lon = '-87.96472'
+	somewhere.elevation = 205
+	now = somewhere.date
+
+
+	sun = ephem.Sun()
+	r1 = somewhere.next_rising(sun)
+	s1 = somewhere.next_setting(sun)
+
+	somewhere.horizon = '-0:34'
+	r2 = somewhere.next_rising(sun)
+	s2 = somewhere.next_setting(sun)
+	if msg is True:
+		print ("Local time %s" % now)
+		print ("Visual sunrise %s" % r1)
+		print ("Visual sunset %s" % s1)
+		print ("Naval obs sunrise %s" % r2)
+		print ("Naval obs sunset %s" % s2)
+	if now < s1:
+		if msg: print "dark, before sunrise"
+		return False
+	elif now > s2:
+		if msg: print "dark, after sunset"
+		return False
+	else:
+		if msg: print "light"
+		return True
+
+#======================================
 #======================================
 if __name__ == '__main__':
-	data = getSolarData()
+	isDaytime(msg=True)
+	data = getSolarUsage()
 	#print(data.keys())
 	import pprint
-	#pprint.pprint(data)
-	
-	for key in dataMap:
-		print("%s: %.2f k%s"%(dataMap[key], int(data[key]['Value'])/1000., data[key].get('Unit',0)))
+	pprint.pprint(data)
+
+	for key in data:
+		print("%s: %.2f k%s"%(key, int(data[key]['Value'])/1000., data[key].get('Unit',0)))
 	print('\n')
-	
