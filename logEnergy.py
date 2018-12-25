@@ -37,12 +37,22 @@ def getSolarCurrent():
 	solarcurrent = int(round(solarValue/0.12))
 	return solarcurrent
 
+
+readDelay = 15
 currents1, totalCurrent1 = getCurrent()
 solarcurrent1 = getSolarCurrent()
+print("Usage: %.1f W use / %.1f W solar"
+	%(totalCurrent1*120/1e3, solarcurrent1*120/1e3))
+time.sleep(readDelay)
 currents2, totalCurrent2 = getCurrent()
 solarcurrent2 = getSolarCurrent()
+print("Usage: %.1f W use / %.1f W solar"
+	%(totalCurrent2*120/1e3, solarcurrent2*120/1e3))
+time.sleep(readDelay)
 currents3, totalCurrent3 = getCurrent()
 solarcurrent3 = getSolarCurrent()
+print("Usage: %.1f W use / %.1f W solar"
+	%(totalCurrent3*120/1e3, solarcurrent3*120/1e3))
 
 #take the median values
 solarcurrent = sorted([solarcurrent1, solarcurrent2, solarcurrent3])[1]

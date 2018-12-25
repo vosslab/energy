@@ -2,7 +2,9 @@
 
 import sys
 import time
-import smbus
+import numpy
+import readSMBus
+import solarProduction
 
 ### all units in milliwatts (mW)
 debug = True
@@ -30,8 +32,10 @@ def getUsageWattsList():
 #======================================
 def calculateEasySum(usageList):
 	usageArray = numpy.array(usageList, dtype=numpy.uint32)
+	if debug: print(usageArray)
 	medianUsages = numpy.median(usageArray, axis=0)
-	totalUsage = numpy.sum(medians)
+	if debug: print(medianUsages)
+	totalUsage = numpy.sum(medianUsages)
 	return medianUsages, totalUsage
 
 #======================================
@@ -41,11 +45,13 @@ def smartReadSmbus(numReads=3, readDelay=15):
 	solarList = []
 	for i in range(numReads):
 		usageWatts = getUsageWattsList()
+		usageList.append(usageWatts)
 		solarWatts = getSolarWatts()
+		solarList.append(solarWatts)
 		if debug is True:
-			outputstring = "solar: %d, "%(solarWatts/1e3)
+			outputstring = "solar: %d W, "%(solarWatts/1e3)
 			for i, u in enumerate(usageWatts):
-				outputstring += "c%d: %d, "%(i, u/1e3)
+				outputstring += "c%d: %d W, "%(i, u/1e3)
 			print(outputstring)
 		time.sleep(readDelay)
 	if numpy.sum(solarList) == 0:
@@ -78,6 +84,5 @@ def fastReadSmbus():
 	return returnString
 
 if __name__ == '__main__':
-	usageList = getUsageList()
-	print(usageList)
-
+	print(fastReadSmbus())
+	print(smartReadSmbus(4, 4))
