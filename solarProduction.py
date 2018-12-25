@@ -68,30 +68,19 @@ def isDaytime(msg=False):
 	somewhere.lat = '42.12364'
 	somewhere.lon = '-87.96472'
 	somewhere.elevation = 205
-	now = somewhere.date
-
 
 	sun = ephem.Sun()
-	r1 = somewhere.next_rising(sun)
-	s1 = somewhere.next_setting(sun)
+	sunrise = somewhere.next_rising(sun)
+	sunset = somewhere.next_setting(sun)
 
-	somewhere.horizon = '-0:34'
-	r2 = somewhere.next_rising(sun)
-	s2 = somewhere.next_setting(sun)
 	if msg is True:
-		print ("Local time %s" % now)
-		print ("Visual sunrise %s" % r1)
-		print ("Visual sunset %s" % s1)
-		print ("Naval obs sunrise %s" % r2)
-		print ("Naval obs sunset %s" % s2)
-	if now < s1:
-		if msg: print "dark, before sunrise"
-		return False
-	elif now > s2:
-		if msg: print "dark, after sunset"
+		print ("Visual sunrise %s" % sunrise)
+		print ("Visual sunset %s" % sunset)
+	if sunrise < sunset:
+		if msg: print "dark, sunrise before sunset"
 		return False
 	else:
-		if msg: print "light"
+		if msg: print "light, sunset before sunrise"
 		return True
 
 #======================================
