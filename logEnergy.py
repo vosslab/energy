@@ -41,17 +41,17 @@ def getSolarCurrent():
 readDelay = 15
 currents1, totalCurrent1 = getCurrent()
 solarcurrent1 = getSolarCurrent()
-print("Usage: %.1f W use / %.1f W solar"
+print("Usage 1/3: %.1f W use / %.1f W solar"
 	%(totalCurrent1*120/1e3, solarcurrent1*120/1e3))
 time.sleep(readDelay)
 currents2, totalCurrent2 = getCurrent()
 solarcurrent2 = getSolarCurrent()
-print("Usage: %.1f W use / %.1f W solar"
+print("Usage 2/3: %.1f W use / %.1f W solar"
 	%(totalCurrent2*120/1e3, solarcurrent2*120/1e3))
 time.sleep(readDelay)
 currents3, totalCurrent3 = getCurrent()
 solarcurrent3 = getSolarCurrent()
-print("Usage: %.1f W use / %.1f W solar"
+print("Usage 3/3: %.1f W use / %.1f W solar"
 	%(totalCurrent3*120/1e3, solarcurrent3*120/1e3))
 
 #take the median values
@@ -64,7 +64,7 @@ for i in range(len(currents1)):
 
 datestamp = time.strftime("%Y-%m%b-%d-%a").lower()
 logname = "usage/%s.log"%(datestamp)
-print("Usage: %.3f kW use / %.3f kW solar --> %s"%(totalCurrent*120/1e6, solarcurrent*120/1e6, logname))
+print("Usage Avg: %.3f kW use / %.3f kW solar --> %s"%(totalCurrent*120/1e6, solarcurrent*120/1e6, logname))
 
 f = open(logname, "a")
 f.write("%d,%d,%d,%d,%d\n"%

@@ -78,7 +78,7 @@ def fastReadSmbus():
 	#not sure what to do?
 	returnString = ""
 	for usage in usageList:
-		returnString += "&pm;%.2f kW"%(totalUsage/1e6)
+		returnString += "&pm;%.2f kW"%(usage/1e6)
 		returnString += " and "
 	returnString[-5:] == ""
 	return returnString

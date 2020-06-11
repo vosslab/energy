@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#Traceback manager for CGI scripts
+import cgitb
+cgitb.enable()
 
 import io
 import sys
@@ -8,16 +10,20 @@ from matplotlib import use
 use('Agg')
 from matplotlib import pyplot
 
-
-def dict2listpairs(biglist, key):
+def dict2listpairs(biglist, key, addzero=False):
 	mintime = biglist[0]['timepoint']
 	day = None
 	x = []
 	y = []
+	if addzero is True:
+		x.append(0.0)
+		y.append(0.0)
 	for itemdict in biglist:
+		yvalue = itemdict[key]
+		if yvalue == 0:
+			continue
 		hours = (itemdict['timepoint'] - mintime)/3600.
 		x.append(hours)
-		yvalue = itemdict[key]
 		y.append(yvalue)
 	yarray = numpy.array(y)
 	return x, yarray
@@ -62,14 +68,14 @@ if testmode: print("<li>sort the data</li>")
 x, totalCurrent = dict2listpairs(datatree, 'totalcurrent')
 x, current1 = dict2listpairs(datatree, 'current1')
 x, current2 = dict2listpairs(datatree, 'current2')
-x, solarCurrent = dict2listpairs(datatree, 'solarcurrent')
+xSolar, solarCurrent = dict2listpairs(datatree, 'solarcurrent', addzero=True)
 
 if testmode: print("<li>finish sort the data</li>")
 
 #median, std = comlib.getMedianComedRate()
 pyplot.ioff()
 pyplot.plot(x, totalCurrent*120/1e6, '.-', color='darkred')
-pyplot.plot(x, solarCurrent*120/1e6, '.-', color='darkorange')
+pyplot.plot(xSolar, solarCurrent*120/1e6, '.-', color='darkorange')
 pyplot.xticks(numpy.arange(int(min(x)), max(x), 1))
 #peakvalue = max(peakvalue, 4)
 #pyplot.ylim(ymin=0, ymax=peakvalue)

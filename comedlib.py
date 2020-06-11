@@ -97,6 +97,7 @@ class ComedLib(object):
 		try:
 			data = json.loads(resp.text)
 		except ValueError:
+			return None
 			time.sleep(300 + 100*random.random())
 			data = self.downloadComedJsonData(url)
 		self.writeCache(data)
