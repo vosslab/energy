@@ -46,7 +46,7 @@ class AutoMonero(object):
 				continue
 
 		if fails >= 9:
-			print "ERROR: too many failed requests"
+			print("ERROR: too many failed requests")
 			sys.exit(1)
 		try:
 			data = json.loads(resp.text)
@@ -67,14 +67,14 @@ class AutoMonero(object):
 			self.proc = True
 			subprocess.Popen(cmd, shell=True)
 			mystr = "started monero miner, screen -x mine"
-			print CL.colorString(mystr, "green")
+			print(CL.colorString(mystr, "green"))
 			return
 
-		print "monero already running, screen -x mine"
+		print("monero already running, screen -x mine")
 	#======================================
 	def disable(self):
 		if self.proc is not None:
-			print CL.colorString("killing miner", "red")
+			print(CL.colorString("killing miner", "red"))
 			self.proc = None
 			cmd = "pkill xmr-stak"
 			subprocess.Popen(cmd, shell=True)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 		if hour in badHours:
 			if now.minute < 20:
 				mystr = "mining disabled, bad hour, sleep until %d:20"%(hour)
-				print CL.colorString(mystr, "red")
+				print(CL.colorString(mystr, "red"))
 				autominer.disable()
 				minutesToSleep = 20 - now.minute - 2
 				sleepTime = minutesToSleep*60
@@ -113,7 +113,7 @@ if __name__ == '__main__':
 		#print "rate %.2f"%(rate)
 		if rate > 2.0*miningCutoffPrice and now.minute >20:
 			mystr = "mining disable over six cents per kWh ( %.2f )"%(rate)
-			print CL.colorString(mystr, "red")
+			print(CL.colorString(mystr, "red"))
 			autominer.disable()
 			#print "wait out the rest of the hour"
 			minutesToSleep = 60 - now.minute - 2
@@ -123,11 +123,11 @@ if __name__ == '__main__':
 			continue
 		if rate > float(miningCutoffPrice):
 			mystr = "mining disabled, rate too high, %.2f cents per kWh"%(rate)
-			print CL.colorString(mystr, "red")
+			print(CL.colorString(mystr, "red"))
 
 			autominer.disable()
 
 			continue
-		print CL.colorString("mining enabled", "green")
+		print(CL.colorString("mining enabled", "green"))
 		autominer.enable()
 

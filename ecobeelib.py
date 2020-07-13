@@ -137,7 +137,7 @@ class MyEcobee(object):
 				elif capability.type == 'humidity':
 					humid = int(capability.value)
 				else:
-					print("Unknown capability: {0}".format(capability.type))
+					print(("Unknown capability: {0}".format(capability.type)))
 					sys.exit(1)
 			sensordict[sensor.name] = {
 				'temperature': temp, 'occupancy': occupancy, 'humidity': humid, 'raw_temp': rawtemp, }
@@ -155,7 +155,7 @@ class MyEcobee(object):
 
 		self.logger.debug(weather_obj.pretty_format())
 		self.logger.debug(dir(weather_obj))
-		keys = weather_obj.attribute_type_map.keys()
+		keys = list(weather_obj.attribute_type_map.keys())
 		keys.sort()
 		weatherdict = {}
 		for key in keys:
@@ -195,7 +195,7 @@ class MyEcobee(object):
 
 		self.logger.debug(runtime_obj.pretty_format())
 		self.logger.debug(dir(runtime_obj))
-		keys = runtime_obj.attribute_type_map.keys()
+		keys = list(runtime_obj.attribute_type_map.keys())
 		keys.sort()
 		runtimedict = {}
 		for key in keys:
@@ -220,7 +220,7 @@ class MyEcobee(object):
 
 		self.logger.debug(settings_obj.pretty_format())
 		self.logger.debug(dir(settings_obj))
-		keys = settings_obj.attribute_type_map.keys()
+		keys = list(settings_obj.attribute_type_map.keys())
 		keys.sort()
 		settingsdict = {}
 		for key in keys:

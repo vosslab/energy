@@ -32,9 +32,9 @@ maxCurrent = data[1]
 noOfChannel = data[2]
 
 # Output data to screen
-print "Type of Sensor : %d" %typeOfSensor
-print "Maximum Current : %d A" %maxCurrent
-print "No. of Channels : %d" %noOfChannel
+print("Type of Sensor : %d" %typeOfSensor)
+print("Maximum Current : %d A" %maxCurrent)
+print("No. of Channels : %d" %noOfChannel)
 
 # PECMAC125A address, 0x2A(42)
 # Command for reading current
@@ -53,7 +53,7 @@ data1 = bus.read_i2c_block_data(0x2A, 0x55, noOfChannel*3+3)
 # Convert the data
 totalCurrent = 0
 currents = []
-print data1
+print(data1)
 for i in range(0, noOfChannel) :
 	msb1 = data1[i * 3]
 	msb = data1[1 + i * 3]
@@ -63,15 +63,15 @@ for i in range(0, noOfChannel) :
 	current = (msb1 * 65536 + msb * 256 + lsb) / 1000.0
 
 	# Output data to screen
-	print "Channel no : %d " %(i+1)
-	print "  Current : %.2f A"%(current)
-	print "  Usage   : %.2f kW"%(current*0.12)
+	print("Channel no : %d " %(i+1))
+	print("  Current : %.2f A"%(current))
+	print("  Usage   : %.2f kW"%(current*0.12))
 	currents.append(current)
 	totalCurrent += current
 
-print "TOTAL"
-print "  Current : %.2f A"%(totalCurrent)
-print "  Usage   : %.2f kW"%(totalCurrent*0.120)
+print("TOTAL")
+print("  Current : %.2f A"%(totalCurrent))
+print("  Usage   : %.2f kW"%(totalCurrent*0.120))
 
 import time
 datestamp = time.strftime("%Y-%m%b-%d-%a").lower()

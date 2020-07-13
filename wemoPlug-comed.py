@@ -46,7 +46,7 @@ class ComedSmartWemoPlug(object):
 	def enable(self):
 		if self.device.get_state() == 0:
 			mystr = "turning ON wemo plug, start charging"
-			print CL.colorString(mystr, "green")
+			print(CL.colorString(mystr, "green"))
 			self.device.toggle()
 			time.sleep(15)
 			self.writeToLogFile("begin charging")
@@ -56,7 +56,7 @@ class ComedSmartWemoPlug(object):
 		time.sleep(15)
 		if self.device.get_state() == 1:
 			return
-		print CL.colorString("ERROR: starting charging", "red")
+		print(CL.colorString("ERROR: starting charging", "red"))
 		self.enable()
 		return
 
@@ -64,7 +64,7 @@ class ComedSmartWemoPlug(object):
 	def disable(self):
 		if self.device.get_state() == 1:
 			mystr = "turning OFF wemo plug, stop charging"
-			print CL.colorString(mystr, "red")
+			print(CL.colorString(mystr, "red"))
 			self.device.toggle()
 			time.sleep(15)
 			self.writeToLogFile("stop charging")
@@ -73,7 +73,7 @@ class ComedSmartWemoPlug(object):
 			pass
 		if self.device.get_state() == 0:
 			return
-		print CL.colorString("ERROR: turning off charging", "red")
+		print(CL.colorString("ERROR: turning off charging", "red"))
 		self.disable()
 		return
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 		if hour in badHours:
 			if now.minute < 20:
 				mystr = "charging disabled, bad hour, sleep until %d:20"%(hour)
-				print CL.colorString(mystr, "red")
+				print(CL.colorString(mystr, "red"))
 				wemoplug.disable()
 				minutesToSleep = 20 - now.minute - 2
 				sleepTime = minutesToSleep*60
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 		#print "rate %.2f"%(rate)
 		if rate > 2.0*cutoff and now.minute > 20:
 			mystr = "%s: charging LONG disable over double price per kWh ( %.2f | cutoff = %.2f )"%(timestr, rate, cutoff)
-			print CL.colorString(mystr, "red")
+			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			#print "wait out the rest of the hour"
 			minutesToSleep = 60 - now.minute - 2
@@ -141,11 +141,11 @@ if __name__ == '__main__':
 
 		if rate > float(cutoff):
 			mystr = "%s: charging disabled, rate too high, %.2f cents per kWh | cutoff = %.2f"%(timestr, rate, cutoff)
-			print CL.colorString(mystr, "red")
+			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
 
 		mystr = "%s: charging enabled ( %.2f kWh | cutoff = %.2f )"%(timestr, rate, cutoff)
-		print CL.colorString(mystr, "green")
+		print(CL.colorString(mystr, "green"))
 		wemoplug.enable()
 

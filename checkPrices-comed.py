@@ -44,12 +44,12 @@ if __name__ == '__main__':
 		y.append(price)
 
 	y2 = []
-	x2 = yvalues.keys()
+	x2 = list(yvalues.keys())
 	x2.sort()
-	print "Last 3 prices"
+	print("Last 3 prices")
 	for i in range(2, -1, -1):
-		print "%d:%02d -- %.3f"%(math.floor(x[i]), round((x[i] % 1)*60), y[i])
-	print ""
+		print("%d:%02d -- %.3f"%(math.floor(x[i]), round((x[i] % 1)*60), y[i]))
+	print("")
 	peakvalue = 0
 	for key in x2:
 		ylist = yvalues[key]
@@ -72,8 +72,8 @@ if __name__ == '__main__':
 		else:
 			keyst = "%02dp-%02dp"%(key-13, key-12)
 		if abs(key - float(int(key))) < 0.001:
-			print("%s -> %s   +- %2.1f -> %.1f/%.1f (%d)"
-				%(keyst, ypstr, ypstd, yarray.min(), yarray.max(), len(yarray)))
+			print(("%s -> %s   +- %2.1f -> %.1f/%.1f (%d)"
+				%(keyst, ypstr, ypstd, yarray.min(), yarray.max(), len(yarray))))
 		y2.append(yp)
 	median, std = comlib.getMedianComedRate()
 

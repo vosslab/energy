@@ -84,5 +84,5 @@ def fastReadSmbus():
 	return returnString
 
 if __name__ == '__main__':
-	print(fastReadSmbus())
-	print(smartReadSmbus(4, 4))
+	print((fastReadSmbus()))
+	print((smartReadSmbus(4, 4)))

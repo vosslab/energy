@@ -10,7 +10,7 @@ import numpy
 import random
 import string
 import shutil
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess
 import unicodedata
 
@@ -67,7 +67,7 @@ class CommonLib(object):
 		if not s1:
 			return len(s2)
 
-		previous_row = xrange(len(s2) + 1)
+		previous_row = range(len(s2) + 1)
 		for i, c1 in enumerate(s1):
 			current_row = [i + 1]
 			for j, c2 in enumerate(s2):
@@ -119,7 +119,7 @@ class CommonLib(object):
 		g = re.sub("[_ ]ft[_ ][a-zA-Z0-9 _-]*$", "and", g)
 
 		if re.search('[^a-z]feat[^a-z]', g):
-			print g
+			print(g)
 
 		g = re.sub("\^", "_", g)
 		g = re.sub(",", "_", g)
@@ -134,10 +134,10 @@ class CommonLib(object):
 		if g == "unknown":
 			return None
 		if re.search('[^a-zA-z0-9_-]', g):
-			print "\033[1;32mWeird character: "+g+"\033[0m"
+			print("\033[1;32mWeird character: "+g+"\033[0m")
 			time.sleep(2)
 		if len(g) == 0:
-			print "\033[31mERROR: "+f+"\033[0m"
+			print("\033[31mERROR: "+f+"\033[0m")
 			return None
 			sys.exit(1)
 		if cut is True and len(g) > 40:
@@ -175,16 +175,16 @@ class CommonLib(object):
 
 	#=======================
 	def unicodeToString(self, uni):
-		if not isinstance(uni, str) and not isinstance(uni, unicode):
+		if not isinstance(uni, str) and not isinstance(uni, str):
 			try:
 				uni = uni.decode("utf8")
 			except AttributeError:
 				uni = uni.text[0]
 		try:
-			uni = unicode(uni)
+			uni = str(uni)
 			string = unicodedata.normalize('NFKD', uni)
 		except UnicodeDecodeError:
-			print uni
+			print(uni)
 			string = uni
 		string = str(string.encode('ascii', 'ignore'))
 		return string
@@ -214,7 +214,7 @@ class CommonLib(object):
 		Returns a quick md5 hash for file filename
 		"""
 		if not os.path.isfile(filename):
-			print self.colorString("MD5SUM, file not found: "+filename, "red")
+			print(self.colorString("MD5SUM, file not found: "+filename, "red"))
 			sys.exit(1)
 		f = file(filename, 'rb')
 		#this next library is deprecated in python 2.6+, need to use hashlib
@@ -252,7 +252,7 @@ class CommonLib(object):
 		files.sort()
 		if shuffle is True:
 			random.shuffle(files)
-		print "Found %d files"%(len(files))
+		print("Found %d files"%(len(files)))
 		return files
 
 	#=======================
@@ -306,7 +306,7 @@ class CommonLib(object):
 		}
 		if fg is None:
 			return text
-		if type(fg) in (types.TupleType, types.ListType):
+		if type(fg) in (tuple, list):
 			fg, bg = fg
 		if not fg:
 			return text

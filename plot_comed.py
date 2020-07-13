@@ -13,12 +13,12 @@ from matplotlib import pyplot
 testmode = False
 
 if testmode is True:
-	print "Content-Type: text/html"
+	print("Content-Type: text/html")
 	print("\n")
-	print "<title>CGI script output</title>"
-	print "<h1>This is my first CGI script</h1>"
+	print("<title>CGI script output</title>")
+	print("<h1>This is my first CGI script</h1>")
 	print("<ul>")
-	print("<li> time: %s</li>"%(time.asctime()))
+	print(("<li> time: %s</li>"%(time.asctime())))
 
 comlib = comedlib.ComedLib()
 comlib.msg = testmode
@@ -62,7 +62,7 @@ for p in data:
 if testmode: print("<li>sorted comed data</li>")
 
 y2 = []
-x2 = yvalues.keys()
+x2 = list(yvalues.keys())
 x2.sort()
 peakvalue = 0
 for key in x2:
@@ -111,15 +111,15 @@ if testmode: print("<li>save fig completed</li>")
 
 #if testmode: pyplot.savefig("comed.png", format=format, dpi=200)
 
-if not testmode: print("Content-Type: image/%s\n"%(format))
+if not testmode: print(("Content-Type: image/%s\n"%(format)))
 if not testmode: sys.stdout.write(figdata.getvalue())
 
-print("<li> time: %s</li>"%(time.asctime()))
+print(("<li> time: %s</li>"%(time.asctime())))
 if testmode: print("<li>ready to write image...</li>")
 if testmode: print("</ul>")
 if testmode:
-	print("<img src='data:image/png;base64,%s'/>"
-		%(figdata.getvalue().encode("base64").strip()))
+	print(("<img src='data:image/png;base64,%s'/>"
+		%(figdata.getvalue().encode("base64").strip())))
 if testmode: print("</body></html>")
 
 

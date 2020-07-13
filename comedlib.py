@@ -32,7 +32,7 @@ class ComedLib(object):
 		if self.useCache is False:
 			return
 		if self.msg is True:
-			print("saving data to %s"%(self.cachefile))
+			print(("saving data to %s"%(self.cachefile)))
 		f = open(self.cachefile, "w")
 		fulldata = {
 			'timestamp': int(time.time()),
@@ -49,7 +49,7 @@ class ComedLib(object):
 		if not os.path.exists(self.cachefile):
 			return None
 		if self.msg is True:
-			print("reading data from %s"%(self.cachefile))
+			print(("reading data from %s"%(self.cachefile)))
 		f = open(self.cachefile, "r")
 		fulldata = yaml.load(f, yaml.SafeLoader)
 		f.close()
@@ -77,7 +77,7 @@ class ComedLib(object):
 				time.sleep(random.random()+ fails**2)
 				continue
 		if fails >= 9:
-			print "ERROR: too many failed requests"
+			print("ERROR: too many failed requests")
 			sys.exit(1)
 		return resp
 
@@ -157,7 +157,7 @@ class ComedLib(object):
 		while data is None:
 			data = self.downloadComedJsonData()
 		yvalues = self.parseComedData(data)
-		x2 = yvalues.keys()
+		x2 = list(yvalues.keys())
 		x2.sort()
 
 		key = x2[-1]
@@ -169,8 +169,8 @@ class ComedLib(object):
 		weight = (13-len(ylist))/13.
 		if abs(key - float(int(key))) < 0.001:
 			if self.msg is True:
-				print("%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
-					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max()))
+				print(("%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
+					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max())))
 			pass
 		return ymean + ystd*weight
 
@@ -194,7 +194,7 @@ class ComedLib(object):
 		median = numpy.median(parray)
 		std = numpy.std(parray)
 		if self.msg is True:
-			print("24 hour median price: %.3f +/- %.3f"%(median, std))
+			print(("24 hour median price: %.3f +/- %.3f"%(median, std)))
 		return median, std
 
 #======================================

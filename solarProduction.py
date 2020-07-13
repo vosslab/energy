@@ -28,7 +28,7 @@ def safeDownloadWebpage(url):
 		except requests.exceptions.ConnectionError:
 			return None
 	if fails >= 9:
-		print "ERROR: too many failed requests"
+		print("ERROR: too many failed requests")
 		sys.exit(1)
 	return resp
 
@@ -74,13 +74,13 @@ def isDaytime(msg=False):
 	sunset = somewhere.next_setting(sun)
 
 	if msg is True:
-		print ("Visual sunrise %s" % sunrise)
-		print ("Visual sunset %s" % sunset)
+		print(("Visual sunrise %s" % sunrise))
+		print(("Visual sunset %s" % sunset))
 	if sunrise < sunset:
-		if msg: print "dark, sunrise before sunset"
+		if msg: print("dark, sunrise before sunset")
 		return False
 	else:
-		if msg: print "light, sunset before sunrise"
+		if msg: print("light, sunset before sunrise")
 		return True
 
 #======================================
@@ -93,5 +93,5 @@ if __name__ == '__main__':
 	pprint.pprint(data)
 
 	for key in data:
-		print("%s: %.2f k%s"%(key, int(data[key]['Value'])/1000., data[key].get('Unit',0)))
+		print(("%s: %.2f k%s"%(key, int(data[key]['Value'])/1000., data[key].get('Unit',0))))
 	print('\n')
