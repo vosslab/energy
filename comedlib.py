@@ -38,7 +38,7 @@ class ComedLib(object):
 			'timestamp': int(time.time()),
 			'data': data,
 		}
-		yaml.dump(fulldata, f)
+		yaml.safe_dump(fulldata, f)
 		f.close()
 		return
 
@@ -51,7 +51,7 @@ class ComedLib(object):
 		if self.msg is True:
 			print("reading data from %s"%(self.cachefile))
 		f = open(self.cachefile, "r")
-		fulldata = yaml.load(f)
+		fulldata = yaml.load(f, yaml.SafeLoader)
 		f.close()
 		if not isinstance(fulldata, dict):
 			return None
@@ -173,6 +173,15 @@ class ComedLib(object):
 					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max()))
 			pass
 		return ymean + ystd*weight
+
+	#======================================
+	def getReasonableCutOff(self):
+		chargingCutoffPrice = 3.99
+
+		median, std = self.getMedianComedRate()
+		defaultCutoff = median + std/6.
+		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
+		return reasonableCutoff
 
 	#======================================
 	def getMedianComedRate(self, data=None):
