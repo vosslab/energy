@@ -178,7 +178,6 @@ class ComedLib(object):
 	#======================================
 	def getReasonableCutOff(self):
 		chargingCutoffPrice = 3.99
-
 		median, std = self.getMedianComedRate()
 		defaultCutoff = median + math.sqrt(std)/3.0
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
@@ -202,4 +201,17 @@ class ComedLib(object):
 #======================================
 if __name__ == '__main__':
 	comedlib = ComedLib()
-	comedlib.getCurrentComedRate()
+	comedlib.msg = (random.random() > 0.9)
+	medrate, std = comedlib.getMedianComedRate()
+	print("24hr Median Rate    {0:.3f}c +- {1:.3f}c".format(medrate, std))
+	currrate = comedlib.getCurrentComedRate()
+	print("Hour Predicted Rate {0:.3f}c".format(currrate))
+	cutoffrate = comedlib.getReasonableCutOff()
+	print("Reasonable Cutoff   {0:.3f}c".format(cutoffrate))
+	if currrate > cutoffrate:
+		print("House Usage Status  OFF")
+	else:
+		print("House Usage Status  on")
+
+
+
