@@ -35,14 +35,14 @@ if __name__ == "__main__":
 		if coolsetting < hightemp - 1:
 			print(("Set A/C to {0:.1f} F".format(hightemp)))
 			myecobee.setTemperature(cooltemp=hightemp)
-			myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
+			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
 			print("\nnothing to do")
 	elif time.localtime().tm_min > 17 and coolsetting > cooltemp + 1:
 		print("Request: Turn ON air conditioner")
 		print(("Set A/C to {0:.1f} F".format(cooltemp)))
 		myecobee.setTemperature(cooltemp=cooltemp)
-		myecobee.sendMessage("A/C was set to 72F, because ComEd Prices are Low -- Neil")
+		#myecobee.sendMessage("A/C was set to 72F, because ComEd Prices are Low -- Neil")
 	else:
 		print("\nnothing to do")
 
