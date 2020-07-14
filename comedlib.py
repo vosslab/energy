@@ -2,6 +2,7 @@
 
 import os
 import sys
+import math
 import time
 import json
 import yaml
@@ -179,7 +180,7 @@ class ComedLib(object):
 		chargingCutoffPrice = 3.99
 
 		median, std = self.getMedianComedRate()
-		defaultCutoff = median + std/6.
+		defaultCutoff = median + math.sqrt(std)/3.0
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
 		return reasonableCutoff
 
