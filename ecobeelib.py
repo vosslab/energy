@@ -278,7 +278,7 @@ if __name__ == "__main__":
 	status = myecobee.settings()
 	pprint.pprint(status)
 
-	myecobee.sendMessage("Orion is a funny guy")
+	#myecobee.sendMessage("Orion is a funny guy")
 
 	#myecobee.setTemperature(cooltemp=76)
 
