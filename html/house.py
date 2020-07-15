@@ -7,6 +7,7 @@ import numpy
 from energylib import comedlib
 from energylib import smartReadUsage
 from energylib import solarProduction
+#from energylib import ecobeelib
 
 def colorPrice(price, precision=1):
 	color = "DimGray"
@@ -56,10 +57,10 @@ print("<h3>Energy Usage</h3>")
 usageText = smartReadUsage.fastReadSmbus()
 print("<span style='color: &#35;880000'>Current Usage:")
 print(" %s</span><br/>"%(usageText))
-print('<br/>\n')
 
+#print('<br/>\n')
 #print("<img src='energylib/plot_usage.py'>")
-
+print("<a href='energylib/plot_usage.py'>Show Usage Plot</a>")
 
 #======================================
 #======================================
@@ -71,15 +72,19 @@ comed_data = comlib.downloadComedJsonData()
 if comed_data is not None:
 	print("<span style='color: &#35;008800'>24hr Median Rate:")
 	median,std = comlib.getMedianComedRate(comed_data)
-	print(" %s &pm; %.2f &cent;</span><br/>"%(colorPrice(median, 2), std))
+	print(" %s &pm; %.2f&cent;</span><br/>"%(colorPrice(median, 2), std))
 
-	print("<span style='color: &#35;000088'>Hour Predict Rate:")
-	predictRate = comlib.getCurrentComedRate(comed_data)
-	print(" %s &cent;</span><br/>"%(colorPrice(predictRate, 2)))
+	print("<span style='color: &#35;448844'>Hour Current Rate:")
+	currentRate = comlib.getCurrentComedRate(comed_data)
+	print(" %s</span><br/>"%(colorPrice(currentRate, 2)))
 
-	print("<span style='color: &#35;000088'>Usage CutOff Rate:")
+	print("<span style='color: &#35;444488'>Hour Predict Rate:")
+	predictRate = comlib.getPredictedRate()
+	print(" %s</span><br/>"%(colorPrice(predictRate, 2)))
+
+	print("<span style='color: &#35;884444'>Usage CutOff Rate:")
 	cutoffRate = comlib.getReasonableCutOff()
-	print(" %s &cent;</span><br/>"%(colorPrice(cutoffRate, 2)))
+	print(" %s</span><br/>"%(colorPrice(cutoffRate, 2)))
 
 	print("House Usage Status:\n")
 	print("<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n")
@@ -99,19 +104,19 @@ if comed_data is not None:
 	#print('<br/>\n')
 
 	hourlyRates = comlib.parseComedData(comed_data)
+	keys = hourlyRates.keys()
+	keys.sort()
 	print("<span style='color: &#35;000088'>Hour Actual Rate:")
-	currRate = numpy.array(hourlyRates[-1]).mean()
-	print(" %s &cent;</span><br/>"%(colorPrice(currRate, 2)))
+	currRate = numpy.array(hourlyRates[keys[-1]]).mean()
+	print(" %s</span><br/>"%(colorPrice(currRate, 2)))
 	print('<br/>\n')
 
 	#print('<br/>\n')
+	print("<a href='energylib/plot_comed.py'>Show Comed Price Plot</a>")
 	#print("<img src='energylib/plot_comed.py'>")
-	#print('<br/>\n')
-
+	print('<br/>\n')
 
 	print("<span style='color: &#35;666666'>Hourly Average Rates:\n<ul style='margin: 0 0;'>\n")
-	keys = hourlyRates.keys()
-	keys.sort()
 	for key in keys:
 		if int(key) < 1:
 			continue
@@ -129,4 +134,6 @@ else:
 
 #======================================
 #======================================
+print('<br/>\n')
+print('<br/>\n')
 print("</body></html>")
