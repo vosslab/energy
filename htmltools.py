@@ -20,7 +20,7 @@ def colorPrice(price, precision=1):
 	return text
 
 
-def htmlComedData():
+def htmlComedData(showPlot=False):
 	htmltext = "<h3>Comed Prices</h3>"
 
 	import comedlib
@@ -32,17 +32,21 @@ def htmlComedData():
 		htmltext += "comed data failed or not available"
 		return htmltext
 
-	htmltext += "<span style='color: &#35;008800'>24hr Median Rate:"
+	htmltext += "<span style='color: &#35;448844'>24hr Median Rate:"
 	median,std = comlib.getMedianComedRate(comed_data)
 	htmltext += " {0} &pm; {1:.2f} &cent;</span><br/>".format(colorPrice(median, 2), std)
 
-	htmltext += "<span style='color: &#35;000088'>Hour Predict Rate:"
-	predictRate = comlib.getCurrentComedRate(comed_data)
-	htmltext += " %s &cent;</span><br/>"%(colorPrice(predictRate, 2))
+	htmltext += "<span style='color: &#35;444488'>Hour Current Rate:"
+	currentRate = comlib.getCurrentComedRate(comed_data)
+	htmltext += " {0:.3f} </span><br/>".format(colorPrice(currentRate, 2))
 
-	htmltext += "<span style='color: &#35;000088'>Usage CutOff Rate:"
+	htmltext += "<span style='color: &#35;884444'>Hour Predict Rate:"
+	predictRate = comlib.getPredictedRate(comed_data)
+	htmltext += " {0:.3f} </span><br/>".format(colorPrice(predictRate, 2))
+
+	htmltext += "<span style='color: &#35;448844'>Usage CutOff Rate:"
 	cutoffRate = comlib.getReasonableCutOff()
-	htmltext += " %s &cent;</span><br/>"%(colorPrice(cutoffRate, 2))
+	htmltext += " {0:.3f} </span><br/>".format(colorPrice(cutoffRate, 2))
 
 	htmltext += "House Usage Status:\n"
 	htmltext += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
@@ -59,18 +63,9 @@ def htmlComedData():
 		rate = float(item['price'])
 		htmltext += "<li>%d:%02d &ndash; %s </li>"%(timestruct[3], timestruct[4], colorPrice(rate))
 	htmltext += "</ul></span>"
-	#htmltext += "<br/>\n"
-
-	hourlyRates = comlib.parseComedData(comed_data)
-	htmltext += "<span style='color: &#35;000088'>Hour Actual Rate:"
-	currRate = numpy.array(hourlyRates[-1]).mean()
-	htmltext += " %s &cent;</span><br/>"%(colorPrice(currRate, 2))
 	htmltext += "<br/>\n"
 
-	#htmltext += "<br/>\n"
-	#htmltext += "<img src='energylib/plot_comed.py'>"
-	#htmltext += "<br/>\n"
-
+	hourlyRates = comlib.parseComedData(comed_data)
 
 	htmltext += "<span style='color: &#35;666666'>Hourly Average Rates:\n<ul style='margin: 0 0;'>\n"
 	keys = list(hourlyRates.keys())
@@ -86,6 +81,13 @@ def htmlComedData():
 		#timestruct = list(time.localtime(int(item['millisUTC'])/1000.))
 		#rate = float(item['price'])
 		htmltext += "<li>%d-%d:00 &ndash; %s </li>"%(hour-1, hour, colorPrice(averageRate, 2))
+
+	htmltext += "<br/>\n"
+	htmltext += "<a href='energylib/plot_comed.py'>\n"
+	if showPlot is True:
+		htmltext += "<img src='energylib/plot_comed.py'>"
+		htmltext += "<br/>\n"
+	htmltext += "Show Comed Price Plot</a>\n"
 
 	return htmltext
 
