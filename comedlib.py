@@ -10,6 +10,7 @@ import numpy
 import random
 import requests
 import datetime
+from scipy import stats
 
 ### TODO
 # add caching
@@ -160,6 +161,31 @@ class ComedLib(object):
 		yvalues = self.parseComedData(data)
 		x2 = list(yvalues.keys())
 		x2.sort()
+		key = x2[-1]
+		ylist = yvalues[key]
+		yarray = numpy.array(ylist, dtype=numpy.float64)
+		ypositive = numpy.where(yarray < 1.0, 1.0, yarray)
+		ymean = ypositive.mean()
+		return ymean
+
+	#======================================
+	def getMostRecentRate(self, data=None):
+		while data is None:
+			data = self.downloadComedJsonData()
+		yvalues = self.parseComedData(data)
+		x2 = list(yvalues.keys())
+		x2.sort()
+		key = x2[-1]
+		ylist = yvalues[key]
+		return ylist[0]
+
+	#======================================
+	def getPredictedRate(self, data=None):
+		while data is None:
+			data = self.downloadComedJsonData()
+		yvalues = self.parseComedData(data)
+		x2 = list(yvalues.keys())
+		x2.sort()
 
 		key = x2[-1]
 		ylist = yvalues[key]
@@ -173,14 +199,45 @@ class ComedLib(object):
 				print(("%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
 					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max())))
 			pass
-		return ymean + ystd*weight
+		value1 = ymean + ystd*weight
+
+		if len(ypositive) > 3:
+			yslopedata = numpy.flip(ypositive)
+		else:
+			key2 = x2[-3]
+			ylist2 = yvalues[key2]
+			yarray2 = numpy.array(ylist2, dtype=numpy.float64)
+			ypositive2 = numpy.where(yarray2 < 1.0, 1.0, yarray2)
+			print(ypositive)
+			print(ypositive2)
+			yslopedata = numpy.flip(numpy.hstack((ypositive, ypositive2[:4])))
+			xarray = numpy.arange(0,len(yslopedata))
+
+		xarray = numpy.arange(0,len(yslopedata))
+		slope, intercept, r_value, p_value, std_err = stats.linregress(xarray, yslopedata)
+		if self.msg is True:
+			print(yslopedata)
+			print(xarray)
+			print("Slope = {0:.3f}".format(slope))
+
+		if slope < 0.1:
+			slope = 0.1
+		value2 = (14 - len(yslopedata))*slope + yslopedata[-1]
+
+		value3 = (yarray.max() + yarray.mean() + yarray[0])/3.0
+
+		if self.msg is True:
+			print("Value 1 = {0:.3f}".format(value1))
+			print("Value 2 = {0:.3f}".format(value2))
+			print("Value 3 = {0:.3f}".format(value3))
+		return max(value1, value2, value3)
+
 
 	#======================================
 	def getReasonableCutOff(self):
-		chargingCutoffPrice = 3.99
-
+		chargingCutoffPrice = 3.49
 		median, std = self.getMedianComedRate()
-		defaultCutoff = median + math.sqrt(std)/3.0
+		defaultCutoff = median + math.sqrt(std)/6.0
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
 		return reasonableCutoff
 
@@ -202,4 +259,19 @@ class ComedLib(object):
 #======================================
 if __name__ == '__main__':
 	comedlib = ComedLib()
-	comedlib.getCurrentComedRate()
+	comedlib.msg = (random.random() > 0.9)
+	medrate, std = comedlib.getMedianComedRate()
+	print("24hr Median Rate    {0:.3f}c +- {1:.3f}c".format(medrate, std))
+	currrate = comedlib.getCurrentComedRate()
+	print("Hour Current Rate   {0:.3f}c".format(currrate))
+	predictrate = comedlib.getPredictedRate()
+	print("Hour Predicted Rate {0:.3f}c".format(predictrate))
+	cutoffrate = comedlib.getReasonableCutOff()
+	print("Reasonable Cutoff   {0:.3f}c".format(cutoffrate))
+	if currrate > cutoffrate:
+		print("House Usage Status  OFF")
+	else:
+		print("House Usage Status  on")
+
+
+
