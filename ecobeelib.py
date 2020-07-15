@@ -22,6 +22,8 @@ class MyEcobee(object):
 			self.shelf_file = 'pyecobee_db.shelf'
 		elif os.path.exists('pyecobee_db'):
 			self.shelf_file = 'pyecobee_db'
+		#default value
+		self.shelf_file = '/etc/energy/pyecobee_db.shelf'
 		return
 
 	def setYamlFile(self):
