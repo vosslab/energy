@@ -1,3 +1,5 @@
+import time
+import numpy
 
 def colorPrice(price, precision=1):
 	color = "DimGray"
