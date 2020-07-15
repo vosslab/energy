@@ -15,8 +15,10 @@ def colorPrice(price, precision=1):
 		color = "DarkRed"
 	if precision == 1:
 		text = "<span style='color: %s'>%.1f&cent;</span>"%(color, price)
-	else:
+	elif precision == 2:
 		text = "<span style='color: %s'>%.2f&cent;</span>"%(color, price)
+	elif precision == 3:
+		text = "<span style='color: %s'>%.3f&cent;</span>"%(color, price)
 	return text
 
 
@@ -34,19 +36,19 @@ def htmlComedData(showPlot=False):
 
 	htmltext += "<span style='color: &#35;448844'>24hr Median Rate:"
 	median,std = comlib.getMedianComedRate(comed_data)
-	htmltext += " {0} &pm; {1:.2f} &cent;</span><br/>".format(colorPrice(median, 2), std)
+	htmltext += " {0} &pm; {1:.2f} &cent;</span><br/>".format(colorPrice(median, 3), std)
 
 	htmltext += "<span style='color: &#35;444488'>Hour Current Rate:"
 	currentRate = comlib.getCurrentComedRate(comed_data)
-	htmltext += " {0} </span><br/>".format(colorPrice(currentRate, 2))
+	htmltext += " {0} </span><br/>".format(colorPrice(currentRate, 3))
 
 	htmltext += "<span style='color: &#35;884444'>Hour Predict Rate:"
 	predictRate = comlib.getPredictedRate(comed_data)
-	htmltext += " {0} </span><br/>".format(colorPrice(predictRate, 2))
+	htmltext += " {0} </span><br/>".format(colorPrice(predictRate, 3))
 
 	htmltext += "<span style='color: &#35;448844'>Usage CutOff Rate:"
 	cutoffRate = comlib.getReasonableCutOff()
-	htmltext += " {0} </span><br/>".format(colorPrice(cutoffRate, 2))
+	htmltext += " {0} </span><br/>".format(colorPrice(cutoffRate, 3))
 
 	htmltext += "House Usage Status:\n"
 	htmltext += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
