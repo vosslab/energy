@@ -202,15 +202,13 @@ class ComedLib(object):
 		value1 = ymean + ystd*weight
 
 		if len(ypositive) > 3:
-			yslopedata = numpy.flip(ypositive)
+			yslopedata = numpy.flip(ypositive, axis=0)
 		else:
 			key2 = x2[-3]
 			ylist2 = yvalues[key2]
 			yarray2 = numpy.array(ylist2, dtype=numpy.float64)
 			ypositive2 = numpy.where(yarray2 < 1.0, 1.0, yarray2)
-			print(ypositive)
-			print(ypositive2)
-			yslopedata = numpy.flip(numpy.hstack((ypositive, ypositive2[:4])))
+			yslopedata = numpy.flip(numpy.hstack((ypositive, ypositive2[:4])), axis=0)
 			xarray = numpy.arange(0,len(yslopedata))
 
 		xarray = numpy.arange(0,len(yslopedata))
