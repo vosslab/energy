@@ -169,6 +169,18 @@ class ComedLib(object):
 		return ymean
 
 	#======================================
+	def getMostRecentRate(self, data=None):
+		while data is None:
+			data = self.downloadComedJsonData()
+		yvalues = self.parseComedData(data)
+		x2 = list(yvalues.keys())
+		x2.sort()
+
+		key = x2[-1]
+		ylist = yvalues[key]
+
+
+	#======================================
 	def getPredictedRate(self, data=None):
 		while data is None:
 			data = self.downloadComedJsonData()
