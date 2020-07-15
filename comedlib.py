@@ -193,9 +193,7 @@ class ComedLib(object):
 		if len(ypositive) > 3:
 			yslopedata = numpy.flip(ypositive)
 		else:
-			print "Get more data"
 			key2 = x2[-3]
-			print key, key2
 			ylist2 = yvalues[key2]
 			yarray2 = numpy.array(ylist2, dtype=numpy.float64)
 			ypositive2 = numpy.where(yarray2 < 1.0, 1.0, yarray2)
