@@ -81,8 +81,9 @@ def htmlComedData(showPlot=False):
 		#timestruct = list(time.localtime(int(item['millisUTC'])/1000.))
 		#rate = float(item['price'])
 		htmltext += "<li>%d-%d:00 &ndash; %s </li>"%(hour-1, hour, colorPrice(averageRate, 2))
-
+	htmltext += "</ul></span>"
 	htmltext += "<br/>\n"
+
 	htmltext += "<a href='energylib/plot_comed.py'>\n"
 	if showPlot is True:
 		htmltext += "<img src='energylib/plot_comed.py'>"
