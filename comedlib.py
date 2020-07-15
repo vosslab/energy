@@ -183,6 +183,8 @@ class ComedLib(object):
 	def getPredictedRate(self, data=None):
 		while data is None:
 			data = self.downloadComedJsonData()
+		median, std = self.getMedianComedRate()
+
 		yvalues = self.parseComedData(data)
 		x2 = list(yvalues.keys())
 		x2.sort()
@@ -220,7 +222,7 @@ class ComedLib(object):
 
 		if slope < 0.1:
 			slope = 0.1
-		value2 = (14 - len(yslopedata))*slope + yslopedata[-1]
+		value2 = (14 - len(yslopedata))*slope/2.0 + median
 
 		value3 = (yarray.max() + yarray.mean() + yarray[0])/3.0
 
@@ -229,7 +231,6 @@ class ComedLib(object):
 			print("Value 2 = {0:.3f}".format(value2))
 			print("Value 3 = {0:.3f}".format(value3))
 		return max(value1, value2, value3)
-
 
 	#======================================
 	def getReasonableCutOff(self):
