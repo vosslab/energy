@@ -38,15 +38,15 @@ def htmlComedData(showPlot=False):
 
 	htmltext += "<span style='color: &#35;444488'>Hour Current Rate:"
 	currentRate = comlib.getCurrentComedRate(comed_data)
-	htmltext += " {0:.3f} </span><br/>".format(colorPrice(currentRate, 2))
+	htmltext += " {0} </span><br/>".format(colorPrice(currentRate, 2))
 
 	htmltext += "<span style='color: &#35;884444'>Hour Predict Rate:"
 	predictRate = comlib.getPredictedRate(comed_data)
-	htmltext += " {0:.3f} </span><br/>".format(colorPrice(predictRate, 2))
+	htmltext += " {0} </span><br/>".format(colorPrice(predictRate, 2))
 
 	htmltext += "<span style='color: &#35;448844'>Usage CutOff Rate:"
 	cutoffRate = comlib.getReasonableCutOff()
-	htmltext += " {0:.3f} </span><br/>".format(colorPrice(cutoffRate, 2))
+	htmltext += " {0} </span><br/>".format(colorPrice(cutoffRate, 2))
 
 	htmltext += "House Usage Status:\n"
 	htmltext += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
