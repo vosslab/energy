@@ -175,10 +175,9 @@ class ComedLib(object):
 		yvalues = self.parseComedData(data)
 		x2 = list(yvalues.keys())
 		x2.sort()
-
 		key = x2[-1]
 		ylist = yvalues[key]
-
+		return ylist[0]
 
 	#======================================
 	def getPredictedRate(self, data=None):
