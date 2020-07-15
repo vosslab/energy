@@ -87,4 +87,5 @@ def htmlComedData():
 		#rate = float(item['price'])
 		htmltext += "<li>%d-%d:00 &ndash; %s </li>"%(hour-1, hour, colorPrice(averageRate, 2))
 
+	return htmltext
 
