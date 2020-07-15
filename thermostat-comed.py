@@ -2,48 +2,75 @@
 
 import sys
 import time
+import datetime
 import comedlib
 import ecobeelib
 
-if __name__ == "__main__":
-	hightemp = 80
-	cooltemp = 72
+class ThermoStat(object):
+	def __init__(self):
+		self.hightemp = 80
+		self.cooltemp = 72
+		self.comlib = comedlib.ComedLib()
+		self.comlib.msg = False
+		self.current_rate = None
+		self.openEcobee()
 
-	comlib = comedlib.ComedLib()
-	comlib.msg = False
-	current_rate = comlib.getCurrentComedRate()
-	median, std = comlib.getMedianComedRate()
-	cutoff = comlib.getReasonableCutOff()
-	print(("24hr Median Rate: {0:.3f} +/- {1:.3f}c".format(median, std)))
-	print(("Predicted Rate: {0:.3f}c".format(current_rate)))
-	print(("Cut Off Rate: {0:.3f}c".format(cutoff)))
+	def openEcobee(self):
+		self.myecobee = ecobeelib.MyEcobee()
+		self.myecobee.setLogger()
+		self.myecobee.readThermostatDefs()
+		self.myecobee.openConnection()
+		self.runtimedict = self.myecobee.runtime()
+		self.coolsetting = float(self.runtimedict['desired_cool'])/10.
+		print(("Current Cool Setting: {0:.1f}F".format(self.coolsetting)))
 
-	if time.localtime().tm_min <= 7:
-		print("less than 7 minutes past the hour => no change")
-		sys.exit(0)
+	def getRates(self):
+		self.current_rate = self.comlib.getCurrentComedRate()
+		self.median, self.std = self.comlib.getMedianComedRate()
+		self.cutoff = self.comlib.getReasonableCutOff()
+		self.predict_rate = self.comlib.getPredictedRate()
 
-	myecobee = ecobeelib.MyEcobee()
-	myecobee.setLogger()
-	myecobee.readThermostatDefs()
-	myecobee.openConnection()
-	runtimedict = myecobee.runtime()
-	coolsetting = float(runtimedict['desired_cool'])/10.
-	print(("Current Cool Setting: {0:.1f}F".format(coolsetting)))
+	def showRates(self):
+		if self.current_rate is None:
+			self.getRates()
+		print(("24hr Median Rate: {0:.3f} +/- {1:.3f}c".format(self.median, self.std)))
+		print(("Current Rate:     {0:.3f}c".format(self.current_rate)))
+		print(("Predicted Rate:   {0:.3f}c".format(self.predict_rate)))
+		print(("Cut Off Rate:     {0:.3f}c".format(self.cutoff)))
 
-	if current_rate >= cutoff:
+	def turnOffEcobee(self):
 		print("Request: Turn OFF air conditioner")
-		if coolsetting < hightemp - 1:
-			print(("Set A/C to {0:.1f} F".format(hightemp)))
-			myecobee.setTemperature(cooltemp=hightemp)
+		if self.coolsetting < self.hightemp - 1:
+			print(("Set A/C to {0:.1f} F".format(self.hightemp)))
+			self.myecobee.setTemperature(cooltemp=self.hightemp)
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
 			print("\nnothing to do")
-	elif time.localtime().tm_min > 17 and coolsetting > cooltemp + 1:
+
+	def turnOnEcobee(self):
 		print("Request: Turn ON air conditioner")
-		print(("Set A/C to {0:.1f} F".format(cooltemp)))
-		myecobee.setTemperature(cooltemp=cooltemp)
-		#myecobee.sendMessage("A/C was set to 72F, because ComEd Prices are Low -- Neil")
+		if self.coolsetting > self.cooltemp + 1:
+			print("Request: Turn ON air conditioner")
+			print(("Set A/C to {0:.1f} F".format(self.cooltemp)))
+			self.myecobee.setTemperature(cooltemp=self.cooltemp)
+			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
+		else:
+			print("\nnothing to do")
+
+if __name__ == "__main__":
+	thermstat = ThermoStat()
+
+	now = datetime.datetime.now()
+
+	if now.minute <= 20:
+		print("less than 20 minutes past the hour => turn off")
+		thermstat.turnOffEcobee()
+		sys.exit(0)
+
+	thermstat.showRates()
+	if thermstat.current_rate >= thermstat.cutoff:
+		thermstat.turnOffEcobee()
 	else:
-		print("\nnothing to do")
+		thermstat.turnOnEcobee()
 
 
