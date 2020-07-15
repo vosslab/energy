@@ -215,14 +215,12 @@ class ComedLib(object):
 			slope = 0.1
 		value2 = (14 - len(yslopedata))*slope + yslopedata[-1]
 
-
-		value3 = (yarray.max() + yarray.mean())/2.0
+		value3 = (yarray.max() + yarray.mean() + yarray[0])/3.0
 
 		if self.msg is True:
 			print("Value 1 = {0:.3f}".format(value1))
 			print("Value 2 = {0:.3f}".format(value2))
 			print("Value 3 = {0:.3f}".format(value3))
-
 		return max(value1, value2, value3)
 
 
