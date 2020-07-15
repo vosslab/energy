@@ -29,6 +29,7 @@ class ThermoStat(object):
 		self.median, self.std = self.comlib.getMedianComedRate()
 		self.cutoff = self.comlib.getReasonableCutOff()
 		self.predict_rate = self.comlib.getPredictedRate()
+		self.recent_rate = self.comlib.getMostRecentRate()
 
 	def showRates(self):
 		if self.current_rate is None:
@@ -37,6 +38,7 @@ class ThermoStat(object):
 		print(("Current Rate:     {0:.3f}c".format(self.current_rate)))
 		print(("Predicted Rate:   {0:.3f}c".format(self.predict_rate)))
 		print(("Cut Off Rate:     {0:.3f}c".format(self.cutoff)))
+		print(("Most Recent Rate: {0:.3f}c".format(self.recent_rate)))
 
 	def turnOffEcobee(self):
 		print("Request: Turn OFF air conditioner")
