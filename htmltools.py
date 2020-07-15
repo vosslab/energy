@@ -1,4 +1,22 @@
 
+def colorPrice(price, precision=1):
+	color = "DimGray"
+	if price < 0.0:
+		color = "RebeccaPurple"
+	elif price < 2.0:
+		color = "DeepSkyBlue"
+	elif price < 3.0:
+		color = "SeaGreen"
+	elif price < 4.5:
+		color = "DarkGoldenRod"
+	else:
+		color = "DarkRed"
+	if precision == 1:
+		text = "<span style='color: %s'>%.1f&cent;</span>"%(color, price)
+	else:
+		text = "<span style='color: %s'>%.2f&cent;</span>"%(color, price)
+	return text
+
 
 def htmlComedData():
 	htmltext = "<h3>Comed Prices</h3>"
