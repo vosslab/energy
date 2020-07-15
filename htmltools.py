@@ -1,6 +1,31 @@
 import time
 import numpy
 
+def htmlEcobee():
+	htmltext = "<h3>Ecobee Stats</h3>"
+	import ecobeelib
+	myecobee = ecobeelib.MyEcobee()
+	myecobee.setLogger()
+	myecobee.readThermostatDefs()
+	myecobee.openConnection()
+	runtimedict = myecobee.runtime()
+	coolsetting = float(runtimedict['desired_cool'])/10.
+	htmltext += (("Current Cool Setting: {0:.1f}F".format(coolsetting)))
+
+	sensordict = myecobee.sensors()
+	keys = list(sensordict.keys())
+	keys.sort()
+	htmltext += "<table>\n"
+	half = int(len(keys)/2)
+	for i,key in enumerate(keys):
+		if i % half == 0:
+			if i > 0:
+				htmltext += "</tr>\n"
+			htmltext += "<tr>"
+		htmltext += "<td>{0}</td>\n<td>{1:.1f}</td>\n".format(key, sensordict[key]['temperature'])
+	htmltext += "</tr></table>\n"
+
+
 def colorPrice(price, precision=1):
 	color = "DimGray"
 	if price < 0.0:
@@ -20,7 +45,6 @@ def colorPrice(price, precision=1):
 	elif precision == 3:
 		text = "<span style='color: %s'>%.3f&cent;</span>"%(color, price)
 	return text
-
 
 def htmlComedData(showPlot=False):
 	htmltext = "<h3>Comed Prices</h3>"
