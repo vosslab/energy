@@ -38,7 +38,7 @@ class ThermoStat(object):
 		print(("Current Rate:     {0:.3f}c".format(self.current_rate)))
 		print(("Predicted Rate:   {0:.3f}c".format(self.predict_rate)))
 		print(("Cut Off Rate:     {0:.3f}c".format(self.cutoff)))
-		print(("Most Recent Rate: {0:.3f}c".format(self.recent_rate)))
+		print(("Most Recent Rate: {0:.1f}c".format(self.recent_rate)))
 
 	def turnOffEcobee(self):
 		print("Request: Turn OFF air conditioner")
