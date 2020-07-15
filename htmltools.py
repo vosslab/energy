@@ -10,21 +10,21 @@ def htmlEcobee():
 	myecobee.openConnection()
 	runtimedict = myecobee.runtime()
 	coolsetting = float(runtimedict['desired_cool'])/10.
-	htmltext += (("Current Cool Setting: {0:.1f}F".format(coolsetting)))
+	htmltext += (("Current Cool Setting: {0:.1f}&deg;F<br/>\n".format(coolsetting)))
 
 	sensordict = myecobee.sensors()
 	keys = list(sensordict.keys())
 	keys.sort()
-	htmltext += "<table>\n"
+	htmltext += "<table style='border: 1px solid black; border-spacing: 7px;'>\n"
 	half = int(len(keys)/2)
 	for i,key in enumerate(keys):
-		if i % half == 0:
+		if i % 2 == 0:
 			if i > 0:
 				htmltext += "</tr>\n"
 			htmltext += "<tr>"
-		htmltext += "<td>{0}</td>\n<td>{1:.1f}</td>\n".format(key, sensordict[key]['temperature'])
+		htmltext += "<td>{0}</td>\n<td>{1:.1f}&deg;</td>\n".format(key, sensordict[key]['temperature'])
 	htmltext += "</tr></table>\n"
-
+	return htmltext
 
 def colorPrice(price, precision=1):
 	color = "DimGray"
@@ -39,11 +39,11 @@ def colorPrice(price, precision=1):
 	else:
 		color = "DarkRed"
 	if precision == 1:
-		text = "<span style='color: %s'>%.1f&cent;</span>"%(color, price)
+		text = "<span style='color: %s'>%.1f&cent;</span>\n"%(color, price)
 	elif precision == 2:
-		text = "<span style='color: %s'>%.2f&cent;</span>"%(color, price)
+		text = "<span style='color: %s'>%.2f&cent;</span>\n"%(color, price)
 	elif precision == 3:
-		text = "<span style='color: %s'>%.3f&cent;</span>"%(color, price)
+		text = "<span style='color: %s'>%.3f&cent;</span>\n"%(color, price)
 	return text
 
 def htmlComedData(showPlot=False):
