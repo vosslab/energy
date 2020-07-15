@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import pytz
 import yaml
@@ -11,7 +12,23 @@ from datetime import datetime
 
 class MyEcobee(object):
 	def __init__(self):
-		self.shelf_file = 'pyecobee_db'
+		self.setPyEcobeeDbFile()
+		self.setYamlFile()
+
+	def setPyEcobeeDbFile(self):
+		if os.path.exists('/etc/energy/pyecobee_db.shelf'):
+			self.shelf_file = '/etc/energy/pyecobee_db.shelf'
+		elif os.path.exists('pyecobee_db.shelf'):
+			self.shelf_file = 'pyecobee_db.shelf'
+		elif os.path.exists('pyecobee_db'):
+			self.shelf_file = 'pyecobee_db'
+		return
+
+	def setYamlFile(self):
+		if os.path.exists("/etc/energy/ecobee_defs.yml"):
+			self.yaml_file = "/etc/energy/ecobee_defs.yml"
+		elif os.path.exists("ecobee_defs.yml"):
+			self.yaml_file = "ecobee_defs.yml"
 		return
 
 	def _persist_to_shelf(self):
@@ -57,9 +74,8 @@ class MyEcobee(object):
 	#================================================================
 
 	def readThermostatDefs(self):
-		file_name = "ecobee_defs.yml"
-		self.logger.debug('Reading txt file: {0}'.format(file_name))
-		pyecobee_defs = open(file_name, 'r')
+		self.logger.debug('Reading txt file: {0}'.format(self.yaml_file))
+		pyecobee_defs = open(self.yaml_file, 'r')
 		fulldata = yaml.load(pyecobee_defs, yaml.SafeLoader)
 		self.thermostat_name = fulldata['thermostat_name'].strip()
 		self.api_key = fulldata['api_key'].strip()
@@ -68,11 +84,13 @@ class MyEcobee(object):
 
 	def openConnection(self):
 		try:
-			pyecobee_db = shelve.open('pyecobee_db', protocol=2)
+			pyecobee_db = shelve.open(self.shelf_file, protocol=2)
 			self.ecobee_service = pyecobee_db[self.thermostat_name]
 		except KeyError:
 			self.ecobee_service = pyecobee.EcobeeService(thermostat_name=self.thermostat_name, application_key=self.api_key)
 		finally:
+			#print("Cannot open pyecobee session<br/>\n")
+			#print(self.shelf_file)
 			pyecobee_db.close()
 
 		if not self.ecobee_service.authorization_token:
