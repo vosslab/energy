@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import time
 import datetime
 import comedlib
 import ecobeelib
@@ -60,10 +59,13 @@ class ThermoStat(object):
 			print("\nnothing to do")
 
 if __name__ == "__main__":
-	thermstat = ThermoStat()
 
 	now = datetime.datetime.now()
+	if now.hour < 7 or now.hour >= 19:
+		print("only run program between 7 am and 7 pm => exit")
+		sys.exit(0)
 
+	thermstat = ThermoStat()
 	if now.minute <= 20:
 		print("less than 20 minutes past the hour => turn off")
 		thermstat.turnOffEcobee()
