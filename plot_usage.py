@@ -73,7 +73,7 @@ xSolar, solarCurrent = dict2listpairs(datatree, 'solarcurrent', addzero=True)
 if testmode: print("<li>finish sort the data</li>")
 
 #median, std = comlib.getMedianComedRate()
-pyplot.figure(figsize=(6.0, 8.0), dpi=100)
+pyplot.figure(figsize=(6.0, 8.0), dpi=50)
 pyplot.ioff()
 pyplot.plot(x, totalCurrent*120/1e6, '.-', color='darkred')
 pyplot.plot(xSolar, solarCurrent*120/1e6, '.-', color='darkorange')
@@ -104,7 +104,7 @@ pyplot.tight_layout()
 #figdata = io.StringIO()
 format = "png"
 figdata = io.BytesIO()
-pyplot.savefig(figdata, format=format, dpi=100)
+pyplot.savefig(figdata, format=format, dpi=50)
 if testmode: print("<li>save fig completed</li>")
 
 #if testmode: pyplot.savefig("comed.png", format=format, dpi=200)
