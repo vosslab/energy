@@ -1,5 +1,6 @@
 import time
 import numpy
+import collections
 
 def htmlEcobee():
 	htmltext = "<h3>Ecobee Stats</h3>"
@@ -16,6 +17,7 @@ def htmlEcobee():
 	keys = list(sensordict.keys())
 	keys.sort()
 	htmltext += "<table style='border: 1px solid black; border-spacing: 7px;'>\n"
+	htmltext += "<tr><th colspan='4'>Ecobee Thermostats</th></tr>\n"
 	half = int(len(keys)/2)
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
@@ -25,25 +27,31 @@ def htmlEcobee():
 		htmltext += "   <td>{0}</td>\n".format(key)
 		htmltext += "   <td>{0:.1f}&deg;</td>\n".format(sensordict[key]['temperature'])
 	htmltext += "</tr></table>\n"
+	htmltext += "<br/>\n"
 
 	weatherdict = myecobee.weather()
-	keys = [
-		'temperature', 'dewpoint',
-		'temp_high', 'temp_low',
-		'wind_speed', 'relative_humidity',
-		'condition', 'pressure',
-	]
+	wmap = collections.OrderedDict({
+		'temperature': 'temp', 'dewpoint': 'temp',
+		'temp_high': 'temp', 'temp_low': 'temp',
+		'wind_speed': 'mph', 'relative_humidity': '%',
+		'condition': ' ', 'pressure': 'mmHg',
+	})
+	keys = list(wmap.keys())
 	htmltext += "<table style='border: 1px solid black; border-spacing: 7px;'>\n"
+	htmltext += "<tr><th colspan='4'>Ecobee Weather Info</th></tr>\n"
 	half = int(len(keys)/2)
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
 				htmltext += "</tr>\n"
 			htmltext += "<tr>\n"
-		htmltext += "  <td>{0}</td>\n".format(key)
-		htmltext += "  <td>{0}</td>\n".format( str(weatherdict[key]) )
+		htmltext += "  <td>{0}</td>\n".format( key.replace('_', ' ') )
+		unittype = wmap[key]
+		if unittype == 'temp':
+			htmltext += "  <td align='right'>{0:.1f}&deg;</td>\n".format(weatherdict[key]/10.)
+		else:
+			htmltext += "  <td align='right'>{0} {1}</td>\n".format( str(weatherdict[key]), unittype )
 	htmltext += "</tr></table>\n"
-
 
 	return htmltext
 
