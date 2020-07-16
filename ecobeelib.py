@@ -247,22 +247,40 @@ class MyEcobee(object):
 			settingsdict[key] = getattr(settings_obj, key)
 		return settingsdict
 
+	def startOfNextHour(self):
+		now = datetime.datetime.now()
+		start_of_next_hour = now.replace(minute=59, second=59, microsecond=0) + datetime.timedelta(seconds=1)
+		return start_of_next_hour
+
+	def twentyPastHour(self):
+		now = datetime.datetime.now()
+		twenty_past = now.replace(minute=59, second=0, microsecond=0) + datetime.timedelta(minutes=21)
+		return twenty_past
+
 	def endOfHour(self):
 		now = datetime.datetime.now()
-		end_of_hour = now.replace(minute=59, second=59, microsecond=0) + datetime.timedelta(seconds=1)
+		end_of_hour = now.replace(minute=59, second=0, microsecond=0)
 		return end_of_hour
 
-	def setTemperature(self, cooltemp=80, heattemp=55, holdhours=1, message=None):
+	def setTemperature(self, cooltemp=80, heattemp=55, endTimeMethod='end_of_hour', message=None):
 		# Specifically the cooling temperature to use and hold indefinitely
 		#HoldType.HOLD_HOURS hold_type=HoldType.HOLD_HOURS, hold_hours=1)
 		#update_thermostat_response = self.ecobee_service.set_hold(cool_hold_temp=79, heat_hold_temp=58, hold_type=pyecobee.HoldType.INDEFINITE)
-		end_of_hour = self.endOfHour()
+		if endTimeMethod == 'end_of_hour':
+			end_time = self.endOfHour()
+		elif endTimeMethod == 'start_of_next_hour':
+			end_time = self.startOfNextHour()
+		elif endTimeMethod == 'twenty_past':
+			end_time = self.twentyPastHour()
+		else:
+			end_time = self.endOfHour()
+
 		central = pytz.timezone('US/Central')
 		update_thermostat_response = self.ecobee_service.set_hold(
 			cool_hold_temp=cooltemp,
 			heat_hold_temp=heattemp,
 			hold_type=pyecobee.HoldType.DATE_TIME,
-			end_date_time=central.localize(end_of_hour, is_dst=True), )
+			end_date_time=central.localize(end_time, is_dst=True), )
 		#	hold_type=pyecobee.HoldType.HOLD_HOURS,
 		#	hold_hours=holdhours, )
 		self.logger.info(update_thermostat_response.pretty_format())
