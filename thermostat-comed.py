@@ -43,7 +43,7 @@ class ThermoStat(object):
 		print("Request: Turn OFF air conditioner")
 		if self.coolsetting < self.hightemp - 1:
 			print(("Set A/C to {0:.1f} F".format(self.hightemp)))
-			self.myecobee.setTemperature(cooltemp=self.hightemp)
+			self.myecobee.setTemperature(cooltemp=self.hightemp, endTimeMethod='twenty_past')
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
 			print("\nnothing to do")
@@ -53,7 +53,7 @@ class ThermoStat(object):
 		if self.coolsetting > self.cooltemp + 1:
 			print("Request: Turn ON air conditioner")
 			print(("Set A/C to {0:.1f} F".format(self.cooltemp)))
-			self.myecobee.setTemperature(cooltemp=self.cooltemp)
+			self.myecobee.setTemperature(cooltemp=self.cooltemp, endTimeMethod='end_of_hour')
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
 			print("\nnothing to do")
