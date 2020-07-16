@@ -21,9 +21,30 @@ def htmlEcobee():
 		if i % 2 == 0:
 			if i > 0:
 				htmltext += "</tr>\n"
-			htmltext += "<tr>"
-		htmltext += "<td>{0}</td>\n<td>{1:.1f}&deg;</td>\n".format(key, sensordict[key]['temperature'])
+			htmltext += "<tr>\n"
+		htmltext += "   <td>{0}</td>\n".format(key)
+		htmltext += "   <td>{0:.1f}&deg;</td>\n".format(sensordict[key]['temperature'])
 	htmltext += "</tr></table>\n"
+
+	weatherdict = myecobee.weather()
+	keys = [
+		'temperature', 'dewpoint',
+		'temp_high', 'temp_low',
+		'wind_speed', 'relative_humidity',
+		'condition', 'pressure',
+	]
+	htmltext += "<table style='border: 1px solid black; border-spacing: 7px;'>\n"
+	half = int(len(keys)/2)
+	for i,key in enumerate(keys):
+		if i % 2 == 0:
+			if i > 0:
+				htmltext += "</tr>\n"
+			htmltext += "<tr>\n"
+		htmltext += "  <td>{0}</td>\n".format(key)
+		htmltext += "  <td>{0}</td>\n".format( str(weatherdict[key]) )
+	htmltext += "</tr></table>\n"
+
+
 	return htmltext
 
 def colorPrice(price, precision=1):
@@ -60,7 +81,7 @@ def htmlComedData(showPlot=False):
 
 	htmltext += "<span style='color: &#35;448844'>24hr Median Rate:"
 	median,std = comlib.getMedianComedRate(comed_data)
-	htmltext += " {0} &pm; {1:.2f} &cent;</span><br/>".format(colorPrice(median, 3), std)
+	htmltext += " {0} &pm; {1:.2f} &cent;</span><br/>".format(colorPrice(median, 1), std)
 
 	htmltext += "<span style='color: &#35;444488'>Hour Current Rate:"
 	currentRate = comlib.getCurrentComedRate(comed_data)
@@ -77,9 +98,9 @@ def htmlComedData(showPlot=False):
 	htmltext += "House Usage Status:\n"
 	htmltext += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
 	if predictRate < cutoffRate:
-		htmltext += "<td padding=10 bgcolor='darkgreen'><span style='color: white'><b>ON</b>\n"
+		htmltext += "<td padding=10 bgcolor='darkgreen'><span style='color: white'><b>*ON*</b>\n"
 	else:
-		htmltext += "<td padding=10 bgcolor='darkred'><span style='color: white'><b>OFF</b>\n"
+		htmltext += "<td padding=10 bgcolor='darkred'><span style='color: white'><b>.OFF.</b>\n"
 	htmltext += "</span></td></tr></table>"
 	htmltext += "<br/>\n"
 
