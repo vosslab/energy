@@ -7,8 +7,8 @@ import yaml
 import shelve
 import logging
 import pyecobee
+import datetime
 from six import moves
-from datetime import datetime
 
 class MyEcobee(object):
 	def __init__(self):
@@ -101,7 +101,7 @@ class MyEcobee(object):
 		if not self.ecobee_service.access_token:
 			self._request_tokens()
 
-		now_utc = datetime.now(pytz.utc)
+		now_utc = datetime.datetime.now(pytz.utc)
 		if now_utc > self.ecobee_service.refresh_token_expires_on:
 			self._authorize()
 			self._request_tokens()
@@ -247,15 +247,24 @@ class MyEcobee(object):
 			settingsdict[key] = getattr(settings_obj, key)
 		return settingsdict
 
+	def endOfHour(self):
+		now = datetime.datetime.now()
+		end_of_hour = now.replace(minute=59, second=59, microsecond=0) + datetime.timedelta(seconds=1)
+		return end_of_hour
+
 	def setTemperature(self, cooltemp=80, heattemp=55, holdhours=1, message=None):
 		# Specifically the cooling temperature to use and hold indefinitely
 		#HoldType.HOLD_HOURS hold_type=HoldType.HOLD_HOURS, hold_hours=1)
 		#update_thermostat_response = self.ecobee_service.set_hold(cool_hold_temp=79, heat_hold_temp=58, hold_type=pyecobee.HoldType.INDEFINITE)
+		end_of_hour = self.endOfHour()
+		central = pytz.timezone('US/Central')
 		update_thermostat_response = self.ecobee_service.set_hold(
 			cool_hold_temp=cooltemp,
 			heat_hold_temp=heattemp,
-			hold_type=pyecobee.HoldType.HOLD_HOURS,
-			hold_hours=holdhours)
+			hold_type=pyecobee.HoldType.DATE_TIME,
+			end_date_time=central.localize(end_of_hour, is_dst=True), )
+		#	hold_type=pyecobee.HoldType.HOLD_HOURS,
+		#	hold_hours=holdhours, )
 		self.logger.info(update_thermostat_response.pretty_format())
 		assert update_thermostat_response.status.code == 0, 'Failure while executing set_hold:\n{0}'.format(
 		update_thermostat_response.pretty_format())
@@ -299,6 +308,6 @@ if __name__ == "__main__":
 	pprint.pprint(status)
 
 	#myecobee.sendMessage("Orion is a funny guy")
+	#myecobee.setTemperature(cooltemp=71)
 
-	#myecobee.setTemperature(cooltemp=76)
 
