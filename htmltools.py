@@ -25,19 +25,24 @@ def htmlEcobee():
 				htmltext += "</tr>\n"
 			htmltext += "<tr>\n"
 		htmltext += "   <td>{0}</td>\n".format(key)
-		htmltext += "   <td>{0:.1f}&deg;</td>\n".format(sensordict[key]['temperature'])
+		temp = sensordict[key]['temperature']
+		htmltext += "   <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
 	htmltext += "</tr></table>\n"
 	htmltext += "<br/>\n"
 
 	weatherdict = myecobee.weather()
-	wmap = collections.OrderedDict({
-		'temperature': 'temp', 'dewpoint': 'temp',
-		'temp_high': 'temp', 'temp_low': 'temp',
-		'wind_speed': 'mph', 'relative_humidity': '%',
-		'condition': ' ', 'pressure': 'mmHg',
-	})
-	keys = list(wmap.keys())
-	htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 3px;'>\n"
+	ordered_key_list = [
+			'temperature', 'condition', 'dewpoint', 'relative_humidity',
+			'temp_high', 'wind_speed', 'temp_low', 'pressure',
+		]
+	wmap = {
+			'temperature': 'temp', 'dewpoint': 'temp',
+			'temp_high': 'temp', 'temp_low': 'temp',
+			'wind_speed': 'mph', 'relative_humidity': '%',
+			'condition': ' ', 'pressure': 'mmHg',
+		}
+	keys = ordered_key_list
+	htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 7px;'>\n"
 	htmltext += "<tr><th colspan='4'>Ecobee Weather Info</th></tr>\n"
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
@@ -47,7 +52,8 @@ def htmlEcobee():
 		htmltext += "  <td>{0}</td>\n".format( key.replace('_', ' ') )
 		unittype = wmap[key]
 		if unittype == 'temp':
-			htmltext += "  <td align='right'>{0:.1f}&deg;</td>\n".format(weatherdict[key]/10.)
+			temp = weatherdict[key]/10.
+			htmltext += "  <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
 		else:
 			htmltext += "  <td align='right'>{0} {1}</td>\n".format( str(weatherdict[key]), unittype )
 	htmltext += "</tr></table>\n"
@@ -59,11 +65,17 @@ def colorPrice(price, precision=1):
 	if price < 0.0:
 		color = "RebeccaPurple"
 	elif price < 2.0:
-		color = "DeepSkyBlue"
+		color = "Blue"
+	elif price < 2.5:
+		color = "RichGreen"
 	elif price < 3.0:
 		color = "SeaGreen"
-	elif price < 4.5:
+	elif price < 4.0:
 		color = "DarkGoldenRod"
+	elif price < 5.0:
+		color = "Orange"
+	elif price < 6.0:
+		color = "Scarlet"
 	else:
 		color = "DarkRed"
 	if precision == 1:
@@ -72,6 +84,40 @@ def colorPrice(price, precision=1):
 		text = "<span style='color: %s'>%.2f&cent;</span>\n"%(color, price)
 	elif precision == 3:
 		text = "<span style='color: %s'>%.3f&cent;</span>\n"%(color, price)
+	return text
+
+def colorTemperature(temperature, precision=1):
+	color = "DimGray"
+	if temperature < 45.0:
+		color = "Magenta"
+	elif temperature < 50.0:
+		color = "PinkyPurple"
+	elif temperature < 55.0:
+		color = "Purple"
+	elif temperature < 60.0:
+		color = "Blue"
+	elif temperature < 65.0:
+		color = "SkyBlue"
+	elif temperature < 70.0:
+		color = "Green"
+	elif temperature < 75.0:
+		color = "RichGreen"
+	elif temperature < 80.0:
+		color = "DarkGoldenRod"
+	elif temperature < 85.0:
+		color = "Orange"
+	elif temperature < 90.0:
+		color = "Scarlet"
+	elif temperature < 95.0:
+		color = "Red"
+	else:
+		color = "DarkRed"
+	if precision == 1:
+		text = "<span style='color: %s'>%.1f&deg;</span>\n"%(color, temperature)
+	elif precision == 2:
+		text = "<span style='color: %s'>%.2f&deg;</span>\n"%(color, temperature)
+	elif precision == 3:
+		text = "<span style='color: %s'>%.3f&deg;</span>\n"%(color, temperature)
 	return text
 
 def htmlComedData(showPlot=False):
