@@ -10,8 +10,6 @@ def numberToHtmlColor(hue, saturation=0.9, value=0.5):
 	if hue > 1:
 		hue = 1
 	rgbindex = colorsys.hsv_to_rgb(hue, saturation, value)
-	print(hue)
-	print(rgbindex[0])
 	r = int(rgbindex[0]*255.)
 	g = int(rgbindex[1]*255.)
 	b = int(rgbindex[2]*255.)
