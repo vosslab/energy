@@ -3,7 +3,7 @@ import numpy
 import colorsys
 import datetime
 
-def numberToHtmlColor(hue, saturation=0.9, value=0.5):
+def numberToHtmlColor(hue, saturation=0.9, value=0.6):
 	#input: hue number between 0 and 1
 	if hue < 0:
 		hue = 0
@@ -21,7 +21,7 @@ def colorPrice(price, precision=1):
 		[-100.,  0.,  2.,  3., 4., 5.,6.,100.],
 		dtype=numpy.float64,)
 	y_hue = numpy.array(
-		[ 315.,240.,180.,120.,60.,30.,5.,  0.],
+		[ 315.,240.,180.,120.,60.,15.,5.,  0.],
 		dtype=numpy.float64,)
 	hue = numpy.interp(price, x_price, y_hue)
 	color = numberToHtmlColor(hue/360.)
@@ -150,7 +150,7 @@ def htmlComedData(showPlot=False):
 	htmltext += "<tr><th>Time</th><th>Cost</th></tr>\n"
 	now = datetime.datetime.now()
 	minutes = now.minute
-	timepoints = max( int(minutes/5), 5)
+	timepoints = max( int(minutes/5), 8)
 	number_of_rows = min( timepoints, len(comed_data) )
 	for item in comed_data[:number_of_rows]:
 		timestruct = list(time.localtime(int(item['millisUTC'])/1000.))
