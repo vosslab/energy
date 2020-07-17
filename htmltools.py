@@ -43,7 +43,7 @@ def colorTemperature(temperature, precision=1):
 	hue = numpy.interp(temperature, x_temp, y_hue)
 	color = numberToHtmlColor(hue/360.)
 	if precision == 1:
-		text = "<span style='color: {0}'>{1:.1f}&deg;</span>\n".format(color, temperature)
+		text = "<span style='color: {0}'><b>{1:.1f}&deg;</b></span>\n".format(color, temperature)
 	elif precision == 2:
 		text = "<span style='color: {0}'>{1:.2f}&deg;</span>\n".format(color, temperature)
 	elif precision == 3:
@@ -59,13 +59,15 @@ def htmlEcobee():
 	myecobee.openConnection()
 	runtimedict = myecobee.runtime()
 	coolsetting = float(runtimedict['desired_cool'])/10.
-	htmltext += (("Current Cool Setting: {0:.1f}&deg;F<br/>\n".format(coolsetting)))
 
 	sensordict = myecobee.sensors()
 	keys = list(sensordict.keys())
 	keys.sort()
 	htmltext += "<table style='border: 1px solid darkred; border-spacing: 7px;'>\n"
 	htmltext += "<tr><th colspan='4'>Ecobee Thermostats</th></tr>\n"
+	htmltext += "<tr><td colspan='4' align='center'>\n"
+	htmltext += (("  Current Cool Setting: {0}<br/>\n".format(colorTemperature(coolsetting, 1))))
+	htmltext += "</td></tr>\n"
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
