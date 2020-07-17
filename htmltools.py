@@ -1,5 +1,6 @@
 import time
 import numpy
+import datetime
 import collections
 
 def htmlEcobee():
@@ -16,9 +17,8 @@ def htmlEcobee():
 	sensordict = myecobee.sensors()
 	keys = list(sensordict.keys())
 	keys.sort()
-	htmltext += "<table style='border: 1px solid black; border-spacing: 7px;'>\n"
+	htmltext += "<table style='border: 1px solid darkred; border-spacing: 7px;'>\n"
 	htmltext += "<tr><th colspan='4'>Ecobee Thermostats</th></tr>\n"
-	half = int(len(keys)/2)
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
@@ -37,9 +37,8 @@ def htmlEcobee():
 		'condition': ' ', 'pressure': 'mmHg',
 	})
 	keys = list(wmap.keys())
-	htmltext += "<table style='border: 1px solid black; border-spacing: 7px;'>\n"
+	htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 3px;'>\n"
 	htmltext += "<tr><th colspan='4'>Ecobee Weather Info</th></tr>\n"
-	half = int(len(keys)/2)
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
@@ -112,31 +111,51 @@ def htmlComedData(showPlot=False):
 	htmltext += "</span></td></tr></table>"
 	htmltext += "<br/>\n"
 
-	htmltext += "<span style='color: &#35;666666'>Last Five Rates:\n<ul style='margin: 0 0;'>\n"
-	for item in comed_data[:5]:
+	htmltext += "<table style='border: 1px solid darkblue; border-spacing: 3px; "
+	htmltext += "  display: inline-block; vertical-align: top;'>\n"
+	htmltext += "<tr><th colspan='2'>Recent Rates</th></tr>\n"
+	htmltext += "<tr><th>Time</th><th>Cost</th></tr>\n"
+	now = datetime.datetime.now()
+	minutes = now.minute
+	timepoints = max( int(minutes/5), 5)
+	number_of_rows = min( timepoints, len(comed_data) )
+	for item in comed_data[:number_of_rows]:
 		timestruct = list(time.localtime(int(item['millisUTC'])/1000.))
 		rate = float(item['price'])
-		htmltext += "<li>%d:%02d &ndash; %s </li>"%(timestruct[3], timestruct[4], colorPrice(rate))
-	htmltext += "</ul></span>"
-	htmltext += "<br/>\n"
+		#htmltext += "<li>%d:%02d &ndash; %s </li>"%(timestruct[3], timestruct[4], colorPrice(rate))
+		htmltext += "<tr>\n"
+		htmltext += "  <td align='center'> {0:d}:{1:02d} </td>\n".format(timestruct[3], timestruct[4])
+		htmltext += "  <td align='right'> {0} </td>\n".format(colorPrice(rate, 1))
+		htmltext += "</tr>\n"
+	htmltext += "</table>\n"
+	#htmltext += "<br/>\n"
+	htmltext += "&nbsp;\n"
 
 	hourlyRates = comlib.parseComedData(comed_data)
 
-	htmltext += "<span style='color: &#35;666666'>Hourly Average Rates:\n<ul style='margin: 0 0;'>\n"
+	htmltext += "<table style='border: 1px solid darkblue; border-spacing: 3px; "
+	htmltext += "  display: inline-block; vertical-align: top;'>\n"
+	htmltext += "<tr><th colspan='2'>Hourly Averages</th></tr>\n"
+	htmltext += "<tr><th>Range</th><th>Cost</th></tr>\n"
 	keys = list(hourlyRates.keys())
 	keys.sort()
+	keys.reverse()
 	for key in keys:
 		if int(key) < 1:
 			continue
 		#htmltext += "'%s'<br/>\n"%(key))
 		if abs(float(int(key)) - float(key)) > 1e-6:
 			continue
+
 		averageRate = numpy.array(hourlyRates[key]).mean()
 		hour = int(key)
 		#timestruct = list(time.localtime(int(item['millisUTC'])/1000.))
 		#rate = float(item['price'])
-		htmltext += "<li>%d-%d:00 &ndash; %s </li>"%(hour-1, hour, colorPrice(averageRate, 2))
-	htmltext += "</ul></span>"
+		htmltext += "<tr>\n"
+		htmltext += "  <td align='center'> {0:d}-{1:d}:00 </td>\n".format(hour-1, hour)
+		htmltext += "  <td align='right'> {0} </td>\n".format(colorPrice(averageRate, 2))
+		htmltext += "</tr>\n"
+	htmltext += "</table>\n"
 	htmltext += "<br/>\n"
 
 	htmltext += "<a href='energylib/plot_comed.py'>\n"
