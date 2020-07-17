@@ -88,7 +88,7 @@ def htmlEcobee():
 			'temperature': 'temp', 'dewpoint': 'temp',
 			'temp_high': 'temp', 'temp_low': 'temp',
 			'wind_speed': 'mph', 'relative_humidity': '%',
-			'condition': ' ', 'pressure': 'mmHg',
+			'condition': ' ', 'pressure': "<font size='-3'>mm&nbsp;Hg</font>",
 		}
 	keys = ordered_key_list
 	htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 7px;'>\n"
