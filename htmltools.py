@@ -28,9 +28,9 @@ def colorPrice(price, precision=1):
 	if precision == 1:
 		text = "<span style='color: {0}'>{1:.1f}&cent;</span>\n".format(color, price)
 	elif precision == 2:
-		text = "<span style='color: {0}'>{1:.2f}f&cent;</span>\n".format(color, price)
+		text = "<span style='color: {0}'>{1:.2f}&cent;</span>\n".format(color, price)
 	elif precision == 3:
-		text = "<span style='color: {0}'>{1:.3f}f&cent;</span>\n".format(color, price)
+		text = "<span style='color: {0}'>{1:.3f}&cent;</span>\n".format(color, price)
 	return text
 
 def colorTemperature(temperature, precision=1):
@@ -47,7 +47,7 @@ def colorTemperature(temperature, precision=1):
 	elif precision == 2:
 		text = "<span style='color: {0}'>{1:.2f}&deg;</span>\n".format(color, temperature)
 	elif precision == 3:
-		text = "<span style='color: {0}'>{1:.3f}f&deg;</span>\n".format(color, temperature)
+		text = "<span style='color: {0}'>{1:.3f}&deg;</span>\n".format(color, temperature)
 	return text
 
 def htmlEcobee():
