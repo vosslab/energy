@@ -1,7 +1,58 @@
+import sys
 import time
 import numpy
+import colorsys
 import datetime
-import collections
+
+def numberToHtmlColor(hue, saturation=0.9, value=0.5):
+	#input: hue number between 0 and 1
+	if hue < 0:
+		hue = 0
+	if hue > 1:
+		hue = 1
+	rgbindex = colorsys.hsv_to_rgb(hue, saturation, value)
+	print(hue)
+	print(rgbindex[0])
+	r = int(rgbindex[0]*255.)
+	g = int(rgbindex[1]*255.)
+	b = int(rgbindex[2]*255.)
+	colorstr = "rgb({0:d}, {1:d}, {2:d})".format(r, g, b)
+	return colorstr
+
+def colorPrice(price, precision=1):
+	x_price = numpy.array(
+		[-100.,  0.,  2.,  3., 4., 5.,6.,100.],
+		dtype=numpy.float64,)
+	y_hue = numpy.array(
+		[ 315.,240.,180.,120.,60.,30.,5.,  0.],
+		dtype=numpy.float64,)
+	hue = numpy.interp(price, x_price, y_hue)
+	color = numberToHtmlColor(hue/360.)
+	if precision == 1:
+		text = "<span style='color: {0}'>{1:.1f}&cent;</span>\n".format(color, price)
+	elif precision == 2:
+		text = "<span style='color: {0}'>{1:.2f}f&cent;</span>\n".format(color, price)
+	elif precision == 3:
+		text = "<span style='color: {0}'>{1:.3f}f&cent;</span>\n".format(color, price)
+	return text
+
+def colorTemperature(temperature, precision=1):
+	x_temp = numpy.array(
+		[-100.,  0., 50., 60., 65., 70.,75.,85.,100.,250.],
+		dtype=numpy.float64,)
+	y_hue = numpy.array(
+		[ 330.,270.,240.,120.,180.,170.,90.,30., 10.,  0.],
+		dtype=numpy.float64,)
+	tarray = numpy.array([temperature,], dtype=numpy.float64)
+	hue = numpy.interp(temperature, x_temp, y_hue)
+	color = numberToHtmlColor(hue/360.)
+	if precision == 1:
+		text = "<span style='color: {0}'>{1:.1f}&deg;</span>\n".format(color, temperature)
+	elif precision == 2:
+		text = "<span style='color: {0}'>{1:.2f}&deg;</span>\n".format(color, temperature)
+	elif precision == 3:
+		text = "<span style='color: {0}'>{1:.3f}f&deg;</span>\n".format(color, temperature)
+	return text
 
 def htmlEcobee():
 	htmltext = "<h3>Ecobee Stats</h3>"
@@ -59,66 +110,6 @@ def htmlEcobee():
 	htmltext += "</tr></table>\n"
 
 	return htmltext
-
-def colorPrice(price, precision=1):
-	color = "DimGray"
-	if price < 0.0:
-		color = "RebeccaPurple"
-	elif price < 2.0:
-		color = "Blue"
-	elif price < 2.5:
-		color = "RichGreen"
-	elif price < 3.0:
-		color = "SeaGreen"
-	elif price < 4.0:
-		color = "DarkGoldenRod"
-	elif price < 5.0:
-		color = "Orange"
-	elif price < 6.0:
-		color = "Scarlet"
-	else:
-		color = "DarkRed"
-	if precision == 1:
-		text = "<span style='color: %s'>%.1f&cent;</span>\n"%(color, price)
-	elif precision == 2:
-		text = "<span style='color: %s'>%.2f&cent;</span>\n"%(color, price)
-	elif precision == 3:
-		text = "<span style='color: %s'>%.3f&cent;</span>\n"%(color, price)
-	return text
-
-def colorTemperature(temperature, precision=1):
-	color = "DimGray"
-	if temperature < 45.0:
-		color = "Magenta"
-	elif temperature < 50.0:
-		color = "PinkyPurple"
-	elif temperature < 55.0:
-		color = "Purple"
-	elif temperature < 60.0:
-		color = "Blue"
-	elif temperature < 65.0:
-		color = "SkyBlue"
-	elif temperature < 70.0:
-		color = "Green"
-	elif temperature < 75.0:
-		color = "RichGreen"
-	elif temperature < 80.0:
-		color = "DarkGoldenRod"
-	elif temperature < 85.0:
-		color = "Orange"
-	elif temperature < 90.0:
-		color = "Scarlet"
-	elif temperature < 95.0:
-		color = "Red"
-	else:
-		color = "DarkRed"
-	if precision == 1:
-		text = "<span style='color: %s'>%.1f&deg;</span>\n"%(color, temperature)
-	elif precision == 2:
-		text = "<span style='color: %s'>%.2f&deg;</span>\n"%(color, temperature)
-	elif precision == 3:
-		text = "<span style='color: %s'>%.3f&deg;</span>\n"%(color, temperature)
-	return text
 
 def htmlComedData(showPlot=False):
 	htmltext = "<h3>Comed Prices</h3>"
