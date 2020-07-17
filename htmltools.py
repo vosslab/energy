@@ -35,10 +35,10 @@ def colorPrice(price, precision=1):
 
 def colorTemperature(temperature, precision=1):
 	x_temp = numpy.array(
-		[-100.,  0., 50., 60., 65., 70.,75.,85.,100.,250.],
+		[-100.,  0., 50., 60., 65., 70.,76.,85.,100.,250.],
 		dtype=numpy.float64,)
 	y_hue = numpy.array(
-		[ 330.,270.,240.,120.,180.,170.,90.,30., 10.,  0.],
+		[ 330.,270.,240.,210.,180.,170.,90.,30., 10.,  0.],
 		dtype=numpy.float64,)
 	hue = numpy.interp(temperature, x_temp, y_hue)
 	color = numberToHtmlColor(hue/360.)
