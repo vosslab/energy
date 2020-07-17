@@ -1,4 +1,3 @@
-import sys
 import time
 import numpy
 import colorsys
@@ -43,7 +42,6 @@ def colorTemperature(temperature, precision=1):
 	y_hue = numpy.array(
 		[ 330.,270.,240.,120.,180.,170.,90.,30., 10.,  0.],
 		dtype=numpy.float64,)
-	tarray = numpy.array([temperature,], dtype=numpy.float64)
 	hue = numpy.interp(temperature, x_temp, y_hue)
 	color = numberToHtmlColor(hue/360.)
 	if precision == 1:
