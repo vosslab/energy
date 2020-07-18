@@ -183,7 +183,6 @@ class MyEcobee(object):
 		return weatherdict
 
 	def equipment_status(self):
-		# Only set the include options you need to True. I've set most of them to True for illustrative purposes only.
 		selection = pyecobee.Selection(
 			selection_type=pyecobee.SelectionType.REGISTERED.value,
 			selection_match=self.thermostat_id,
@@ -199,7 +198,6 @@ class MyEcobee(object):
 		return equipment_status
 
 	def runtime(self):
-		# Only set the include options you need to True. I've set most of them to True for illustrative purposes only.
 		selection = pyecobee.Selection(
 			selection_type=pyecobee.SelectionType.REGISTERED.value,
 			selection_match=self.thermostat_id,
@@ -222,9 +220,51 @@ class MyEcobee(object):
 			runtimedict[key] = getattr(runtime_obj, key)
 		return runtimedict
 
+	def events(self):
+		selection = pyecobee.Selection(
+			selection_type=pyecobee.SelectionType.REGISTERED.value,
+			selection_match=self.thermostat_id,
+			include_events=True,
+		)
+		thermostat_response = self._request_data(selection)
+
+		thermostat_obj = thermostat_response.thermostat_list[0]
+		self.logger.debug(thermostat_obj.pretty_format())
+		self.logger.debug(dir(thermostat_obj))
+
+		events_list = thermostat_response.thermostat_list[0].events
+
+		events_tree = []
+		for event_obj in events_list:
+			self.logger.debug(event_obj.pretty_format())
+			self.logger.debug(dir(event_obj))
+			keys = list(event_obj.attribute_type_map.keys())
+			keys.sort()
+			eventdict = {}
+			for key in keys:
+				eventdict[key] = getattr(event_obj, key)
+			events_tree.append(eventdict)
+		return events_tree
+
+
+	def everything(self):
+		selection = pyecobee.Selection(
+				selection_type=pyecobee.SelectionType.REGISTERED.value,
+				selection_match=self.thermostat_id,
+				include_device=True, include_electricity=True, include_equipment_status=True,
+				include_events=True, include_extended_runtime=True, include_house_details=True,
+				include_location=True, include_management=True, include_notification_settings=True,
+				include_oem_cfg=False, include_privacy=False, include_program=True, include_reminders=True,
+				include_runtime=True, include_security_settings=False, include_sensors=True,
+				include_settings=True, include_technician=True, include_utility=True, include_version=True,
+				include_weather=True, include_alerts=True,)
+		thermostat_response = self._request_data(selection)
+		self.logger.info(thermostat_response.pretty_format())
+		assert thermostat_response.status.code == 0, 'Failure while executing request_thermostats:\n{0}'.format(
+				thermostat_response.pretty_format())
+		return
 
 	def settings(self):
-		# Only set the include options you need to True. I've set most of them to True for illustrative purposes only.
 		selection = pyecobee.Selection(
 			selection_type=pyecobee.SelectionType.REGISTERED.value,
 			selection_match=self.thermostat_id,
@@ -249,17 +289,17 @@ class MyEcobee(object):
 
 	def startOfNextHour(self):
 		now = datetime.datetime.now()
-		start_of_next_hour = now.replace(minute=59, second=59, microsecond=0) + datetime.timedelta(seconds=1)
+		start_of_next_hour = now.replace(minute=59, second=1, microsecond=0) + datetime.timedelta(seconds=1)
 		return start_of_next_hour
 
 	def twentyPastHour(self):
 		now = datetime.datetime.now()
-		twenty_past = now.replace(minute=59, second=0, microsecond=0) + datetime.timedelta(minutes=21)
+		twenty_past = now.replace(minute=59, second=1, microsecond=0) + datetime.timedelta(minutes=21)
 		return twenty_past
 
 	def endOfHour(self):
 		now = datetime.datetime.now()
-		end_of_hour = now.replace(minute=59, second=0, microsecond=0)
+		end_of_hour = now.replace(minute=59, second=1, microsecond=0)
 		return end_of_hour
 
 	def setTemperature(self, cooltemp=80, heattemp=55, endTimeMethod='end_of_hour', message=None):
@@ -305,23 +345,29 @@ if __name__ == "__main__":
 
 	import pprint
 
-	print("\n")
+	print("\n\nEVENTS\n")
+	events_tree = myecobee.events()
+	for eventdict in events_tree:
+		pprint.pprint(eventdict)
+		print('\n')
+
+	print("\n\nSENSORS\n")
 	sensordict = myecobee.sensors()
 	pprint.pprint(sensordict)
 
-	print("\n")
+	print("\n\nWEATHER\n")
 	weatherdict = myecobee.weather()
 	pprint.pprint(weatherdict)
 
-	print("\n")
+	print("\n\nEQUIPMENT STATUS\n")
 	status = myecobee.equipment_status()
 	pprint.pprint(status)
 
-	print("\n")
+	print("\n\nRUNTIME\n")
 	status = myecobee.runtime()
 	pprint.pprint(status)
 
-	print("\n")
+	print("\n\nSETTINGS\n")
 	status = myecobee.settings()
 	pprint.pprint(status)
 
