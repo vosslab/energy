@@ -7,8 +7,8 @@ import ecobeelib
 
 class ThermoStat(object):
 	def __init__(self):
-		self.hightemp = 80
-		self.cooltemp = 72
+		self.hightemp = 80.1
+		self.cooltemp = 72.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
 		self.current_rate = None
@@ -39,6 +39,14 @@ class ThermoStat(object):
 		print(("Cut Off Rate:     {0:.3f}c".format(self.cutoff)))
 		print(("Most Recent Rate: {0:.1f}c".format(self.recent_rate)))
 
+	def checkUserOverride(self):
+		events_tree = self.myecobee.events()
+		user_override = False
+		for event_dict in events_tree:
+			if not event_dict['end_time'].endswith("01"):
+				user_override = True
+		return user_override
+
 	def turnOffEcobee(self):
 		print("Request: Turn OFF air conditioner")
 		if self.coolsetting < self.hightemp - 1:
@@ -66,13 +74,17 @@ if __name__ == "__main__":
 		sys.exit(0)
 
 	thermstat = ThermoStat()
+	if thermstat.checkUserOverride() is True:
+		print("user override in effect => exit")
+		sys.exit(0)
+
 	if now.minute <= 20:
 		print("less than 20 minutes past the hour => turn off")
 		thermstat.turnOffEcobee()
 		sys.exit(0)
 
 	thermstat.showRates()
-	if thermstat.current_rate >= thermstat.cutoff:
+	if thermstat.predict_rate >= thermstat.cutoff:
 		thermstat.turnOffEcobee()
 	else:
 		thermstat.turnOnEcobee()
