@@ -234,10 +234,14 @@ class ComedLib(object):
 
 	#======================================
 	def getReasonableCutOff(self):
-		chargingCutoffPrice = 3.49
+		chargingCutoffPrice = 3.89
 		median, std = self.getMedianComedRate()
-		defaultCutoff = median + math.sqrt(std)/6.0
+		defaultCutoff = median + math.sqrt(std)/5.0
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
+		now = datetime.datetime.now()
+		if now.weekday() >= 5:
+			#Sat/Sun bonus
+			reasonableCutoff += 0.5
 		return reasonableCutoff
 
 	#======================================
