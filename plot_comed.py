@@ -82,7 +82,7 @@ for key in x2:
 if testmode: print("<li>second sort of comed data</li>")
 
 #median, std = comlib.getMedianComedRate()
-pyplot.figure(figsize=(6.0, 8.0), dpi=50)
+pyplot.figure(figsize=(6.0, 8.0), dpi=100)
 pyplot.ioff()
 pyplot.plot(x, y,  '+', color='darkgreen')
 pyplot.plot(x2, y2, '-', color='darkblue', mew=0, ms=5, alpha=50)
@@ -107,7 +107,7 @@ pyplot.tight_layout()
 #fig = pyplot.figure()
 #figdata = io.StringIO()
 figdata = io.BytesIO()
-pyplot.savefig(figdata, format=format, dpi=50)
+pyplot.savefig(figdata, format=format, dpi=100)
 if testmode: print("<li>save fig completed</li>")
 
 #if testmode: pyplot.savefig("comed.png", format=format, dpi=200)
