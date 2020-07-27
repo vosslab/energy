@@ -240,8 +240,8 @@ class ComedLib(object):
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
 		now = datetime.datetime.now()
 		if now.weekday() >= 5:
-			#Sat/Sun bonus
-			reasonableCutoff += 0.5
+			#Sat/Sun weekend bonus
+			reasonableCutoff += 0.9
 		return reasonableCutoff
 
 	#======================================
