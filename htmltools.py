@@ -81,8 +81,9 @@ def htmlEcobee():
 
 	weatherdict = myecobee.weather()
 	ordered_key_list = [
-			'temperature', 'condition', 'dewpoint', 'relative_humidity',
-			'temp_high', 'wind_speed', 'temp_low', 'pressure',
+			'temperature', 'wind_speed',
+			'dewpoint', 'relative_humidity',
+			'temp_high', 'temp_low',
 		]
 	wmap = {
 			'temperature': 'temp', 'dewpoint': 'temp',
@@ -93,6 +94,8 @@ def htmlEcobee():
 	keys = ordered_key_list
 	htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 7px;'>\n"
 	htmltext += "<tr><th colspan='4'>Ecobee Weather Info</th></tr>\n"
+	htmltext += "<tr><td colspan='1'>condition</td>\n"
+	htmltext += "    <td colspan='3'>{0}</td></tr>\n".format(weatherdict['condition'])
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
