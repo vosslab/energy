@@ -234,7 +234,7 @@ class ComedLib(object):
 
 	#======================================
 	def getReasonableCutOff(self):
-		chargingCutoffPrice = 3.89
+		chargingCutoffPrice = 3.99
 		median, std = self.getMedianComedRate()
 		defaultCutoff = median + math.sqrt(std)/5.0
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0

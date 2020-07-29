@@ -292,10 +292,10 @@ class MyEcobee(object):
 		start_of_next_hour = now.replace(minute=59, second=1, microsecond=0) + datetime.timedelta(seconds=1)
 		return start_of_next_hour
 
-	def twentyPastHour(self):
+	def thirtyPastHour(self):
 		now = datetime.datetime.now()
-		twenty_past = now.replace(minute=59, second=1, microsecond=0) + datetime.timedelta(minutes=21)
-		return twenty_past
+		thirty_past = now.replace(minute=59, second=1, microsecond=0) + datetime.timedelta(minutes=31)
+		return thirty_past
 
 	def endOfHour(self):
 		now = datetime.datetime.now()
@@ -310,8 +310,8 @@ class MyEcobee(object):
 			end_time = self.endOfHour()
 		elif endTimeMethod == 'start_of_next_hour':
 			end_time = self.startOfNextHour()
-		elif endTimeMethod == 'twenty_past':
-			end_time = self.twentyPastHour()
+		elif endTimeMethod == 'thirty_past':
+			end_time = self.thirtyPastHour()
 		else:
 			end_time = self.endOfHour()
 

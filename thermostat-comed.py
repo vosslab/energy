@@ -10,7 +10,7 @@ class ThermoStat(object):
 	def __init__(self):
 		self.use_humid = True
 		self.hightemp = 80.1
-		self.cooltemp = 73.1
+		self.cooltemp = 72.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
 		self.current_rate = None
@@ -55,7 +55,7 @@ class ThermoStat(object):
 		print("Request: Turn OFF air conditioner")
 		if self.coolsetting < self.hightemp - 1:
 			print(("Set A/C to {0:.1f} F".format(self.hightemp)))
-			self.myecobee.setTemperature(cooltemp=self.hightemp, endTimeMethod='twenty_past')
+			self.myecobee.setTemperature(cooltemp=self.hightemp, endTimeMethod='thirty_past')
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
 			print("\nnothing to do")
@@ -117,8 +117,8 @@ class ThermoStat(object):
 if __name__ == "__main__":
 
 	now = datetime.datetime.now()
-	if now.hour < 6 or now.hour >= 22:
-		print("only run program between 6am and 10pm => exit")
+	if now.hour < 6 or now.hour >= 20:
+		print("only run program between 6am and 8pm => exit")
 		sys.exit(0)
 
 	thermstat = ThermoStat()
