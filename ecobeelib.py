@@ -4,6 +4,7 @@ import os
 import sys
 import pytz
 import yaml
+import numpy
 import shelve
 import logging
 import pyecobee
@@ -162,6 +163,19 @@ class MyEcobee(object):
 			sensordict[sensor.name] = {
 				'temperature': temp, 'occupancy': occupancy, 'humidity': humid, 'raw_temp': rawtemp, }
 		return sensordict
+
+	def getMedianTemp(self):
+		sensordict = self.sensors()
+		keys = list(sensordict.keys)
+		templist = []
+		for name in keys:
+			temp = sensordict[name].get('temperature')
+			if temp is not None:
+				templist.append(temp)
+		temparr = numpy.array(templist)
+		median_temp = numpy.median(temparr)
+		return median_temp
+
 
 	def weather(self):
 		# Only set the include options you need to True. I've set most of them to True for illustrative purposes only.

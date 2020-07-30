@@ -113,6 +113,15 @@ class ThermoStat(object):
 		temp = ( heat_index - 0.047 * rel_humid + 8.5)/1.1
 		return temp
 
+	def getRateBonus(self):
+		median_temp = self.myecobee.getMedianTemp()
+		print("Median House Temp: {0:.1f}F".format(median_temp))
+		#self.hightemp = 80.1
+		#self.cooltemp = 72.1
+		bonus_rate = (median_temp - self.cooltemp)/float(self.hightemp - self.cooltemp)
+		print("Temperature Bonus Rate: {0:.3f}c".format(bonus_rate))
+		return bonus_rate
+
 
 if __name__ == "__main__":
 
@@ -137,7 +146,8 @@ if __name__ == "__main__":
 		sys.exit(0)
 
 	thermstat.showRates()
-	if thermstat.predict_rate >= thermstat.cutoff:
+	bonus_rate = thermstat.getBonusRate()
+	if thermstat.predict_rate >= thermstat.cutoff + bonus_rate:
 		thermstat.turnOffEcobee()
 	else:
 		thermstat.turnOnEcobee()
