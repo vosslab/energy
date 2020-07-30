@@ -119,6 +119,7 @@ class ThermoStat(object):
 		#self.hightemp = 80.1
 		#self.cooltemp = 72.1
 		bonus_rate = (median_temp - self.cooltemp)/float(self.hightemp - self.cooltemp)
+		bonus_rate = max(0.0, bonus_rate)
 		print("Temperature Bonus Rate: {0:.3f}c".format(bonus_rate))
 		return bonus_rate
 
@@ -146,8 +147,10 @@ if __name__ == "__main__":
 		sys.exit(0)
 
 	thermstat.showRates()
-	bonus_rate = thermstat.getBonusRate()
-	if thermstat.predict_rate >= thermstat.cutoff + bonus_rate:
+	bonus_rate = thermstat.getRateBonus()
+	bonus_cutoff = thermstat.cutoff + bonus_rate
+	print("Final Cutoff Rate: {0:.3f}".format(bonus_cutoff))
+	if thermstat.predict_rate >= bonus_cutoff:
 		thermstat.turnOffEcobee()
 	else:
 		thermstat.turnOnEcobee()

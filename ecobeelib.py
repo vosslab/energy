@@ -166,7 +166,7 @@ class MyEcobee(object):
 
 	def getMedianTemp(self):
 		sensordict = self.sensors()
-		keys = list(sensordict.keys)
+		keys = list(sensordict.keys())
 		templist = []
 		for name in keys:
 			temp = sensordict[name].get('temperature')
