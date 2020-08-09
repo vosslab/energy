@@ -43,6 +43,10 @@ class ComedSmartWemoPlug(object):
 		return self.comlib.getMedianComedRate()
 
 	#======================================
+	def getReasonableCutOff(self):
+		return self.comlib.getReasonableCutOff()
+
+	#======================================
 	def enable(self):
 		if self.device.get_state() == 0:
 			mystr = "turning ON wemo plug, start charging"
@@ -121,10 +125,7 @@ if __name__ == '__main__':
 
 		### get the comed rate
 		rate = wemoplug.getCurrentComedRate()
-		median, std = wemoplug.getMedianComedRate()
-		reasonableCutoff = median + std/6.
-
-		cutoff = (chargingCutoffPrice+reasonableCutoff)/2.0
+		cutoff = wemoplug.getReasonableCutOff()
 		#print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
 
 		#print "rate %.2f"%(rate)
