@@ -64,7 +64,10 @@ class MyEcobee(object):
 		moves.input()
 
 	def _request_data(self, selection):
-		thermostat_response = self.ecobee_service.request_thermostats(selection)
+		try:
+			thermostat_response = self.ecobee_service.request_thermostats(selection)
+		except KeyError:
+			return None
 		self.logger.debug(thermostat_response.pretty_format())
 		assert thermostat_response.status.code == 0, 'Failure while executing request_thermostats:\n{0}'.format(
 			thermostat_response.pretty_format())
@@ -142,6 +145,8 @@ class MyEcobee(object):
 			include_sensors=True,
 		)
 		thermostat_response = self._request_data(selection)
+		if thermostat_response is None:
+			return None
 
 		thermostat_obj = thermostat_response.thermostat_list[0]
 		self.logger.debug(thermostat_obj.pretty_format())
@@ -241,6 +246,8 @@ class MyEcobee(object):
 			include_events=True,
 		)
 		thermostat_response = self._request_data(selection)
+		if thermostat_response is None:
+			return None
 
 		thermostat_obj = thermostat_response.thermostat_list[0]
 		self.logger.debug(thermostat_obj.pretty_format())

@@ -10,7 +10,7 @@ class ThermoStat(object):
 	def __init__(self):
 		self.use_humid = True
 		self.hightemp = 80.1
-		self.cooltemp = 72.1
+		self.cooltemp = 73.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
 		self.current_rate = None
@@ -43,6 +43,8 @@ class ThermoStat(object):
 
 	def checkUserOverride(self):
 		events_tree = self.myecobee.events()
+		if events_tree is None:
+			return False
 		user_override = False
 		for event_dict in events_tree:
 			if ( event_dict['cool_hold_temp'] % 10 != 1
@@ -136,7 +138,7 @@ if __name__ == "__main__":
 		print("user override in effect => exit")
 		sys.exit(0)
 
-	if now.hour < 9 or now.hour >= 19:
+	if now.hour < 10 or now.hour >= 18 and now.weekday() <= 4:
 		time_cutoff = 20
 	else:
 		time_cutoff = 9
