@@ -20,21 +20,23 @@ from scipy import stats
 #======================================
 class ComedLib(object):
 	def __init__(self):
-		self.msg = True
 		self.useCache = True
 		scriptdir = os.path.dirname(__file__)
 		filename = "comed_cache_file.yml"
+		self.debug = False
+		if len(sys.argv) > 1 and sys.argv[1] == "debug":
+			self.debug = True
 		self.cachefile = os.path.join(scriptdir, filename)
 		self.baseurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed&datestart=201801030005&dateend=201801032300"
 		return
-	
+
 	#======================================
 	def writeCache(self, data):
 		if self.useCache is False:
 			return
-		if self.msg is True:
-			print(("saving data to %s"%(self.cachefile)))
+		if self.debug is True:
+			print((".. saving data to %s"%(self.cachefile)))
 		f = open(self.cachefile, "w")
 		fulldata = {
 			'timestamp': int(time.time()),
@@ -50,8 +52,8 @@ class ComedLib(object):
 			return None
 		if not os.path.exists(self.cachefile):
 			return None
-		if self.msg is True:
-			print(("reading data from %s"%(self.cachefile)))
+		if self.debug is True:
+			print((".. reading data from %s"%(self.cachefile)))
 		f = open(self.cachefile, "r")
 		fulldata = yaml.load(f, yaml.SafeLoader)
 		f.close()
@@ -87,12 +89,12 @@ class ComedLib(object):
 	def downloadComedJsonData(self, url=None):
 		data = self.readCache()
 		if isinstance(data, list):
-			if self.msg is True:
-				print("Using comed data from cache")
+			if self.debug is True:
+				print(".. Using comed data from cache")
 			return data
 		else:
-			if self.msg is True:
-				print("Downloading comed new data")
+			if self.debug is True:
+				print(".. Downloading comed new data")
 		if url is None:
 			url = self.getUrl()
 		resp = self.safeDownloadWebpage(url)
@@ -197,8 +199,8 @@ class ComedLib(object):
 		ystd = ypositive.std()
 		weight = (13-len(ylist))/13.
 		if abs(key - float(int(key))) < 0.001:
-			if self.msg is True:
-				print(("%03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
+			if self.debug is True:
+				print((".. %03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
 					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max())))
 			pass
 		value1 = ymean + ystd*weight
@@ -215,10 +217,10 @@ class ComedLib(object):
 
 		xarray = numpy.arange(0,len(yslopedata))
 		slope, intercept, r_value, p_value, std_err = stats.linregress(xarray, yslopedata)
-		if self.msg is True:
+		if self.debug is True:
 			print(yslopedata)
 			print(xarray)
-			print("Slope = {0:.3f}".format(slope))
+			print(".. Slope = {0:.3f}".format(slope))
 
 		if slope < 0.1:
 			slope = 0.1
@@ -226,22 +228,34 @@ class ComedLib(object):
 
 		value3 = (yarray.max() + yarray.mean() + yarray[0])/3.0
 
-		if self.msg is True:
-			print("Value 1 = {0:.3f}".format(value1))
-			print("Value 2 = {0:.3f}".format(value2))
-			print("Value 3 = {0:.3f}".format(value3))
+		if self.debug is True:
+			print(".. Value 1 = {0:.3f} (mean + std*weight)".format(value1))
+			print(".. Value 2 = {0:.3f} (slope based)".format(value2))
+			print(".. Value 3 = {0:.3f} (avg of: max, mean, recent)".format(value3))
 		return max(value1, value2, value3)
 
 	#======================================
 	def getReasonableCutOff(self):
 		chargingCutoffPrice = 3.99
+		weekendBonus = 0.9
+		if self.debug is True:
+			print(".. Starting cutoff {0:.2f}c".format(chargingCutoffPrice))
 		median, std = self.getMedianComedRate()
+		if self.debug is True:
+			print(".. Median Rate {0:.2f} =/- {1:.3f}c".format(median, std))
 		defaultCutoff = median + math.sqrt(std)/5.0
+		if self.debug is True:
+			print(".. Calculated Cutoff {0:.3f}c".format(defaultCutoff))
 		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
+		if self.debug is True:
+			print(".. Combined Cutoff {0:.3f}c".format(reasonableCutoff))
 		now = datetime.datetime.now()
 		if now.weekday() >= 5:
-			#Sat/Sun weekend bonus
-			reasonableCutoff += 0.9
+			if self.debug is True:
+				print(".. Sat/Sun weekend bonus of {0:.2f}c".format(weekendBonus))
+			reasonableCutoff += weekendBonus
+		if self.debug is True:
+			print(".. Final Cutoff {0:.3f}c".format(reasonableCutoff))
 		return reasonableCutoff
 
 	#======================================
@@ -254,8 +268,8 @@ class ComedLib(object):
 		parray = numpy.array(prices, dtype=numpy.float64)
 		median = numpy.median(parray)
 		std = numpy.std(parray)
-		if self.msg is True:
-			print(("24 hour median price: %.3f +/- %.3f"%(median, std)))
+		if self.debug is True:
+			print((".. 24 hour median price: %.3f +/- %.3f"%(median, std)))
 		return median, std
 
 #======================================
