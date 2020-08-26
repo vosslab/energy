@@ -9,7 +9,7 @@ import ecobeelib
 class ThermoStat(object):
 	def __init__(self):
 		self.use_humid = True
-		self.hightemp = 80.1
+		self.hightemp = 84.1
 		self.cooltemp = 73.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False

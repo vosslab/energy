@@ -236,7 +236,7 @@ class ComedLib(object):
 
 	#======================================
 	def getReasonableCutOff(self):
-		chargingCutoffPrice = 3.99
+		chargingCutoffPrice = 4.19
 		weekendBonus = 0.9
 		if self.debug is True:
 			print(".. Starting cutoff {0:.2f}c".format(chargingCutoffPrice))
