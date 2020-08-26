@@ -58,8 +58,9 @@ class ThermoStat(object):
 		return user_override
 
 	def turnOffEcobee(self):
+		now = datetime.datetime.now()
 		print("Request: Turn OFF air conditioner")
-		if self.coolsetting < self.hightemp - 1:
+		if now.minute <= 20 or self.coolsetting < self.hightemp - 1:
 			print(("Set A/C to {0:.1f} F".format(self.hightemp)))
 			self.myecobee.setTemperature(cooltemp=self.hightemp, endTimeMethod='thirty_past')
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
