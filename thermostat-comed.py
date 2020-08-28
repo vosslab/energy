@@ -9,7 +9,7 @@ import ecobeelib
 class ThermoStat(object):
 	def __init__(self):
 		self.use_humid = True
-		self.hightemp = 84.1
+		self.hightemp = 81.1
 		self.cooltemp = 73.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
@@ -79,7 +79,7 @@ class ThermoStat(object):
 		print("Relative humidity: {0:.1f}%".format(rel_humid))
 		return numpy.array(humidvalues).mean()
 
-	def getAdjustedCoolTemp(self):
+	def getHumidAdjustedCoolTemp(self):
 		if self.use_humid is False:
 			return self.cooltemp
 		rel_humid = self.getRelativeHumidity()
@@ -88,18 +88,29 @@ class ThermoStat(object):
 		adjustTemp = self.inverseHeatIndex(self.cooltemp, rel_humid)
 		#rounding
 		adjustTemp = round(adjustTemp, 1)
-		if int(adjustTemp*10) % 10 == 0:
-			adjustTemp += 0.1
-		adjustTemp = round(adjustTemp, 1)
-		print("Adjusted Cool Setting: {0:.1f}F".format(adjustTemp))
+		print("Humidity Adjusted Cool Setting: {0:.1f}F".format(adjustTemp))
 		if adjustTemp > self.cooltemp:
 			adjustTemp = self.cooltemp
 		return adjustTemp
 
 	def turnOnEcobee(self):
 		print("Request: Turn ON air conditioner")
-		adjustTemp = self.getAdjustedCoolTemp()
-		if self.coolsetting > adjustTemp + 1:
+		#adjust for humidity
+		adjustTemp = self.getHumidAdjustedCoolTemp()
+
+		#adjust if areas are hotter than others
+		stdev_temp = self.myecobee.getStdevTemp()
+		print("Adjust temp down by {0:.1f}F for standard deviation".format(stdev_temp/2.0))
+		adjustTemp -= stdev_temp/2.0
+
+		#rounding
+		adjustTemp = round(adjustTemp, 1)
+		if int(adjustTemp*10) % 10 == 0:
+			adjustTemp += 0.1
+		adjustTemp = round(adjustTemp, 1)
+		print("Final Adjusted Cool Setting: {0:.1f}F".format(adjustTemp))
+
+		if self.coolsetting > adjustTemp + 1.0:
 			print("Request: Turn ON air conditioner")
 			print(("Set A/C to {0:.1f} F".format(adjustTemp)))
 			self.myecobee.setTemperature(cooltemp=adjustTemp, endTimeMethod='end_of_hour')
@@ -129,7 +140,7 @@ class ThermoStat(object):
 if __name__ == "__main__":
 
 	now = datetime.datetime.now()
-	if now.hour < 6 or now.hour >= 20:
+	if now.hour < 6 or now.hour > 20:
 		print("only run program between 6am and 8pm => exit")
 		sys.exit(0)
 
@@ -138,10 +149,15 @@ if __name__ == "__main__":
 		print("user override in effect => exit")
 		sys.exit(0)
 
-	if now.hour < 10 or now.hour >= 18 and now.weekday() <= 4:
-		time_cutoff = 20
-	else:
+	if now.hour < 10 or now.hour >= 18:
+		#early late
 		time_cutoff = 9
+	elif now.weekday() >= 5:
+		#weekend
+		time_cutoff = 7
+	else:
+		#default
+		time_cutoff = 20
 
 	if now.minute <= time_cutoff:
 		print("less than {0:d} minutes past the hour => turn off".format(time_cutoff))
