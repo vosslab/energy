@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import math
 import numpy
 import datetime
 import comedlib
@@ -100,8 +101,9 @@ class ThermoStat(object):
 
 		#adjust if areas are hotter than others
 		stdev_temp = self.myecobee.getStdevTemp()
-		print("Adjust temp down by {0:.1f}F for standard deviation".format(stdev_temp/2.0))
-		adjustTemp -= stdev_temp/2.0
+		adjustment = math.sqrt(stdev_temp)/3.0
+		adjustTemp -= adjustment
+		print("Adjust temp down by {0:.1f}F for standard deviation of {1:.1f}F".format(adjustment, stdev_temp))
 
 		#rounding
 		adjustTemp = round(adjustTemp, 1)
