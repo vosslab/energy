@@ -3,16 +3,13 @@ import os
 import re
 import sys
 import glob
-import math
 import time
-import types
-import numpy
 import random
-import string
-import shutil
-import urllib.request, urllib.parse, urllib.error
-import subprocess
 import unicodedata
+try:
+	import apDisplay
+except:
+	pass
 
 """
 File for common functions to musiclib, movielib, and photolib
