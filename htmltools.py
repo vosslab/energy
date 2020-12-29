@@ -68,15 +68,38 @@ def htmlEcobee():
 	htmltext += "<tr><td colspan='4' align='center'>\n"
 	htmltext += (("  Current Cool Setting: {0}<br/>\n".format(colorTemperature(coolsetting, 1))))
 	htmltext += "</td></tr>\n"
+	templist = []
+	humidlist = []
 	for i,key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
 				htmltext += "</tr>\n"
 			htmltext += "<tr>\n"
 		htmltext += "   <td>{0}</td>\n".format(key)
-		temp = sensordict[key]['temperature']
+		temp = sensordict[key].get('temperature')
+		humid = sensordict[key].get('humidity')
+		if humid is not None:
+			humidlist.append(humid)
+		if temp is None:
+			continue
+		templist.append(temp)
 		htmltext += "   <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
-	htmltext += "</tr></table>\n"
+	htmltext += "</tr>\n"
+
+	htmltext += "<tr><td colspan='4' align='center'>\n"
+	humidarr = numpy.array(humidlist)
+	avghumid = float(humidarr.mean())
+	htmltext += (("  Inside Humidity: {0:.0f}%<br/>\n".format(avghumid)))
+	htmltext += "</td></tr>\n"
+
+	htmltext += "<tr><td colspan='4' align='center'>\n"
+	temparr = numpy.array(templist)
+	avgtemp = float(temparr.mean())
+	stdtemp = float(temparr.std())
+	htmltext += (("  Average Temperature: {0} &pm; {1:.2f}<br/>\n".format(colorTemperature(avgtemp, 1), stdtemp)))
+	htmltext += "</td></tr>\n"
+
+	htmltext += "</table>\n"
 	htmltext += "<br/>\n"
 
 	weatherdict = myecobee.weather()
