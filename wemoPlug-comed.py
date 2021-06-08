@@ -15,13 +15,17 @@ CL = commonlib.CommonLib()
 # keep track of length of time charged or off
 
 #badHours = [5, 6, 17, 18]
-#badHours = [17, 18]
+badHours = [17, 18]
 badHours = []
 chargingCutoffPrice = 3.99
-wemoIpAddress = "192.168.2.165"
+wemoIpAddresses = [
+ "192.168.2.165",
+ "192.168.2.168",
+]
 
 class ComedSmartWemoPlug(object):
-	def __init__(self):
+	def __init__(self, ipaddress):
+		self.address = ipaddress
 		self.connectToWemo()
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
@@ -29,7 +33,6 @@ class ComedSmartWemoPlug(object):
 
 	#======================================
 	def connectToWemo(self):
-		self.address = wemoIpAddress
 		self.port = pywemo.ouimeaux_device.probe_wemo(self.address)
 		self.wemoUrl = 'http://%s:%i/setup.xml' % (self.address, self.port)
 		self.device = pywemo.discovery.device_from_description(self.wemoUrl, None)
@@ -91,7 +94,10 @@ class ComedSmartWemoPlug(object):
 if __name__ == '__main__':
 	count = 0
 	refreshTime = 300
-	wemoplug = ComedSmartWemoPlug()
+	wemoPlugList = []
+	for ipadress in wemoIpAddresses:
+		wemoplug = ComedSmartWemoPlug(ipadress)
+		wemoPlugList.append(wemoplug)
 	while(True):
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414

@@ -10,7 +10,7 @@ import ecobeelib
 class ThermoStat(object):
 	def __init__(self):
 		self.use_humid = True
-		self.hightemp = 81.1
+		self.hightemp = 82.1
 		self.cooltemp = 73.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
@@ -24,7 +24,8 @@ class ThermoStat(object):
 		self.myecobee.openConnection()
 		self.runtimedict = self.myecobee.runtime()
 		self.coolsetting = float(self.runtimedict['desired_cool'])/10.
-		print(("Current Cool Setting: {0:.1f}F".format(self.coolsetting)))
+		#self.coolsetting = 72.0
+		#print(("Current Cool Setting: {0:.1f}F".format(self.coolsetting)))
 
 	def getRates(self):
 		self.current_rate = self.comlib.getCurrentComedRate()
@@ -160,6 +161,7 @@ if __name__ == "__main__":
 	else:
 		#default
 		time_cutoff = 20
+		time_cutoff = 3
 
 	if now.minute <= time_cutoff:
 		print("less than {0:d} minutes past the hour => turn off".format(time_cutoff))

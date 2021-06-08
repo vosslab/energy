@@ -26,6 +26,8 @@ def getCurrent():
 		lsb = data1[2 + i*3]
 		# Convert the data to milliamperes
 		current = (msb1 * 65536 + msb * 256 + lsb)
+		if current > 8000000:
+			current = 0
 		currents.append(current)
 		totalCurrent += current
 	return currents, totalCurrent

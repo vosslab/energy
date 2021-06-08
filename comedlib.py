@@ -276,7 +276,8 @@ class ComedLib(object):
 #======================================
 if __name__ == '__main__':
 	comedlib = ComedLib()
-	comedlib.msg = (random.random() > 0.9)
+	comedlib.msg = True #(random.random() > 0.9)
+	comedlib.debug = True #(random.random() > 0.9)
 	medrate, std = comedlib.getMedianComedRate()
 	print("24hr Median Rate    {0:.3f}c +- {1:.3f}c".format(medrate, std))
 	currrate = comedlib.getCurrentComedRate()

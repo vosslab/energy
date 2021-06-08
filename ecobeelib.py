@@ -97,7 +97,8 @@ class MyEcobee(object):
 		finally:
 			#print("Cannot open pyecobee session<br/>\n")
 			#print(self.shelf_file)
-			pyecobee_db.close()
+			#pyecobee_db.close()
+			pass
 
 		if not self.ecobee_service.authorization_token:
 			self._authorize()
@@ -177,6 +178,10 @@ class MyEcobee(object):
 			temp = sensordict[name].get('temperature')
 			if temp is not None:
 				templist.append(temp)
+		tempstr = ' '
+		for tempnum in templist:
+			tempstr += '{0:.1f}F '.format(tempnum)
+		print("Sensors: {0}".format(tempstr))
 		temparr = numpy.array(templist)
 		median_temp = numpy.median(temparr)
 		return median_temp
@@ -228,17 +233,23 @@ class MyEcobee(object):
 		return equipment_status
 
 	def runtime(self):
+		#print("runtime")
 		selection = pyecobee.Selection(
 			selection_type=pyecobee.SelectionType.REGISTERED.value,
 			selection_match=self.thermostat_id,
+			include_equipment_status=True,
 			include_runtime=True,
 		)
+		#print("thermostat_response")
 		thermostat_response = self._request_data(selection)
 
+		#print("thermostat_obj")
 		thermostat_obj = thermostat_response.thermostat_list[0]
+
 		self.logger.debug(thermostat_obj.pretty_format())
 		self.logger.debug(dir(thermostat_obj))
 
+		#print(help(thermostat_response.thermostat_list[0]))
 		runtime_obj = thermostat_response.thermostat_list[0].runtime
 
 		self.logger.debug(runtime_obj.pretty_format())

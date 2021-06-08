@@ -47,8 +47,9 @@ print("<a href='energylib/plot_usage.py'>Show Usage Plot</a>")
 #======================================
 #======================================
 try:
-	print(htmltools.htmlEcobee())
-except:
+	#print(htmltools.htmlEcobee())
+	pass
+except ValueError:
 	print('<br/>ECOBEE failed to load, tell Neil')
 
 #======================================

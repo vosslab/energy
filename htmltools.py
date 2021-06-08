@@ -59,6 +59,7 @@ def htmlEcobee():
 	myecobee.openConnection()
 	runtimedict = myecobee.runtime()
 	coolsetting = float(runtimedict['desired_cool'])/10.
+	heatsetting = float(runtimedict['desired_heat'])/10.
 
 	sensordict = myecobee.sensors()
 	keys = list(sensordict.keys())
@@ -67,6 +68,7 @@ def htmlEcobee():
 	htmltext += "<tr><th colspan='4'>Ecobee Thermostats</th></tr>\n"
 	htmltext += "<tr><td colspan='4' align='center'>\n"
 	htmltext += (("  Current Cool Setting: {0}<br/>\n".format(colorTemperature(coolsetting, 1))))
+	htmltext += (("  Current Heat Setting: {0}<br/>\n".format(colorTemperature(heatsetting, 1))))
 	htmltext += "</td></tr>\n"
 	templist = []
 	humidlist = []
