@@ -8,7 +8,7 @@ from energylib import comedlib
 from energylib import htmltools
 from energylib import smartReadUsage
 from energylib import solarProduction
-#from energylib import ecobeelib
+from energylib import ecobeelib
 
 print("Content-Type: text/html\n")
 print("\n")
@@ -47,9 +47,9 @@ print("<a href='energylib/plot_usage.py'>Show Usage Plot</a>")
 #======================================
 #======================================
 try:
-	#print(htmltools.htmlEcobee())
+	print(htmltools.htmlEcobee())
 	pass
-except ValueError:
+except:
 	print('<br/>ECOBEE failed to load, tell Neil')
 
 #======================================

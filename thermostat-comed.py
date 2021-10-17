@@ -9,11 +9,13 @@ import ecobeelib
 
 class ThermoStat(object):
 	def __init__(self):
+		self.debug = True
 		self.use_humid = True
 		self.hightemp = 82.1
-		self.cooltemp = 73.1
+		#vacation override
+		self.cooltemp = 72.1
 		self.comlib = comedlib.ComedLib()
-		self.comlib.msg = False
+		self.comlib.msg = self.debug
 		self.current_rate = None
 		self.openEcobee()
 
@@ -134,7 +136,7 @@ class ThermoStat(object):
 		print("Median House Temp: {0:.1f}F".format(median_temp))
 		#self.hightemp = 80.1
 		#self.cooltemp = 72.1
-		bonus_rate = (median_temp - self.cooltemp)/float(self.hightemp - self.cooltemp)
+		bonus_rate = 2.0*(median_temp - self.cooltemp)/float(self.hightemp - self.cooltemp)
 		bonus_rate = max(0.0, bonus_rate)
 		print("Temperature Bonus Rate: {0:.3f}c".format(bonus_rate))
 		return bonus_rate
@@ -143,14 +145,18 @@ class ThermoStat(object):
 if __name__ == "__main__":
 
 	now = datetime.datetime.now()
-	if now.hour < 6 or now.hour > 20:
-		print("only run program between 6am and 8pm => exit")
+	print("Current hour: {0:d}".format(now.hour))
+	#vacation override
+	if now.hour < 6 or now.hour >= 19:
+		print("only run program between 6am and 7pm => exit")
 		sys.exit(0)
 
 	thermstat = ThermoStat()
 	if thermstat.checkUserOverride() is True:
 		print("user override in effect => exit")
 		sys.exit(0)
+	print("no user override found")
+
 
 	if now.hour < 10 or now.hour >= 18:
 		#early late
@@ -161,8 +167,11 @@ if __name__ == "__main__":
 	else:
 		#default
 		time_cutoff = 20
-		time_cutoff = 3
+		#time_cutoff = 3
+	#vacation override
+	#time_cutoff = 20
 
+	#blah
 	if now.minute <= time_cutoff:
 		print("less than {0:d} minutes past the hour => turn off".format(time_cutoff))
 		thermstat.turnOffEcobee()
@@ -172,7 +181,16 @@ if __name__ == "__main__":
 	bonus_rate = thermstat.getRateBonus()
 	bonus_cutoff = thermstat.cutoff + bonus_rate
 	print("Final Cutoff Rate: {0:.3f}".format(bonus_cutoff))
-	if thermstat.predict_rate >= bonus_cutoff:
+
+	predict_rate = thermstat.predict_rate
+	del thermstat
+	thermstat = ThermoStat()
+	if thermstat.checkUserOverride() is True:
+		print("user override in effect => exit")
+		sys.exit(0)
+	print("no user override found")
+
+	if predict_rate >= bonus_cutoff:
 		thermstat.turnOffEcobee()
 	else:
 		thermstat.turnOnEcobee()

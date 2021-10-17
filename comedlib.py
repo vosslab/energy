@@ -55,7 +55,10 @@ class ComedLib(object):
 		if self.debug is True:
 			print((".. reading data from %s"%(self.cachefile)))
 		f = open(self.cachefile, "r")
-		fulldata = yaml.load(f, yaml.SafeLoader)
+		try:
+			fulldata = yaml.load(f, yaml.SafeLoader)
+		except yaml.parser.ParserError:
+			return None
 		f.close()
 		if not isinstance(fulldata, dict):
 			return None
@@ -246,7 +249,7 @@ class ComedLib(object):
 		defaultCutoff = median + math.sqrt(std)/5.0
 		if self.debug is True:
 			print(".. Calculated Cutoff {0:.3f}c".format(defaultCutoff))
-		reasonableCutoff = (chargingCutoffPrice + defaultCutoff)/2.0
+		reasonableCutoff = (chargingCutoffPrice + 2*defaultCutoff)/3.0
 		if self.debug is True:
 			print(".. Combined Cutoff {0:.3f}c".format(reasonableCutoff))
 		now = datetime.datetime.now()
