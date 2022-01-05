@@ -40,7 +40,12 @@ if testmode is True:
 	print("<ul>")
 	print(("<li> time: %s</li>"%(time.asctime())))
 
-datestamp = time.strftime("%Y-%m%b-%d-%a").lower()
+#new content
+import datetime
+yesterday = datetime.date.today() - datetime.timedelta(days=1)
+yesterday_tuple = datetime.date.timetuple(yesterday)
+
+datestamp = time.strftime("%Y-%m%b-%d-%a", yesterday_tuple).lower()
 logname = "/home/pi/energy/usage/%s.log"%(datestamp)
 
 if testmode: print("<li>reading log file</li>")

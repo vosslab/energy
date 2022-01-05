@@ -42,7 +42,9 @@ print(" %s</span><br/>"%(usageText))
 
 #print('<br/>\n')
 #print("<img src='energylib/plot_usage.py'>")
-print("<a href='energylib/plot_usage.py'>Show Usage Plot</a>")
+print("<a href='energylib/plot_usage.py'>Show Today Usage Plot</a>")
+print("<br/>")
+print("<a href='energylib/plot_yesterday_usage.py'>Show Yesterday Usage Plot</a>")
 
 #======================================
 #======================================
