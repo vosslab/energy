@@ -358,12 +358,15 @@ class MyEcobee(object):
 		else:
 			end_time = self.endOfHour()
 
+		self.setHoldTemperature(cooltemp, heattemp, end_time)
+
+	def setHoldTemperature(cooltemp=80, heattemp=55, endtime=None):
 		central = pytz.timezone('US/Central')
 		update_thermostat_response = self.ecobee_service.set_hold(
 			cool_hold_temp=cooltemp,
 			heat_hold_temp=heattemp,
 			hold_type=pyecobee.HoldType.DATE_TIME,
-			end_date_time=central.localize(end_time, is_dst=True), )
+			end_date_time=central.localize(endtime, is_dst=True), )
 		#	hold_type=pyecobee.HoldType.HOLD_HOURS,
 		#	hold_hours=holdhours, )
 		self.logger.info(update_thermostat_response.pretty_format())
