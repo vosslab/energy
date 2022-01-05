@@ -360,7 +360,7 @@ class MyEcobee(object):
 
 		self.setHoldTemperature(cooltemp, heattemp, end_time)
 
-	def setHoldTemperature(cooltemp=80, heattemp=55, endtime=None):
+	def setHoldTemperature(self, cooltemp=80, heattemp=55, endtime=None):
 		central = pytz.timezone('US/Central')
 		update_thermostat_response = self.ecobee_service.set_hold(
 			cool_hold_temp=cooltemp,
