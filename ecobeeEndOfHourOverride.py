@@ -6,7 +6,7 @@ import pytz
 import ecobeelib
 
 
-def openEcobee(self):
+def openEcobee():
 	myecobee = ecobeelib.MyEcobee()
 	myecobee.setLogger()
 	myecobee.readThermostatDefs()
@@ -27,4 +27,4 @@ if __name__ == '__main__':
 	if len(sys.argv) < 2:
 		print("Usage: ecobeeEndOfHourOverride.py <TEMP>")
 	set_temperature = float(sys.argv[1])
-	
+	setEcobee(set_temperature)
