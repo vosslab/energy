@@ -42,7 +42,7 @@ if __name__ == '__main__':
 		help="end hour in military time", dest="hour")
 	parser.add_argument('-M', '--minute', type=int,   required=False,
 		help="end minutes at the hour", dest="minute", default=0)
-	group = parser.add_mutually_exclusive_group()
+	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('--heat', action='store_true')
 	group.add_argument('--cool', action='store_true')
 	args = parser.parse_args()
