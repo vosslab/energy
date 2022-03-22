@@ -132,7 +132,7 @@ if __name__ == '__main__':
 		### more strict cutoff
 		cutoff = (cutoff + 2.0 * median) / 3.0
 		### less strict cutoff
-		cutoff += 1.0
+		#cutoff += 1.0
 
 		#print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
 
@@ -153,13 +153,15 @@ if __name__ == '__main__':
 				time.sleep(sleepTime)
 			continue
 
-		if rate > float(cutoff) + 0.5:
+		buffer_rate = 0.3
+
+		if rate > float(cutoff) + buffer_rate:
 			mystr = "%s: charging disabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
 
-		elif rate < float(cutoff) - 0.5:
+		elif rate < float(cutoff) - buffer_rate:
 			mystr = "%s: charging enabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "green"))
 			wemoplug.enable()

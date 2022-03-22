@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import argparse
 import datetime
 import ecobeelib
@@ -46,5 +47,9 @@ if __name__ == '__main__':
 	group.add_argument('--heat', action='store_true')
 	group.add_argument('--cool', action='store_true')
 	args = parser.parse_args()
+
+	if args.hour < datetime.datetime.now().hour:
+		print("USE MILITARY TIME")
+		sys.exit(1)
 
 	setEcobee(args)

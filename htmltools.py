@@ -149,13 +149,24 @@ def htmlComedData(showPlot=False):
 		htmltext += "comed data failed or not available"
 		return htmltext
 
+	gas_conversion_rate = 34.7/3.9
+
 	htmltext += "<span style='color: &#35;448844'>24hr Median Rate:"
 	median,std = comlib.getMedianComedRate(comed_data)
 	htmltext += " {0} &pm; {1:.2f} &cent;</span><br/>".format(colorPrice(median, 1), std)
 
+	htmltext += "&nbsp;<span style='color: &#35;448844'>Equivalent Gas Rate:"
+	med_gas_equiv = (median + 3.8) * gas_conversion_rate / 100.
+	std_gas_equiv = (std) * gas_conversion_rate / 100.
+	htmltext += "</span> ${0:.2f} &pm; {1:.2f} per gallon<br/>".format(med_gas_equiv,std_gas_equiv)
+
 	htmltext += "<span style='color: &#35;444488'>Hour Current Rate:"
 	currentRate = comlib.getCurrentComedRate(comed_data)
 	htmltext += " {0} </span><br/>".format(colorPrice(currentRate, 3))
+
+	htmltext += "&nbsp;<span style='color: &#35;444488'>Equivalent Gas Rate:"
+	gas_equiv = (currentRate + 3.8) * gas_conversion_rate / 100.
+	htmltext += "</span> ${0:.2f} per gallon<br/>".format(gas_equiv)
 
 	htmltext += "<span style='color: &#35;884444'>Hour Predict Rate:"
 	predictRate = comlib.getPredictedRate(comed_data)
