@@ -257,6 +257,8 @@ class ComedLib(object):
 			if self.debug is True:
 				print(".. Sat/Sun weekend bonus of {0:.2f}c".format(weekendBonus))
 			reasonableCutoff += weekendBonus
+		if reasonableCutoff < 1.0:
+			reasonableCutoff = 1.0
 		if self.debug is True:
 			print(".. Final Cutoff {0:.3f}c".format(reasonableCutoff))
 		return reasonableCutoff

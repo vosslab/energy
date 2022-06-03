@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
 	thermstat.showRates()
 	bonus_rate = thermstat.getRateBonus()
-	bonus_cutoff = thermstat.cutoff + bonus_rate
+	bonus_cutoff = thermstat.cutoff + bonus_rate + 1.1
 	print("Final Cutoff Rate: {0:.3f}".format(bonus_cutoff))
 
 	predict_rate = thermstat.predict_rate

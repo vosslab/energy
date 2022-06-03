@@ -19,6 +19,10 @@ CL = commonlib.CommonLib()
 badHours = []
 chargingCutoffPrice = 3.99
 wemoIpAddress = "192.168.2.165" #insight1
+#always start charge below this value
+lower_bound = 1.8
+#always stop  charge above this value
+upper_bound = 7.8
 #wemoIpAddress = "192.168.2.168" #plug6
 
 class ComedSmartWemoPlug(object):
@@ -92,6 +96,7 @@ class ComedSmartWemoPlug(object):
 #======================================
 if __name__ == '__main__':
 	count = 0
+	last_hour = -2
 	refreshTime = 300
 	wemoplug = ComedSmartWemoPlug()
 	while(True):
@@ -103,6 +108,9 @@ if __name__ == '__main__':
 		count += 1
 		now = datetime.datetime.now()
 		hour = now.hour
+		if hour != last_hour:
+			print('============== new hour ==')
+
 		timestr = "%02d:%02d"%(now.hour, now.minute)
 
 		### always enable before 5AM
@@ -131,6 +139,10 @@ if __name__ == '__main__':
 		cutoff = wemoplug.getReasonableCutOff()
 		### more strict cutoff
 		cutoff = (cutoff + 2.0 * median) / 3.0
+		if cutoff < lower_bound:
+			cutoff = lower_bound
+		#elif cutoff > upper_bound:
+		#	cutoff = upper_bound
 		### less strict cutoff
 		#cutoff += 1.0
 
@@ -140,6 +152,10 @@ if __name__ == '__main__':
 		#print(median)
 		#print(cutoff)
 		#print(now.minute)
+
+		if now.hour >= 23 or now.hour <= 5:
+			#print("Time Bonus Cent")
+			rate += 0.8
 
 		#print "rate %.2f"%(rate)
 		if rate > 2.0*cutoff and now.minute > 20:
@@ -155,7 +171,12 @@ if __name__ == '__main__':
 
 		buffer_rate = 0.3
 
-		if rate > float(cutoff) + buffer_rate:
+		if rate < lower_bound:
+			mystr = "%s: charging enabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
+			print(CL.colorString(mystr, "green"))
+			wemoplug.enable()
+
+		elif rate > float(cutoff) + buffer_rate or rate > upper_bound:
 			mystr = "%s: charging disabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
@@ -170,3 +191,4 @@ if __name__ == '__main__':
 			mystr = "%s: charging unchanged ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "brown"))
 
+		last_hour = hour

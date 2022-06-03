@@ -18,7 +18,7 @@ def numberToHtmlColor(hue, saturation=0.9, value=0.6):
 
 def colorPrice(price, precision=1):
 	x_price = numpy.array(
-		[-100.,  0.,  2.,  3., 4., 5.,6.,100.],
+		[-100.,  0.,  3.,  5., 7., 9., 11.,100.],
 		dtype=numpy.float64,)
 	y_hue = numpy.array(
 		[ 315.,240.,180.,120.,60.,15.,5.,  0.],
