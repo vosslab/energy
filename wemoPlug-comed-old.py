@@ -18,7 +18,8 @@ CL = commonlib.CommonLib()
 #badHours = [17, 18]
 badHours = []
 chargingCutoffPrice = 3.99
-wemoIpAddress = "192.168.2.165" #insight1
+#wemoIpAddress = "192.168.2.165" #insight1
+wemoIpAddress = "192.168.2.166" #insight2
 #always start charge below this value
 lower_bound = 1.8
 #always stop  charge above this value

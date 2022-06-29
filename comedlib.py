@@ -200,13 +200,13 @@ class ComedLib(object):
 		ymean = yarray.mean()
 		ypositive = numpy.where(yarray < 1.0, 1.0, yarray)
 		ystd = ypositive.std()
-		weight = (13-len(ylist))/13.
+		weight = min((8-len(ylist))/8., 1)
 		if abs(key - float(int(key))) < 0.001:
 			if self.debug is True:
 				print((".. %03d:00 -> %2.2f +- %2.2f / %2.2f -> %.1f/%.1f"
 					%(key, ymean, ystd, ystd*weight, yarray.min(), yarray.max())))
 			pass
-		value1 = ymean + ystd*weight
+		value1 = ymean + math.sqrt(ystd)*weight
 
 		if len(ypositive) > 3:
 			yslopedata = numpy.flip(ypositive, axis=0)
@@ -227,7 +227,7 @@ class ComedLib(object):
 
 		if slope < 0.1:
 			slope = 0.1
-		value2 = (14 - len(yslopedata))*slope/2.0 + median
+		value2 = (14 - len(yslopedata))*slope/2.0 + yarray.mean()
 
 		value3 = (yarray.max() + yarray.mean() + yarray[0])/3.0
 

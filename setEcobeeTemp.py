@@ -17,7 +17,7 @@ def setEcobee(args):
 	print("Final Adjusted Temp Setting: {0:.1f}F".format(adjustTemp))
 
 	endtime = datetime.datetime.now()
-	endtime = endtime.replace(hour=args.hour, second=1, microsecond=0)
+	endtime = endtime.replace(hour=args.hour, second=30, microsecond=0)
 	if args.minute is not None:
 		endtime = endtime.replace(minute=args.minute)
 	print("Selected time is:")

@@ -48,13 +48,24 @@ class ThermoStat(object):
 	def checkUserOverride(self):
 		events_tree = self.myecobee.events()
 		if events_tree is None:
+			print('no events to parse -> no override')
 			return False
 		user_override = False
+		if len(events_tree) > 1:
+			print('{0} events to parse'.format(len(events_tree)))
 		for event_dict in events_tree:
+			print(event_dict['cool_hold_temp'], event_dict['is_cool_off'], event_dict['end_time'], event_dict['end_date'])
 			if ( event_dict['cool_hold_temp'] % 10 != 1
 					and event_dict['is_cool_off'] is False
-					and not event_dict['end_time'].endswith("01") ):
-				user_override = True
+					and not event_dict['end_time'].endswith("01")
+					and not event_dict['end_date'].startswith("2035") ):
+				#print(event_dict)
+				end_date = int(event_dict['end_date'][:4])
+				now = datetime.datetime.now()
+				if end_date <= now.year + 1:
+					print('^^ user override ^^')
+					user_override = True
+					return True
 		return user_override
 
 	def turnOffEcobee(self):
