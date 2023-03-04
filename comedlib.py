@@ -59,6 +59,8 @@ class ComedLib(object):
 			fulldata = yaml.load(f, yaml.SafeLoader)
 		except yaml.parser.ParserError:
 			return None
+		except yaml.scanner.ScannerError:
+			return None
 		f.close()
 		if not isinstance(fulldata, dict):
 			return None
@@ -69,9 +71,10 @@ class ComedLib(object):
 	#======================================
 	def safeDownloadWebpage(self, url):
 		fails = 0
+		verify = True
 		while(fails < 9):
 			try:
-				resp = requests.get(url, timeout=1)
+				resp = requests.get(url, timeout=1, verify=verify)
 				break
 			except requests.exceptions.ReadTimeout:
 				#print "FAILED request"
@@ -83,6 +86,9 @@ class ComedLib(object):
 				fails+=2
 				time.sleep(random.random()+ fails**2)
 				continue
+			except requests.exceptions.SSLError:
+				fails+=1
+				verify = False
 		if fails >= 9:
 			print("ERROR: too many failed requests")
 			sys.exit(1)
@@ -239,8 +245,13 @@ class ComedLib(object):
 
 	#======================================
 	def getReasonableCutOff(self):
-		chargingCutoffPrice = 4.19
+		if self.debug is True:
+			print("\ngetReasonableCutOff():")
+		chargingCutoffPrice = 10.1
 		weekendBonus = 0.9
+		lateNightBonus = 0.8
+		peakSolarBonus = 1.5
+
 		if self.debug is True:
 			print(".. Starting cutoff {0:.2f}c".format(chargingCutoffPrice))
 		median, std = self.getMedianComedRate()
@@ -257,6 +268,18 @@ class ComedLib(object):
 			if self.debug is True:
 				print(".. Sat/Sun weekend bonus of {0:.2f}c".format(weekendBonus))
 			reasonableCutoff += weekendBonus
+
+		if now.hour >= 23 or now.hour <= 5:
+			if self.debug is True:
+				print(".. late night bonus of {0:.2f}c".format(lateNightBonus))
+			reasonableCutoff += lateNightBonus
+
+		if now.hour >= 6 or now.hour <= 20:
+			solar_adjust = math.exp(-1 * (now.hour - 12)**2 / 6.3) * peakSolarBonus
+			if self.debug is True:
+				print(".. peak solar bonus of {0:.2f}c".format(solar_adjust))
+			reasonableCutoff += solar_adjust
+
 		if reasonableCutoff < 1.0:
 			reasonableCutoff = 1.0
 		if self.debug is True:
@@ -271,7 +294,9 @@ class ComedLib(object):
 		for item in data:
 			prices.append(float(item['price']))
 		parray = numpy.array(prices, dtype=numpy.float64)
-		median = numpy.median(parray)
+		#median = numpy.median(parray)
+		#use 75% percentile instead
+		median = numpy.percentile(parray, 75)
 		std = numpy.std(parray)
 		if self.debug is True:
 			print((".. 24 hour median price: %.3f +/- %.3f"%(median, std)))

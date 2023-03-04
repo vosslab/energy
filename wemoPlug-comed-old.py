@@ -21,9 +21,9 @@ chargingCutoffPrice = 3.99
 #wemoIpAddress = "192.168.2.165" #insight1
 wemoIpAddress = "192.168.2.166" #insight2
 #always start charge below this value
-lower_bound = 1.8
+lower_bound = 2.8
 #always stop  charge above this value
-upper_bound = 7.8
+upper_bound = 10.2
 #wemoIpAddress = "192.168.2.168" #plug6
 
 class ComedSmartWemoPlug(object):
@@ -111,6 +111,7 @@ if __name__ == '__main__':
 		hour = now.hour
 		if hour != last_hour:
 			print('============== new hour ==')
+		last_hour = hour
 
 		timestr = "%02d:%02d"%(now.hour, now.minute)
 
@@ -139,13 +140,15 @@ if __name__ == '__main__':
 		median = wemoplug.getMedianComedRate()
 		cutoff = wemoplug.getReasonableCutOff()
 		### more strict cutoff
-		cutoff = (cutoff + 2.0 * median) / 3.0
+		#cutoff = (cutoff + 2.0 * median) / 3.0
 		if cutoff < lower_bound:
 			cutoff = lower_bound
 		#elif cutoff > upper_bound:
 		#	cutoff = upper_bound
 		### less strict cutoff
 		#cutoff += 1.0
+		### more strict cutoff
+		cutoff -= 0.5
 
 		#print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
 
@@ -154,11 +157,6 @@ if __name__ == '__main__':
 		#print(cutoff)
 		#print(now.minute)
 
-		if now.hour >= 23 or now.hour <= 5:
-			#print("Time Bonus Cent")
-			rate += 0.8
-
-		#print "rate %.2f"%(rate)
 		if rate > 2.0*cutoff and now.minute > 20:
 			mystr = "%s: charging LONG disable over double price per kWh ( %.2f | cutoff = %.2f )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "red"))
@@ -170,15 +168,21 @@ if __name__ == '__main__':
 				time.sleep(sleepTime)
 			continue
 
-		buffer_rate = 0.3
+		buffer_rate = 0.5
 
 		if rate < lower_bound:
 			mystr = "%s: charging enabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "green"))
 			wemoplug.enable()
 
-		elif rate > float(cutoff) + buffer_rate or rate > upper_bound:
+		elif rate > float(cutoff) + buffer_rate:
 			mystr = "%s: charging disabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
+			print(CL.colorString(mystr, "red"))
+			wemoplug.disable()
+			continue
+
+		elif rate > upper_bound:
+			mystr = "%s: charging disabled ( %.2f c/kWh | upper_bound = %.2f c/kWh )"%(timestr, rate, upper_bound)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
@@ -192,4 +196,3 @@ if __name__ == '__main__':
 			mystr = "%s: charging unchanged ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
 			print(CL.colorString(mystr, "brown"))
 
-		last_hour = hour
