@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import math
 import pywemo
@@ -28,6 +29,7 @@ upper_bound = 10.2
 
 class ComedSmartWemoPlug(object):
 	def __init__(self):
+		self.depth = 0
 		self.connectToWemo()
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = False
@@ -54,6 +56,10 @@ class ComedSmartWemoPlug(object):
 		return self.comlib.getReasonableCutOff()
 
 	#======================================
+	def getPredictedRate(self):
+		return self.comlib.getPredictedRate()
+
+	#======================================
 	def enable(self):
 		if self.device.get_state() == 0:
 			mystr = "turning ON wemo plug, start charging"
@@ -73,6 +79,7 @@ class ComedSmartWemoPlug(object):
 
 	#======================================
 	def disable(self):
+		self.depth += 1
 		if self.device.get_state() == 1:
 			mystr = "turning OFF wemo plug, stop charging"
 			print(CL.colorString(mystr, "red"))
@@ -82,10 +89,16 @@ class ComedSmartWemoPlug(object):
 		else:
 			#print "charging already disabled"
 			pass
+		# get state of device
 		if self.device.get_state() == 0:
+			self.depth = 0
 			return
 		print(CL.colorString("ERROR: turning off charging", "red"))
-		self.disable()
+		time.sleep(0.2 * self.depth)
+		if self.depth > 10:
+			sys.exit(1)
+		else:
+			self.disable()
 		return
 
 	#======================================
@@ -136,7 +149,8 @@ if __name__ == '__main__':
 			pass
 
 		### get the comed rate
-		rate = wemoplug.getCurrentComedRate()
+		current_rate = wemoplug.getCurrentComedRate()
+		predict_rate = wemoplug.getPredictedRate()
 		median = wemoplug.getMedianComedRate()
 		cutoff = wemoplug.getReasonableCutOff()
 		### more strict cutoff
@@ -157,8 +171,8 @@ if __name__ == '__main__':
 		#print(cutoff)
 		#print(now.minute)
 
-		if rate > 2.0*cutoff and now.minute > 20:
-			mystr = "%s: charging LONG disable over double price per kWh ( %.2f | cutoff = %.2f )"%(timestr, rate, cutoff)
+		if predict_rate > 2.0*cutoff and now.minute > 20:
+			mystr = "%s: charging LONG disable over double price per kWh ( %.2f | %.2f | cutoff = %.2f )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			#print "wait out the rest of the hour"
@@ -170,29 +184,29 @@ if __name__ == '__main__':
 
 		buffer_rate = 0.5
 
-		if rate < lower_bound:
-			mystr = "%s: charging enabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
+		if predict_rate < lower_bound:
+			mystr = "%s: charging enabled ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "green"))
 			wemoplug.enable()
 
-		elif rate > float(cutoff) + buffer_rate:
-			mystr = "%s: charging disabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
+		elif predict_rate > float(cutoff) + buffer_rate:
+			mystr = "%s: charging disabled ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
 
-		elif rate > upper_bound:
-			mystr = "%s: charging disabled ( %.2f c/kWh | upper_bound = %.2f c/kWh )"%(timestr, rate, upper_bound)
+		elif predict_rate > upper_bound:
+			mystr = "%s: charging disabled ( %.2f c/kWh | %.2f c/kWh | upper_bound = %.2f c/kWh )"%(timestr, current_rate, predict_rate, upper_bound)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
 
-		elif rate < float(cutoff) - buffer_rate:
-			mystr = "%s: charging enabled ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
+		elif predict_rate < float(cutoff) - buffer_rate:
+			mystr = "%s: charging enabled ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "green"))
 			wemoplug.enable()
 
 		else:
-			mystr = "%s: charging unchanged ( %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, rate, cutoff)
+			mystr = "%s: charging unchanged ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "brown"))
 
