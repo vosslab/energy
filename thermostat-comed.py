@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import math
+import time
 import numpy
 import datetime
 import comedlib
@@ -39,11 +40,11 @@ class ThermoStat(object):
 	def showRates(self):
 		if self.current_rate is None:
 			self.getRates()
-		print(("24hr Median Rate: {0:.3f} +/- {1:.3f}c".format(self.median, self.std)))
-		print(("Current Rate:     {0:.3f}c".format(self.current_rate)))
-		print(("Predicted Rate:   {0:.3f}c".format(self.predict_rate)))
-		print(("Cut Off Rate:     {0:.3f}c".format(self.cutoff)))
-		print(("Most Recent Rate: {0:.1f}c".format(self.recent_rate)))
+		print((" o 24hr Median Rate: {0:.3f} +/- {1:.3f}c".format(self.median, self.std)))
+		print((" o Current Rate:     {0:.3f}c".format(self.current_rate)))
+		print((" o Predicted Rate:   {0:.3f}c".format(self.predict_rate)))
+		print((" o Cut Off Rate:     {0:.3f}c".format(self.cutoff)))
+		print((" o Most Recent Rate: {0:.1f}c".format(self.recent_rate)))
 
 	def checkUserOverride(self):
 		events_tree = self.myecobee.events()
@@ -58,24 +59,25 @@ class ThermoStat(object):
 			end_date = int(event_dict['end_date'][:4])
 			if end_date > now.year + 1:
 				continue
-			print(event_dict['cool_hold_temp'], event_dict['is_cool_off'], event_dict['end_time'], event_dict['end_date'])
+			print(" - ", event_dict['cool_hold_temp'], event_dict['is_cool_off'], event_dict['end_time'], event_dict['end_date'])
 			if ( event_dict['cool_hold_temp'] % 10 != 1
 					and event_dict['is_cool_off'] is False
 					and not event_dict['end_time'].endswith("01") ):
-				print('^^ user override ^^')
+				print('^^^^ user override ^^^')
 				user_override = True
 				return True
 		return user_override
 
 	def turnOffEcobee(self):
 		now = datetime.datetime.now()
-		print("Request: Turn OFF air conditioner")
+		print("||Request: Turn OFF air conditioner")
 		if now.minute <= 20 or self.coolsetting < self.hightemp - 1:
 			print(("Set A/C to {0:.1f} F".format(self.hightemp)))
 			self.myecobee.setTemperature(cooltemp=self.hightemp, endTimeMethod='thirty_past')
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
-			print("\nnothing to do")
+			#print("\nnothing to do")
+			pass
 
 	def getRelativeHumidity(self):
 		humidvalues = []
@@ -91,8 +93,7 @@ class ThermoStat(object):
 			return None
 
 		rel_humid = numpy.array(humidvalues).mean()
-		print("Relative humidity: {0:.1f}%".format(rel_humid))
-		return numpy.array(humidvalues).mean()
+		return rel_humid
 
 	def getHumidAdjustedCoolTemp(self):
 		if self.use_humid is False:
@@ -103,13 +104,13 @@ class ThermoStat(object):
 		adjustTemp = self.inverseHeatIndex(self.cooltemp, rel_humid)
 		#rounding
 		adjustTemp = round(adjustTemp, 1)
-		print("Humidity Adjusted Cool Setting: {0:.1f}F".format(adjustTemp))
+		print(f" _ Humidity Adjusted Cool Setting: {adjustTemp:.1f}F / Relative humidity: {rel_humid:.1f}%")
 		if adjustTemp > self.cooltemp:
 			adjustTemp = self.cooltemp
 		return adjustTemp
 
 	def turnOnEcobee(self):
-		print("Request: Turn ON air conditioner")
+		print("||Request: Turn ON air conditioner")
 		#adjust for humidity
 		adjustTemp = self.getHumidAdjustedCoolTemp()
 
@@ -117,7 +118,11 @@ class ThermoStat(object):
 		stdev_temp = self.myecobee.getStdevTemp()
 		adjustment = math.sqrt(stdev_temp)/3.0
 		adjustTemp -= adjustment
-		print("Adjust temp down by {0:.1f}F for standard deviation of {1:.1f}F".format(adjustment, stdev_temp))
+		print(" _ Adjust temp down by {0:.1f}F for standard deviation of {1:.1f}F".format(adjustment, stdev_temp))
+
+		if now.hour >= 19:
+			print(" _ Adjust temperature down 1 degree after 7pm for bedtime")
+			adjustTemp -= 1.0
 
 		#rounding
 		adjustTemp = round(adjustTemp, 1)
@@ -127,12 +132,13 @@ class ThermoStat(object):
 		print("Final Adjusted Cool Setting: {0:.1f}F".format(adjustTemp))
 
 		if self.coolsetting > adjustTemp + 1.0:
-			print("Request: Turn ON air conditioner")
+			print("||Request: Turn ON air conditioner")
 			print(("Set A/C to {0:.1f} F".format(adjustTemp)))
 			self.myecobee.setTemperature(cooltemp=adjustTemp, endTimeMethod='end_of_hour')
 			#myecobee.sendMessage("A/C was set to 80F, because ComEd Prices are High -- Neil")
 		else:
-			print("\nnothing to do")
+			#print("\nnothing to do")
+			pass
 
 	def heatIndex(self, temp, rel_humid):
 		heat_index = 1.1 * temp + 0.047 * rel_humid - 10.3
@@ -153,13 +159,17 @@ class ThermoStat(object):
 		return bonus_rate
 
 
+
+
 if __name__ == "__main__":
 
+	print("=====================================================")
+	print(time.asctime())
 	now = datetime.datetime.now()
 	print("Current hour: {0:d}".format(now.hour))
 	#vacation override
-	if now.hour < 6 or now.hour >= 19:
-		print("only run program between 6am and 7pm => exit")
+	if now.hour < 6 or now.hour >= 20:
+		print("only run program between 6am and 8:59pm => exit")
 		sys.exit(0)
 
 	thermstat = ThermoStat()
@@ -168,7 +178,14 @@ if __name__ == "__main__":
 		sys.exit(0)
 	print("no user override found")
 
+	#don't change temperature when it is almost the next hour
+	next_hour_cutoff = 59
+	if now.minute >= next_hour_cutoff:
+		print(f"more than {next_hour_cutoff} minutes past the hour => turn off")
+		thermstat.turnOffEcobee()
+		sys.exit(0)
 
+	#minutes past the hour to start tweaking temperature
 	if now.hour < 10 or now.hour >= 18:
 		#early late
 		time_cutoff = 9

@@ -3,6 +3,8 @@
 import sys
 import time
 import numpy
+#print(sys.path)
+
 import readSMBus
 import solarProduction
 

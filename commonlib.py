@@ -311,7 +311,7 @@ class CommonLib(object):
 		closecol = "m"
 		clear = opencol + "0" + closecol
 		xterm = 0
-		if os.environ.get("TERM") is not None and os.environ.get("TERM") == "xterm": 
+		if os.environ.get("TERM") is not None and os.environ.get("TERM").startswith("xterm"): 
 			xterm = True
 		else:
 			xterm = False

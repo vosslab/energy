@@ -113,7 +113,8 @@ if testmode: print("<li>save fig completed</li>")
 #if testmode: pyplot.savefig("comed.png", format=format, dpi=200)
 
 if not testmode: print(("Content-Type: image/%s\n"%(format)))
-if not testmode: sys.stdout.write(figdata.getvalue())
+#if not testmode: sys.stdout.write(figdata.getvalue())
+if not testmode: sys.stdout.buffer.write(figdata.getvalue())
 
 print(("<li> time: %s</li>"%(time.asctime())))
 if testmode: print("<li>ready to write image...</li>")

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
 import pytz
 import yaml
 import numpy
-import shelve
+import pickle
 import logging
 import pyecobee
 import datetime
@@ -13,54 +13,81 @@ from six import moves
 
 class MyEcobee(object):
 	def __init__(self):
-		self.setPyEcobeeDbFile()
-		self.setYamlFile()
+		self.setPyEcobee_Database_File()
+		self.setPyEcobee_Defs_File()
 
-	def setPyEcobeeDbFile(self):
-		if os.path.exists('/etc/energy/pyecobee_db.shelf'):
-			self.shelf_file = '/etc/energy/pyecobee_db.shelf'
-		elif os.path.exists('pyecobee_db.shelf'):
-			self.shelf_file = 'pyecobee_db.shelf'
-		elif os.path.exists('pyecobee_db'):
-			self.shelf_file = 'pyecobee_db'
-		#default value
-		self.shelf_file = '/etc/energy/pyecobee_db.shelf'
+	def setPyEcobee_Database_File(self):
+		if os.path.exists('/etc/energy/pyecobee_db.pickle'):
+			self.db_file = '/etc/energy/pyecobee_db.pickle'
+		else:
+			self.db_file = '/etc/energy/pyecobee_db.pickle'
 		return
 
-	def setYamlFile(self):
+	def setPyEcobee_Defs_File(self):
 		if os.path.exists("/etc/energy/ecobee_defs.yml"):
-			self.yaml_file = "/etc/energy/ecobee_defs.yml"
+			self.defs_file = "/etc/energy/ecobee_defs.yml"
 		elif os.path.exists("ecobee_defs.yml"):
-			self.yaml_file = "ecobee_defs.yml"
+			self.defs_file = "ecobee_defs.yml"
+		else:
+			self.defs_file = "/etc/energy/ecobee_defs.yml"
 		return
 
-	def _persist_to_shelf(self):
-		pyecobee_db = shelve.open(self.shelf_file, protocol=2)
-		pyecobee_db[self.thermostat_name] = self.ecobee_service
-		pyecobee_db.close()
+	def _persist_data(self):
+		data = {
+			self.thermostat_name: self.ecobee_service,
+		}
+		# Open file in binary write mode
+		with open(self.db_file, 'wb') as file:
+			pickle.dump(data, file)
+
+	def _load_data(self):
+		self.ecobee_service = None
+		if os.path.exists(self.db_file) and os.path.getsize(self.db_file) > 0:
+			# Open file in binary read mode
+			with open(self.db_file, 'rb') as file:
+				data = pickle.load(file)
+				self.ecobee_service = data.get(self.thermostat_name)
+
+		if self.ecobee_service is None:
+			# Setup new app, by going to web service
+			self.ecobee_service = pyecobee.EcobeeService(
+				thermostat_name=self.thermostat_name,
+				application_key=self.api_key)
+
 
 	def _refresh_tokens(self):
 		token_response = self.ecobee_service.refresh_tokens()
 		self.logger.debug('TokenResponse returned from self.ecobee_service.refresh_tokens():\n{0}'.format(token_response.pretty_format()))
-		self._persist_to_shelf()
+		self._persist_data()
 
 	def _request_tokens(self):
-		token_response = self.ecobee_service.request_tokens()
+		try:
+			token_response = self.ecobee_service.request_tokens()
+		except pyecobee.exceptions.EcobeeAuthorizationException:
+			self._authorize()
 		self.logger.debug('TokenResponse returned from self.ecobee_service.request_tokens():\n{0}'.format(token_response.pretty_format()))
-		self._persist_to_shelf()
+		self._persist_data()
 
 	def _authorize(self):
 		authorize_response = self.ecobee_service.authorize()
-		self.logger.debug('AutorizeResponse returned from self.ecobee_service.authorize():\n{0}'.format(authorize_response.pretty_format()))
-		self._persist_to_shelf()
-		self.logger.info('Please goto ecobee.com, login to the web portal and click on the settings tab.\n'
-			'Ensure the My Apps widget is enabled.\n'
-			'If it is not click on the My Apps option in the menu on the left.\n'
-			'In the My Apps widget paste "{0}" and in the textbox labelled'
-			'"Enter your 4 digit pin to install your third party app" and then click "Install App". \n'
-			'The next screen will display any permissions the app requires and will ask you to click\n'
-			'"Authorize" to add the application.\n\n'
-			'After completing this step please hit "Enter" to continue.'.format(authorize_response.ecobee_pin))
+		self.logger.debug('AuthorizeResponse returned from self.ecobee_service.authorize():\n{0}'.format(authorize_response.pretty_format()))
+		self._persist_data()
+		ecobee_pin = authorize_response.ecobee_pin  # Pin code
+		pin_color = "\033[94m"  # ANSI escape code for blue text
+		reset_color = "\033[0m"  # ANSI escape code to reset to default terminal text color
+		message = (
+			"\n"
+			 "1. Please go to ecobee.com, log in to the web portal,\n"
+			 " https://www.ecobee.com/consumerportal/index.html#login\n"
+			 "2. Next and click on the settings icon in the upper right.\n"
+			 "3. Click on the 'My Apps' option in the menu on the left.\n"
+			f"4. In the 'My Apps' widget, paste {pin_color}{ecobee_pin}{reset_color} into the textbox labeled\n"
+			"'Enter your 4 digit pin to install your third-party app,' and then click 'Install App'.\n"
+			"The next screen will display any permissions the app requires \nand will ask you to click "
+			"'Authorize' to add the application.\n\n"
+			"After completing this step, please hit 'Enter' to continue."
+		)
+		self.logger.info(message)
 		moves.input()
 
 	def _request_data(self, selection):
@@ -80,26 +107,31 @@ class MyEcobee(object):
 	#================================================================
 
 	def readThermostatDefs(self):
-		self.logger.debug('Reading txt file: {0}'.format(self.yaml_file))
-		pyecobee_defs = open(self.yaml_file, 'r')
-		fulldata = yaml.load(pyecobee_defs, yaml.SafeLoader)
+		self.logger.debug('Reading txt file: {0}'.format(self.defs_file))
+		pyecobee_defs_file_ptr = open(self.defs_file, 'r')
+		fulldata = yaml.safe_load(pyecobee_defs_file_ptr)
 		self.thermostat_name = fulldata['thermostat_name'].strip()
 		self.api_key = fulldata['api_key'].strip()
 		self.thermostat_id = str(fulldata['thermostat_id'])
-		pyecobee_defs.close()
+		pyecobee_defs_file_ptr.close()
 
 	def openConnection(self):
-		try:
-			pyecobee_db = shelve.open(self.shelf_file, protocol=2)
-			self.ecobee_service = pyecobee_db[self.thermostat_name]
-		except KeyError:
-			self.ecobee_service = pyecobee.EcobeeService(thermostat_name=self.thermostat_name, application_key=self.api_key)
-		finally:
-			#print("Cannot open pyecobee session<br/>\n")
-			#print(self.shelf_file)
-			#pyecobee_db.close()
-			pass
+		self._load_data()
 
+		if self.ecobee_service is None or not self.ecobee_service.authorization_token:
+			self._authorize()
+
+		if self.ecobee_service is None or not self.ecobee_service.access_token:
+			self._request_tokens()
+
+		now_utc = datetime.datetime.now(pytz.utc)
+		if self.ecobee_service.refresh_token_expires_on and now_utc > self.ecobee_service.refresh_token_expires_on:
+			self._authorize()
+			self._request_tokens()
+		elif self.ecobee_service.access_token_expires_on and now_utc > self.ecobee_service.access_token_expires_on:
+			self._refresh_tokens()
+
+	def openConnection_OLD(self):
 		if not self.ecobee_service.authorization_token:
 			self._authorize()
 
@@ -419,5 +451,6 @@ if __name__ == "__main__":
 
 	#myecobee.sendMessage("Orion is a funny guy")
 	#myecobee.setTemperature(cooltemp=71)
+
 
 

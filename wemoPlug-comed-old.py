@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import time
@@ -111,7 +111,7 @@ class ComedSmartWemoPlug(object):
 if __name__ == '__main__':
 	count = 0
 	last_hour = -2
-	refreshTime = 300
+	refreshTime = 180
 	wemoplug = ComedSmartWemoPlug()
 	while(True):
 		if count > 0:

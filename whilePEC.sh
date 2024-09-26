@@ -1,3 +1,3 @@
 #!/bin/sh
 
-while true; do python logEnergy.py ; sleep 300; done
+while true; do python3 logEnergy.py ; sleep 300; done

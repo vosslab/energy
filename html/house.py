@@ -1,6 +1,15 @@
+#!/usr/bin/env python3
+
 #Traceback manager for CGI scripts
 import cgitb
 cgitb.enable()
+
+import sys
+sys.path.append('/home/pi/energy')
+
+#import notarealmodule
+
+
 
 import time
 import numpy
