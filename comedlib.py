@@ -54,7 +54,7 @@ class ComedLib(object):
 		self.parsed_data_cache = None
 
 		# Try to read from persistent cache
-		#data = self.readCache()
+		data = self.readCache()
 		if data:
 			if self.debug:
 				print(".. Using comed data from persistent cache")
