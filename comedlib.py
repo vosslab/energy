@@ -1,109 +1,69 @@
 #!/usr/bin/env python3
 
+# Standard Library
 import os
 import sys
-import math
 import time
+import math
 import json
-import yaml
-import numpy
 import random
-import requests
 import datetime
+import shelve
+# PIP modules
+import numpy
+import requests
 from scipy import stats
-
-### TODO
-# add caching
-# take median from last three days
 
 #======================================
 #======================================
 class ComedLib(object):
+	"""
+	Class to interact with ComEd's pricing data. Handles downloading, caching, and parsing of data.
+	"""
+
 	def __init__(self):
+		"""Initializes the ComedLib object, setting up cache settings and base URL."""
 		self.useCache = True
 		scriptdir = os.path.dirname(__file__)
-		filename = "comed_cache_file.yml"
-		self.debug = False
-		if len(sys.argv) > 1 and sys.argv[1] == "debug":
-			self.debug = True
-		self.cachefile = os.path.join(scriptdir, filename)
+		self.cachefile = os.path.join(scriptdir, "comed_cache_file")
 		self.baseurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
-		#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed&datestart=201801030005&dateend=201801032300"
-		return
-
-	#======================================
-	def writeCache(self, data):
-		if self.useCache is False:
-			return
-		if self.debug is True:
-			print((".. saving data to %s"%(self.cachefile)))
-		f = open(self.cachefile, "w")
-		fulldata = {
-			'timestamp': int(time.time()),
-			'data': data,
-		}
-		yaml.safe_dump(fulldata, f)
-		f.close()
-		return
-
-	#======================================
-	def readCache(self):
-		if self.useCache is False:
-			return None
-		if not os.path.exists(self.cachefile):
-			return None
-		if self.debug is True:
-			print((".. reading data from %s"%(self.cachefile)))
-		f = open(self.cachefile, "r")
-		try:
-			fulldata = yaml.load(f, yaml.SafeLoader)
-		except yaml.parser.ParserError:
-			return None
-		except yaml.scanner.ScannerError:
-			return None
-		f.close()
-		if not isinstance(fulldata, dict):
-			return None
-		if time.time() - fulldata['timestamp'] > 240:
-			return None
-		return fulldata['data']
-
-	#======================================
-	def safeDownloadWebpage(self, url):
-		fails = 0
-		verify = True
-		while(fails < 9):
-			try:
-				resp = requests.get(url, timeout=1, verify=verify)
-				break
-			except requests.exceptions.ReadTimeout:
-				#print "FAILED request"
-				fails+=1
-				time.sleep(random.random()+ fails**2)
-				continue
-			except requests.exceptions.ConnectTimeout:
-				#print "FAILED connect"
-				fails+=2
-				time.sleep(random.random()+ fails**2)
-				continue
-			except requests.exceptions.SSLError:
-				fails+=1
-				verify = False
-		if fails >= 9:
-			print("ERROR: too many failed requests")
-			sys.exit(1)
-		return resp
+		self.parsed_data_cache = None  # In-memory cache for parsed data
+		self.raw_data_cache = None  # In-memory cache for raw data
+		self.cache_expiry_seconds = 120  # Cache expiry time in seconds
+		self.debug = True
 
 	#======================================
 	def downloadComedJsonData(self, url=None):
-		data = self.readCache()
-		if isinstance(data, list):
-			if self.debug is True:
-				print(".. Using comed data from cache")
+		"""
+		Downloads the ComEd JSON data. Uses in-memory cache if available and valid,
+		otherwise attempts to read from persistent cache or download fresh data.
+
+		Args:
+			url (str, optional): URL to download the JSON data from. Defaults to None.
+
+		Returns:
+			list: JSON data as a list of dictionaries, or None if download or parsing fails.
+		"""
+		# Try to use in-memory cache first
+		if self.raw_data_cache:
+			data_age = time.time() - self.raw_data_cache['timestamp']
+			if data_age < self.cache_expiry_seconds:
+				if self.debug:
+					print(f".. Using comed data from in-memory cache .. age {data_age:.1f} seconds")
+				return self.raw_data_cache['data']
+		self.parsed_data_cache = None
+
+		# Try to read from persistent cache
+		#data = self.readCache()
+		if data:
+			if self.debug:
+				print(".. Using comed data from persistent cache")
+			self.raw_data_cache = {'data': data, 'timestamp': time.time()}  # Update in-memory cache
 			return data
-		else:
-			if self.debug is True:
-				print(".. Downloading comed new data")
+
+		# Download new data if cache is not available or expired
+		if self.debug:
+			print(".. Downloading new comed data")
 		if url is None:
 			url = self.getUrl()
 		resp = self.safeDownloadWebpage(url)
@@ -111,76 +71,181 @@ class ComedLib(object):
 			data = json.loads(resp.text)
 		except ValueError:
 			return None
-			time.sleep(300 + 100*random.random())
-			data = self.downloadComedJsonData(url)
+
+		# Save data to cache
 		self.writeCache(data)
-		time.sleep(random.random())
+		self.raw_data_cache = {'data': data, 'timestamp': time.time()}  # Update in-memory cache
 		return data
 
 	#======================================
+	def parseComedData(self, data=None):
+		"""
+		Parses the ComEd data and caches the result for reuse.
+
+		Args:
+			data (list, optional): Raw JSON data as a list of dictionaries. Defaults to None.
+
+		Returns:
+			dict: Dictionary with hours as keys and lists of prices as values.
+		"""
+		if data is None:
+			data = self.downloadComedJsonData()
+		if self.parsed_data_cache is not None:
+			return self.parsed_data_cache  # Use cached parsed data
+
+		yvalues = {}
+		day = None
+		for p in data:
+			ms = int(p['millisUTC'])
+			price = float(p['price'])
+			timestruct = list(time.localtime(ms / 1000.))
+			if day is None:
+				day = timestruct[2]
+
+			hours = timestruct[3] + timestruct[4] / 60.
+			if timestruct[2] != day:
+				hours -= 24.
+			hour = int(hours) + 1
+			hour2 = float(hour) - 0.99
+			if hour in yvalues:
+				yvalues[hour].append(price)
+				yvalues[hour2].append(price)
+			else:
+				yvalues[hour] = [price]
+				yvalues[hour2] = [price]
+
+		# Cache the parsed data for reuse
+		self.parsed_data_cache = yvalues
+		return yvalues
+
+	#======================================
+	def writeCache(self, data):
+		"""
+		Writes data to the persistent cache using `shelve`.
+
+		Args:
+			data (list): JSON data to be cached.
+		"""
+		if not self.useCache:
+			return
+		if self.debug:
+			print(f".. saving data to {self.cachefile}")
+		# Using shelve for persistent key-value storage
+		with shelve.open(self.cachefile) as cache:
+			cache['data'] = data
+			cache['timestamp'] = int(time.time())
+
+	#======================================
+	def readCache(self):
+		"""
+		Reads data from the persistent cache if available and valid.
+
+		Returns:
+			list: Cached JSON data as a list of dictionaries, or None if cache is invalid or not present.
+		"""
+		if not self.useCache:
+			return None
+		# Attempt to read from shelve cache
+		try:
+			with shelve.open(self.cachefile) as cache:
+				if 'timestamp' not in cache or 'data' not in cache:
+					return None
+				if time.time() - cache['timestamp'] > self.cache_expiry_seconds:
+					return None
+				return cache['data']
+		except Exception as e:
+			if self.debug:
+				print(f"ERROR: Failed to read cache. {str(e)}")
+			return None
+
+	#======================================
+	def safeDownloadWebpage(self, url):
+		"""
+		Safely downloads a webpage with retry logic for handling network errors.
+
+		Args:
+			url (str): URL to download.
+
+		Returns:
+			requests.Response: HTTP response object.
+
+		Exits:
+			Exits the program if too many failures occur during download.
+		"""
+		fails = 0
+		verify = True
+		while(fails < 9):
+			try:
+				resp = requests.get(url, timeout=1, verify=verify)
+				break
+			except requests.exceptions.ReadTimeout:
+				fails += 1
+				time.sleep(random.random() + fails**2)
+				continue
+			except requests.exceptions.ConnectTimeout:
+				fails += 2
+				time.sleep(random.random() + fails**2)
+				continue
+			except requests.exceptions.SSLError:
+				fails += 1
+				verify = False
+		if fails >= 9:
+			print("ERROR: too many failed requests")
+			sys.exit(1)
+		return resp
+
+	#======================================
 	def getUrl(self):
+		"""
+		Returns the base URL for downloading data.
+
+		Returns:
+			str: Base URL for data.
+		"""
 		return self.baseurl
 
 	#======================================
 	def getHourUrl(self):
+		"""
+		Placeholder method for getting an hour-specific URL. Currently returns the base URL.
+
+		Returns:
+			str: URL for data.
+		"""
 		return self.getUrl()
-		### this does not work to limit data
-		#now = datetime.datetime.now()
-		#timecode = "%04d%02d%02d%02d00"%(now.year, now.month, now.day, now.hour)
-		#print timecode
-		#adding timecode does not work to limit data return, only good for past dates, e.g., 2014
-		#comedurl = self.baseurl #+"&datestart="+timecode
-		#return comedurl
-
-	#======================================
-	def parseComedData(self, data=None):
-		if data is None:
-			return None
-		#x = []
-		#y = []
-		yvalues = {}
-		day = None
-		#print "Current Price %.2f"%(float(data[0]['price']))
-		for p in data:
-			ms = int(p['millisUTC'])
-			price = float(p['price'])
-			#print ms, price
-			timestruct = list(time.localtime(ms/1000.))
-			if day is None:
-				day = timestruct[2]
-
-			#print timestruct
-			hours = timestruct[3] + timestruct[4]/60.
-			if timestruct[2] != day:
-				hours -= 24.
-			hour = int(hours)+1
-			hour2 = float(hour) - 0.99
-			try:
-				yvalues[hour].append(price)
-				yvalues[hour2].append(price)
-			except KeyError:
-				yvalues[hour] = [price,]
-				yvalues[hour2] = [price,]
-			#x.append(hours)
-			#y.append(price)
-		return yvalues
 
 	#======================================
 	def getCurrentComedRate(self, data=None):
-		while data is None:
+		"""
+		Calculates the current average ComEd rate.
+
+		Args:
+			data (list, optional): Raw JSON data as a list of dictionaries. Defaults to None.
+
+		Returns:
+			float: The average rate for the most recent hour.
+		"""
+		if data is None:
 			data = self.downloadComedJsonData()
 		yvalues = self.parseComedData(data)
-		x2 = list(yvalues.keys())
-		x2.sort()
+		x2 = sorted(yvalues.keys())
 		key = x2[-1]
 		ylist = yvalues[key]
 		yarray = numpy.array(ylist, dtype=numpy.float64)
 		ypositive = numpy.where(yarray < 1.0, 1.0, yarray)
-		ymean = ypositive.mean()
-		return ymean
+		return ypositive.mean()
 
 	#======================================
 	def getMostRecentRate(self, data=None):
+		"""
+		Returns the most recent rate from the data.
+
+		Args:
+			data (list, optional): Raw JSON data. Defaults to None.
+
+		Returns:
+			float: The most recent rate.
+		"""
 		while data is None:
 			data = self.downloadComedJsonData()
 		yvalues = self.parseComedData(data)
@@ -192,6 +257,15 @@ class ComedLib(object):
 
 	#======================================
 	def getPredictedRate(self, data=None):
+		"""
+		Predicts the future rate based on the current trend using linear regression.
+
+		Args:
+			data (list, optional): Raw JSON data. Defaults to None.
+
+		Returns:
+			float: Predicted future rate.
+		"""
 		while data is None:
 			data = self.downloadComedJsonData()
 		median, std = self.getMedianComedRate()
@@ -245,81 +319,137 @@ class ComedLib(object):
 
 	#======================================
 	def getReasonableCutOff(self):
-		if self.debug is True:
+		"""
+		Calculates a reasonable cutoff price for energy usage based on time of day, day of the week,
+		and solar peak hours. Includes bonuses for weekends and late-night usage.
+
+		Returns:
+			float: The calculated reasonable cutoff price.
+		"""
+		if self.debug:
 			print("\ngetReasonableCutOff():")
+
 		chargingCutoffPrice = 10.1
 		weekendBonus = 0.9
 		lateNightBonus = 0.8
 		peakSolarBonus = 1.5
 
-		if self.debug is True:
-			print(".. Starting cutoff {0:.2f}c".format(chargingCutoffPrice))
+		# Start calculating the cutoff
+		if self.debug:
+			print(f".. Starting cutoff {chargingCutoffPrice:.2f}c")
+
 		median, std = self.getMedianComedRate()
-		if self.debug is True:
-			print(".. Median Rate {0:.2f} =/- {1:.3f}c".format(median, std))
-		defaultCutoff = median + math.sqrt(std)/5.0
-		if self.debug is True:
-			print(".. Calculated Cutoff {0:.3f}c".format(defaultCutoff))
-		reasonableCutoff = (chargingCutoffPrice + 2*defaultCutoff)/3.0
-		if self.debug is True:
-			print(".. Combined Cutoff {0:.3f}c".format(reasonableCutoff))
+
+		if self.debug:
+			print(f".. Median Rate {median:.2f} +/- {std:.3f}c")
+
+		# Calculate a default cutoff based on the median and standard deviation
+		defaultCutoff = median + math.sqrt(std) / 5.0
+
+		if self.debug:
+			print(f".. Calculated Cutoff {defaultCutoff:.3f}c")
+
+		reasonableCutoff = (chargingCutoffPrice + 2 * defaultCutoff) / 3.0
+
+		if self.debug:
+			print(f".. Combined Cutoff {reasonableCutoff:.3f}c")
+
+		# Adjust the cutoff for weekends
 		now = datetime.datetime.now()
-		if now.weekday() >= 5:
-			if self.debug is True:
-				print(".. Sat/Sun weekend bonus of {0:.2f}c".format(weekendBonus))
+		if now.weekday() >= 5:  # Saturday or Sunday
+			if self.debug:
+				print(f".. Sat/Sun weekend bonus of {weekendBonus:.2f}c")
 			reasonableCutoff += weekendBonus
 
+		# Adjust the cutoff for late-night usage
 		if now.hour >= 23 or now.hour <= 5:
-			if self.debug is True:
-				print(".. late night bonus of {0:.2f}c".format(lateNightBonus))
+			if self.debug:
+				print(f".. Late night bonus of {lateNightBonus:.2f}c")
 			reasonableCutoff += lateNightBonus
 
-		if now.hour >= 6 or now.hour <= 20:
-			solar_adjust = math.exp(-1 * (now.hour - 12)**2 / 6.3) * peakSolarBonus
-			if self.debug is True:
-				print(".. peak solar bonus of {0:.2f}c".format(solar_adjust))
+		# Adjust the cutoff for peak solar hours
+		if 6 <= now.hour <= 20:
+			solar_adjust = math.exp(-1 * (now.hour - 12) ** 2 / 6.3) * peakSolarBonus
+			if self.debug:
+				print(f".. Peak solar bonus of {solar_adjust:.2f}c")
 			reasonableCutoff += solar_adjust
 
+		# Ensure the cutoff is not below 1.0
 		if reasonableCutoff < 1.0:
 			reasonableCutoff = 1.0
-		if self.debug is True:
-			print(".. Final Cutoff {0:.3f}c".format(reasonableCutoff))
+
+		if self.debug:
+			print(f".. Final Cutoff {reasonableCutoff:.3f}c")
+
 		return reasonableCutoff
 
 	#======================================
 	def getMedianComedRate(self, data=None):
-		while data is None:
+		"""
+		Calculates the 75th percentile (used as median) of the rates and the standard deviation.
+
+		Args:
+			data (list, optional): Raw JSON data. Defaults to None.
+
+		Returns:
+			tuple: A tuple containing the median (75th percentile) and the standard deviation of rates.
+		"""
+		if data is None:
 			data = self.downloadComedJsonData()
-		prices = []
-		for item in data:
-			prices.append(float(item['price']))
+
+		prices = [float(item['price']) for item in data]
 		parray = numpy.array(prices, dtype=numpy.float64)
-		#median = numpy.median(parray)
-		#use 75% percentile instead
+
+		# Check if median and standard deviation are cached
+		if hasattr(self, '_median_cache'):
+			return self._median_cache
+
+		# Calculate the 75th percentile and standard deviation
 		median = numpy.percentile(parray, 75)
 		std = numpy.std(parray)
-		if self.debug is True:
-			print((".. 24 hour median price: %.3f +/- %.3f"%(median, std)))
+		self._median_cache = (median, std)
+
+		if self.debug:
+			print(f".. 24 hour median price: {median:.3f} +/- {std:.3f}")
+
 		return median, std
 
 #======================================
 #======================================
+#======================================
+#======================================
 if __name__ == '__main__':
+	# Measure start time
+	start_time = time.time()
+
+	# Instantiate the ComedLib object
 	comedlib = ComedLib()
-	comedlib.msg = True #(random.random() > 0.9)
-	comedlib.debug = True #(random.random() > 0.9)
+	comedlib.debug = True  # Enable debugging output
+
+	# Calculate and print the 24-hour median rate
 	medrate, std = comedlib.getMedianComedRate()
-	print("24hr Median Rate    {0:.3f}c +- {1:.3f}c".format(medrate, std))
+	print(f"24hr Median Rate    {medrate:.3f}c +- {std:.3f}c")
+
+	# Calculate and print the current rate
 	currrate = comedlib.getCurrentComedRate()
-	print("Hour Current Rate   {0:.3f}c".format(currrate))
+	print(f"Hour Current Rate   {currrate:.3f}c")
+
+	# Calculate and print the predicted future rate
 	predictrate = comedlib.getPredictedRate()
-	print("Hour Predicted Rate {0:.3f}c".format(predictrate))
+	print(f"Hour Predicted Rate {predictrate:.3f}c")
+
+	# Calculate and print the reasonable cutoff
 	cutoffrate = comedlib.getReasonableCutOff()
-	print("Reasonable Cutoff   {0:.3f}c".format(cutoffrate))
+	print(f"Reasonable Cutoff   {cutoffrate:.3f}c")
+
+	# Determine and print the house usage status based on the current rate and cutoff
 	if currrate > cutoffrate:
 		print("House Usage Status  OFF")
 	else:
 		print("House Usage Status  on")
 
+	# Measure end time and print run-time duration
+	end_time = time.time()
+	print(f"Script run time: {end_time - start_time:.2f} seconds")
 
 
