@@ -9,38 +9,37 @@ sys.path.append('/home/pi/energy')
 
 #import notarealmodule
 
-
-
 import time
-import numpy
-from energylib import comedlib
+#from energylib import comedlib
 from energylib import htmltools
 from energylib import smartReadUsage
 from energylib import solarProduction
-from energylib import ecobeelib
+#from energylib import ecobeelib
+
 
 print("Content-Type: text/html\n")
-print("\n")
-print("<head>")
-print("<title>House Energy Usage</title>")
-print("</head>")
+print("<head><title>House Energy Usage</title></head>")
 
 #======================================
 print("<body>")
-print("<h1>House Energy Usage</h1>")
-print("<h3>Current time:</h3>%s"%(time.asctime()))
-print('<br/>\n')
+print(f"<h1>House Energy Usage</h1><h3>Current time:</h3>{time.asctime()}<br/>\n")
 print("<a href='comed.py'>Show Only Comed Prices</a><br/>")
 print("<a href='fullhouse.py'>Show Full House Display with Graphs</a><br/>")
 
+
 #======================================
 #======================================
-solardata = solarProduction.getSolarUsage()
-print("<h3>Solar Data</h3>")
-for key in solardata:
-	if int(solardata[key]['Value']) > 0:
-		print("%s: %.3f k%s<br/>"
-			%(key, int(solardata[key]['Value'])/1000., solardata[key]['Unit']))
+# Fetch solar data (assuming this is a potentially slow operation)
+try:
+    solardata = solarProduction.getSolarUsage()
+    solar_data_html = "<h3>Solar Data</h3>" + "".join(
+        f"{key}: {int(solardata[key]['Value'])/1000.:.3f} k{solardata[key]['Unit']}<br/>"
+        for key in solardata if int(solardata[key]['Value']) > 0
+    )
+    print(solar_data_html)
+except Exception as e:
+    print("<h3>Solar Data</h3>Failed to load solar data<br/>")
+    print(f"Error: {str(e)}<br/>")
 
 #======================================
 #======================================

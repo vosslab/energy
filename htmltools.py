@@ -4,53 +4,26 @@ import colorsys
 import datetime
 
 def numberToHtmlColor(hue, saturation=0.9, value=0.6):
-	#input: hue number between 0 and 1
-	if hue < 0:
-		hue = 0
-	if hue > 1:
-		hue = 1
-	rgbindex = colorsys.hsv_to_rgb(hue, saturation, value)
-	r = int(rgbindex[0]*255.)
-	g = int(rgbindex[1]*255.)
-	b = int(rgbindex[2]*255.)
-	colorstr = "rgb({0:d}, {1:d}, {2:d})".format(r, g, b)
-	return colorstr
+	hue = max(0, min(hue, 1))  # Clamp hue between 0 and 1
+	r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+	return f"rgb({int(r * 255)}, {int(g * 255)}, {int(b * 255)})"
 
 def colorPrice(price, precision=1):
-	x_price = numpy.array(
-		[-100.,  0.,  3.,  5., 7., 9., 11.,100.],
-		dtype=numpy.float64,)
-	y_hue = numpy.array(
-		[ 315.,240.,180.,120.,60.,15.,5.,  0.],
-		dtype=numpy.float64,)
+	x_price = numpy.array([-100., 0., 3., 5., 7., 9., 11., 100.], dtype=numpy.float64)
+	y_hue = numpy.array([315., 240., 180., 120., 60., 15., 5., 0.], dtype=numpy.float64)
 	hue = numpy.interp(price, x_price, y_hue)
-	color = numberToHtmlColor(hue/360.)
-	if precision == 1:
-		text = "<span style='color: {0}'>{1:.1f}&cent;</span>\n".format(color, price)
-	elif precision == 2:
-		text = "<span style='color: {0}'>{1:.2f}&cent;</span>\n".format(color, price)
-	elif precision == 3:
-		text = "<span style='color: {0}'>{1:.3f}&cent;</span>\n".format(color, price)
-	return text
+	color = numberToHtmlColor(hue / 360.)
+	return f"<span style='color: {color}'>{price:.{precision}f}&cent;</span>\n"
 
 def colorTemperature(temperature, precision=1):
-	x_temp = numpy.array(
-		[-100.,  0., 50., 60., 65., 70.,76.,85.,100.,250.],
-		dtype=numpy.float64,)
-	y_hue = numpy.array(
-		[ 330.,270.,240.,210.,180.,170.,90.,30., 10.,  0.],
-		dtype=numpy.float64,)
+	x_temp = numpy.array([-100., 0., 50., 60., 65., 70., 76., 85., 100., 250.], dtype=numpy.float64)
+	y_hue = numpy.array([330., 270., 240., 210., 180., 170., 90., 30., 10., 0.], dtype=numpy.float64)
 	hue = numpy.interp(temperature, x_temp, y_hue)
-	color = numberToHtmlColor(hue/360.)
-	if precision == 1:
-		text = "<span style='color: {0}'><b>{1:.1f}&deg;</b></span>\n".format(color, temperature)
-	elif precision == 2:
-		text = "<span style='color: {0}'>{1:.2f}&deg;</span>\n".format(color, temperature)
-	elif precision == 3:
-		text = "<span style='color: {0}'>{1:.3f}&deg;</span>\n".format(color, temperature)
-	return text
+	color = numberToHtmlColor(hue / 360.)
+	return f"<span style='color: {color}'><b>{temperature:.{precision}f}&deg;</b></span>\n"
 
-def htmlEcobee():
+
+def htmlEcobee(weather=False):
 	htmltext = "<h3>Ecobee Stats</h3>"
 	import ecobeelib
 	myecobee = ecobeelib.MyEcobee()
@@ -58,8 +31,12 @@ def htmlEcobee():
 	myecobee.readThermostatDefs()
 	myecobee.openConnection()
 	runtimedict = myecobee.runtime()
-	coolsetting = float(runtimedict['desired_cool'])/10.
-	heatsetting = float(runtimedict['desired_heat'])/10.
+
+	# Ensure 'desired_cool' and 'desired_heat' are not None or NaN
+	coolsetting = runtimedict.get('desired_cool', -10)
+	heatsetting = runtimedict.get('desired_heat', -10)
+	coolsetting = float(coolsetting) / 10.
+	heatsetting = float(heatsetting) / 10.
 
 	sensordict = myecobee.sensors()
 	keys = list(sensordict.keys())
@@ -72,70 +49,92 @@ def htmlEcobee():
 	htmltext += "</td></tr>\n"
 	templist = []
 	humidlist = []
-	for i,key in enumerate(keys):
+
+	for i, key in enumerate(keys):
 		if i % 2 == 0:
 			if i > 0:
 				htmltext += "</tr>\n"
 			htmltext += "<tr>\n"
 		htmltext += "   <td>{0}</td>\n".format(key)
+
 		temp = sensordict[key].get('temperature')
 		humid = sensordict[key].get('humidity')
-		if humid is not None:
+
+		# Handle invalid temperature and humidity values
+		if humid is not None and not numpy.isnan(humid):
 			humidlist.append(humid)
-		if temp is None:
-			continue
-		templist.append(temp)
-		htmltext += "   <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
+
+		if temp is not None and not numpy.isnan(temp):
+			templist.append(temp)
+			htmltext += "   <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
+		else:
+			htmltext += "   <td align='right'>N/A</td>\n"  # Handle missing temperature data
+
 	htmltext += "</tr>\n"
 
 	htmltext += "<tr><td colspan='4' align='center'>\n"
-	humidarr = numpy.array(humidlist)
-	avghumid = float(humidarr.mean())
-	htmltext += (("  Inside Humidity: {0:.0f}%<br/>\n".format(avghumid)))
+	if humidlist:
+		humidarr = numpy.array(humidlist)
+		avghumid = float(humidarr.mean())
+		htmltext += (("  Inside Humidity: {0:.0f}%<br/>\n".format(avghumid)))
+	else:
+		htmltext += "  Inside Humidity: N/A<br/>\n"
 	htmltext += "</td></tr>\n"
 
 	htmltext += "<tr><td colspan='4' align='center'>\n"
-	temparr = numpy.array(templist)
-	avgtemp = float(temparr.mean())
-	stdtemp = float(temparr.std())
-	htmltext += (("  Average Temperature: {0} &pm; {1:.2f}<br/>\n".format(colorTemperature(avgtemp, 1), stdtemp)))
+	if templist:
+		temparr = numpy.array(templist)
+		avgtemp = float(temparr.mean())
+		stdtemp = float(temparr.std())
+		htmltext += (("  Average Temperature: {0} &pm; {1:.2f}<br/>\n".format(colorTemperature(avgtemp, 1), stdtemp)))
+	else:
+		htmltext += "  Average Temperature: N/A<br/>\n"
 	htmltext += "</td></tr>\n"
 
 	htmltext += "</table>\n"
 	htmltext += "<br/>\n"
 
-	weatherdict = myecobee.weather()
-	ordered_key_list = [
+	# Show weather info if the parameter is True
+	if weather:
+		weatherdict = myecobee.weather()
+		ordered_key_list = [
 			'temperature', 'wind_speed',
 			'dewpoint', 'relative_humidity',
 			'temp_high', 'temp_low',
 		]
-	wmap = {
+		wmap = {
 			'temperature': 'temp', 'dewpoint': 'temp',
 			'temp_high': 'temp', 'temp_low': 'temp',
 			'wind_speed': 'mph', 'relative_humidity': '%',
 			'condition': ' ', 'pressure': "<font size='-3'>mm&nbsp;Hg</font>",
 		}
-	keys = ordered_key_list
-	htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 7px;'>\n"
-	htmltext += "<tr><th colspan='4'>Ecobee Weather Info</th></tr>\n"
-	htmltext += "<tr><td colspan='1'>condition</td>\n"
-	htmltext += "    <td colspan='3'>{0}</td></tr>\n".format(weatherdict['condition'])
-	for i,key in enumerate(keys):
-		if i % 2 == 0:
-			if i > 0:
-				htmltext += "</tr>\n"
-			htmltext += "<tr>\n"
-		htmltext += "  <td>{0}</td>\n".format( key.replace('_', ' ') )
-		unittype = wmap[key]
-		if unittype == 'temp':
-			temp = weatherdict[key]/10.
-			htmltext += "  <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
-		else:
-			htmltext += "  <td align='right'>{0} {1}</td>\n".format( str(weatherdict[key]), unittype )
-	htmltext += "</tr></table>\n"
+		keys = ordered_key_list
+		htmltext += "<table style='border: 1px solid darkgreen; border-spacing: 7px;'>\n"
+		htmltext += "<tr><th colspan='4'>Ecobee Weather Info</th></tr>\n"
+		htmltext += "<tr><td colspan='1'>condition</td>\n"
+		htmltext += "    <td colspan='3'>{0}</td></tr>\n".format(weatherdict['condition'])
+		for i, key in enumerate(keys):
+			if i % 2 == 0:
+				if i > 0:
+					htmltext += "</tr>\n"
+				htmltext += "<tr>\n"
+			htmltext += "  <td>{0}</td>\n".format(key.replace('_', ' '))
+
+			unittype = wmap[key]
+			value = weatherdict.get(key)
+
+			# Handle weather data processing
+			if value is None or numpy.isnan(value):
+				htmltext += "  <td align='right'>N/A</td>\n"
+			elif unittype == 'temp':
+				temp = value / 10.
+				htmltext += "  <td align='right'>{0}</td>\n".format(colorTemperature(temp, 1))
+			else:
+				htmltext += "  <td align='right'>{0} {1}</td>\n".format(str(value), unittype)
+		htmltext += "</tr></table>\n"
 
 	return htmltext
+
 
 def htmlComedData(showPlot=False):
 	htmltext = "<h3>Comed Prices</h3>"
