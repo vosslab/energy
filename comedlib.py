@@ -30,7 +30,7 @@ class ComedLib(object):
 		self.parsed_data_cache = None  # In-memory cache for parsed data
 		self.raw_data_cache = None  # In-memory cache for raw data
 		self.cache_expiry_seconds = 120  # Cache expiry time in seconds
-		self.debug = True
+		self.debug = False
 
 	#======================================
 	def downloadComedJsonData(self, url=None):
