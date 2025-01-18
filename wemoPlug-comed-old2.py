@@ -24,8 +24,9 @@ wemoIpAddress = "192.168.2.166" #insight2
 #always start charge below this value
 lower_bound = 2.8
 #always stop  charge above this value
-upper_bound = 10.2
+upper_bound = 8.2
 #wemoIpAddress = "192.168.2.168" #plug6
+down_adjust = 1.0
 
 class ComedSmartWemoPlug(object):
 	def __init__(self):
@@ -165,12 +166,12 @@ if __name__ == '__main__':
 		#cutoff = (cutoff + 2.0 * median) / 3.0
 		if cutoff < lower_bound:
 			cutoff = lower_bound
-		#elif cutoff > upper_bound:
-		#	cutoff = upper_bound
+		elif cutoff > upper_bound:
+			cutoff = upper_bound
 		### less strict cutoff
 		#cutoff += 1.0
 		### more strict cutoff
-		cutoff -= 0.5
+		cutoff -= down_adjust
 
 		#print("Adjusted cutoff = %.2f ( %.1f | %.1f )"%(cutoff, chargingCutoffPrice, reasonableCutoff))
 
