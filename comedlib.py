@@ -103,6 +103,7 @@ class ComedLib(object):
 				day = timestruct[2]
 
 			hours = timestruct[3] + timestruct[4] / 60.
+			#print(f"{hours:.2f}<br/>")
 			if timestruct[2] != day:
 				hours -= 24.
 			hour = int(hours) + 1
@@ -116,6 +117,7 @@ class ComedLib(object):
 
 		# Cache the parsed data for reuse
 		self.parsed_data_cache = yvalues
+		#print(f"{yvalues.keys()}<br/>")
 		return yvalues
 
 	#======================================
