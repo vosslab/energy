@@ -304,7 +304,7 @@ def _generate_recent_rates_table(comed_data: list) -> str:
 	current_hour = now.hour
 
 	# Display rows with actual data
-	last_printed_row = None
+	last_printed_row = 0
 	for i, item in enumerate(comed_data[:13]):
 		timestruct = list(time.localtime(int(item['millisUTC']) / 1000.0))
 		time_hour = timestruct[3]
