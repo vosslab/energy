@@ -184,6 +184,46 @@ def htmlComedData(showPlot: bool = False) -> str:
 # Helper Subfunctions
 #==============
 
+def equivalent_gas_cost(electricity_cost_cents_per_kwh):
+	"""
+	Calculate the equivalent cost of a gallon of gas for an electric vehicle.
+
+	Parameters:
+		electricity_cost_cents_per_kwh (float): The cost of electricity in cents per kilowatt-hour.
+
+	Internal Parameters:
+		ev_efficiency_miles_per_kwh (float): The efficiency of the electric vehicle in miles per kilowatt-hour.
+		gas_vehicle_mpg (float): The fuel efficiency of the comparable gas vehicle in miles per gallon.
+
+	Returns:
+		float: The equivalent cost of a gallon of gas in dollars.
+	"""
+	# Define gas-to-electricity conversion rate constants
+	# gas_vehicle_mpg: Represents the miles per gallon for a comparable gas vehicle (e.g., 2021 Kia Niro)
+	# ev_efficiency_miles_per_kwh: Represents the miles per kilowatt-hour for the electric vehicle (e.g., Kia Niro EV)
+	# EPA-estimated fuel economy for a 2021 Kia Niro gas vehicle in miles per gallon
+	gas_vehicle_miles_per_gallon = 49
+	# EPA-estimated efficiency for the 2021 Kia Niro EV in miles per kilowatt-hour
+	ev_efficiency_miles_per_kwh = 3.5
+
+	# EPA’s standard conversion factor of 33.7 kWh being equivalent to one gallon of gasoline
+
+	# Calculate the gas-to-electricity conversion rate
+	# This rate represents how many miles a gas car can travel compared to an EV, using equivalent energy
+	gas_conversion_rate = gas_vehicle_mpg / ev_efficiency_miles_per_kwh
+	#gas_conversion_rate = 33.7
+
+	# Calculate the equivalent cost of a gallon of gas in cents
+	# Multiply the electricity cost per kWh by the gas-to-electricity conversion rate
+	equivalent_gas_cost_cents = electricity_cost_cents_per_kwh * gas_conversion_rate
+
+	# Convert the cost from cents to dollars
+	# Divide by 100 to convert from cents to dollars, and round to two decimal places for readability
+	equivalent_gas_cost_dollars = round(equivalent_gas_cost_cents / 100.0, 2)
+
+	# Return the final equivalent gas cost in dollars
+	return equivalent_gas_cost_dollars
+
 def _generate_status_header_html(comlib, comed_data) -> str:
 	"""
 	Generate HTML for the status header, which includes:
@@ -200,9 +240,6 @@ def _generate_status_header_html(comlib, comed_data) -> str:
 	Returns:
 		str: HTML-formatted string containing the status header information.
 	"""
-	# Define gas-to-electricity conversion rate (predefined constant)
-	gas_conversion_rate = 34.7 / 3.9
-
 	# Get median and standard deviation of electricity rates
 	median, std = comlib.getMedianComedRate(comed_data)
 	# Get the current electricity rate
@@ -217,15 +254,15 @@ def _generate_status_header_html(comlib, comed_data) -> str:
 	html += f" {colorPrice(median, 1)} &pm; {std:.2f} &cent;</span><br/>"
 
 	html += "&nbsp;<span style='color: &#35;448844'>Equivalent Gas Rate:"
-	med_gas_equiv = (median + 3.8) * gas_conversion_rate / 100.0
-	std_gas_equiv = std * gas_conversion_rate / 100.0
+	med_gas_equiv = equivalent_gas_cost(median + 3.8)
+	std_gas_equiv = equivalent_gas_cost(std)
 	html += f"</span> ${med_gas_equiv:.2f} &pm; {std_gas_equiv:.2f} per gallon<br/>"
 
 	html += "<span style='color: &#35;444488'>Hour Current Rate:"
 	html += f" {colorPrice(currentRate, 3)} </span><br/>"
 
 	html += "&nbsp;<span style='color: &#35;444488'>Equivalent Gas Rate:"
-	gas_equiv = (currentRate + 3.8) * gas_conversion_rate / 100.0
+	gas_equiv = equivalent_gas_cost(currentRate + 3.8)
 	html += f"</span> ${gas_equiv:.2f} per gallon<br/>"
 
 	html += "<span style='color: &#35;884444'>Hour Predict Rate:"
