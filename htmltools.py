@@ -264,29 +264,31 @@ def _generate_recent_rates_table(comed_data: list) -> str:
 
 	# Calculate rows to display with actual data
 	now = datetime.datetime.now()
-	minutes = now.minute
-	timepoints = max(int(minutes / 5), 8)  # Minimum 8 timepoints, based on 5-minute intervals
-	number_of_rows = min(timepoints, len(comed_data))  # Don't exceed the length of available data
+	current_hour = now.hour
 
 	# Display rows with actual data
-	for i, item in enumerate(comed_data[:number_of_rows]):
+	last_printed_row = None
+	for i, item in enumerate(comed_data[:13]):
 		timestruct = list(time.localtime(int(item['millisUTC']) / 1000.0))
+		time_hour = timestruct[3]
+		if time_hour != current_hour:
+			break
+		last_printed_row = i+1
 		rate = float(item['price'])
 		html += "<tr>\n"
-		html += f"  <td align='center'> {timestruct[3]:d}:{timestruct[4]:02d} </td>\n"
+		html += f"  <td align='center'> {time_hour:d}:{timestruct[4]:02d} </td>\n"
 		html += f"  <td align='right'> {colorPrice(rate, 1)} </td>\n"
 		html += "</tr>\n"
 
 	# Display additional rows in gray if there are more timepoints available
-	if len(comed_data) > number_of_rows:
-		for i in range(number_of_rows, min(23, len(comed_data))):
-			item = comed_data[i]
-			timestruct = list(time.localtime(int(item['millisUTC']) / 1000.0))
-			rate = float(item['price'])
-			html += "<tr style='background-color: lightgray;'>\n"
-			html += f"  <td align='center'> {timestruct[3]:d}:{timestruct[4]:02d} </td>\n"
-			html += f"  <td align='right'> {colorPrice(rate, 1)} </td>\n"
-			html += "</tr>\n"
+	for i in range(last_printed_row, min(23, len(comed_data))):
+		item = comed_data[i]
+		timestruct = list(time.localtime(int(item['millisUTC']) / 1000.0))
+		rate = float(item['price'])
+		html += "<tr style='background-color: lightgray;'>\n"
+		html += f"  <td align='center'> {timestruct[3]:d}:{timestruct[4]:02d} </td>\n"
+		html += f"  <td align='right'> {colorPrice(rate, 1)} </td>\n"
+		html += "</tr>\n"
 
 	html += "</table>\n"
 	html += "&nbsp;\n"
