@@ -202,7 +202,7 @@ def equivalent_gas_cost(electricity_cost_cents_per_kwh):
 	# gas_vehicle_mpg: Represents the miles per gallon for a comparable gas vehicle (e.g., 2021 Kia Niro)
 	# ev_efficiency_miles_per_kwh: Represents the miles per kilowatt-hour for the electric vehicle (e.g., Kia Niro EV)
 	# EPA-estimated fuel economy for a 2021 Kia Niro gas vehicle in miles per gallon
-	gas_vehicle_miles_per_gallon = 49
+	gas_vehicle_miles_per_gallon = 49.0
 	# EPA-estimated efficiency for the 2021 Kia Niro EV in miles per kilowatt-hour
 	ev_efficiency_miles_per_kwh = 3.5
 
@@ -210,7 +210,7 @@ def equivalent_gas_cost(electricity_cost_cents_per_kwh):
 
 	# Calculate the gas-to-electricity conversion rate
 	# This rate represents how many miles a gas car can travel compared to an EV, using equivalent energy
-	gas_conversion_rate = gas_vehicle_mpg / ev_efficiency_miles_per_kwh
+	gas_conversion_rate = gas_vehicle_miles_per_gallon / ev_efficiency_miles_per_kwh
 	#gas_conversion_rate = 33.7
 
 	# Calculate the equivalent cost of a gallon of gas in cents
