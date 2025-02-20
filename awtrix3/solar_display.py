@@ -40,8 +40,8 @@ def compile_solar_data():
 		return None, None
 
 	current_num, total_num = get_current_production()
-	if total_num == 0 or current_num == 0:
-		return None, None
+	#if total_num == 0 or current_num == 0:
+	#	return None, None
 
 	# Get to percentage daylight
 	progress_value = sun_location.percent_of_daylight_complete()
