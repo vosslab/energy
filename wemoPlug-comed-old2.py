@@ -181,7 +181,7 @@ if __name__ == '__main__':
 		#print(now.minute)
 
 		if predict_rate > 2.0*cutoff and now.minute > 20:
-			mystr = "%s: charging LONG disable over double price per kWh ( %.2f | %.2f | cutoff = %.2f )"%(timestr, current_rate, predict_rate, cutoff)
+			mystr = "%s: charging LONG DISable !! double cutoff ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			#print "wait out the rest of the hour"
@@ -194,28 +194,28 @@ if __name__ == '__main__':
 		buffer_rate = 0.5
 
 		if predict_rate < lower_bound:
-			mystr = "%s: charging enabled ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
+			mystr = "%s: charging +enabled ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "green"))
 			wemoplug.enable()
 
 		elif predict_rate > float(cutoff) + buffer_rate:
-			mystr = "%s: charging disabled ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
+			mystr = "%s: charging -DISabled ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
 
 		elif predict_rate > upper_bound:
-			mystr = "%s: charging disabled ( %.2f c/kWh | %.2f c/kWh | upper_bound = %.2f c/kWh )"%(timestr, current_rate, predict_rate, upper_bound)
+			mystr = "%s: charging -DISabled ( %.2f c/kWh | %.2f c/kWh | upper_bound = %.2f c/kWh )"%(timestr, current_rate, predict_rate, upper_bound)
 			print(CL.colorString(mystr, "red"))
 			wemoplug.disable()
 			continue
 
 		elif predict_rate < float(cutoff) - buffer_rate:
-			mystr = "%s: charging enabled ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
+			mystr = "%s: charging +enabled ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "green"))
 			wemoplug.enable()
 
 		else:
-			mystr = "%s: charging unchanged ( %.2f c/kWh | %.2f c/kWh | cutoff = %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
+			mystr = "%s: charging ~unchanged ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "brown"))
 
