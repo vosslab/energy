@@ -24,13 +24,16 @@ class ComedLib(object):
 	def __init__(self):
 		"""Initializes the ComedLib object, setting up cache settings and base URL."""
 		self.useCache = True
+		self.debug = False
+		cache_dir = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+		self.cache_file = os.path.join(cache_dir, "comedlib", "comed_cache_file.json")
+		os.makedirs(os.path.dirname(self.cache_file), exist_ok=True)
+		self.cache_expiry_seconds = 240  # Cache expiry time in seconds
+
 		scriptdir = os.path.dirname(__file__)
-		self.cachefile = os.path.join(scriptdir, "comed_cache_file")
 		self.baseurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		self.parsed_data_cache = None  # In-memory cache for parsed data
 		self.raw_data_cache = None  # In-memory cache for raw data
-		self.cache_expiry_seconds = 120  # Cache expiry time in seconds
-		self.debug = False
 
 	#======================================
 	def downloadComedJsonData(self, url=None):
@@ -123,19 +126,20 @@ class ComedLib(object):
 	#======================================
 	def writeCache(self, data):
 		"""
-		Writes data to the persistent cache using `shelve`.
-
-		Args:
-			data (list): JSON data to be cached.
+		Writes data to the persistent cache using JSON.
 		"""
 		if not self.useCache:
 			return
+
+		cache_data = {
+			"data": data,
+			"timestamp": int(time.time())
+		}
+		with open(self.cache_file, "w") as file:
+			json.dump(cache_data, file)
+
 		if self.debug:
-			print(f".. saving data to {self.cachefile}")
-		# Using shelve for persistent key-value storage
-		with shelve.open(self.cachefile) as cache:
-			cache['data'] = data
-			cache['timestamp'] = int(time.time())
+			print(f".. Saved cache to {self.cache_file}")
 
 	#======================================
 	def readCache(self):
@@ -147,18 +151,20 @@ class ComedLib(object):
 		"""
 		if not self.useCache:
 			return None
-		# Attempt to read from shelve cache
-		try:
-			with shelve.open(self.cachefile) as cache:
-				if 'timestamp' not in cache or 'data' not in cache:
-					return None
-				if time.time() - cache['timestamp'] > self.cache_expiry_seconds:
-					return None
-				return cache['data']
-		except Exception as e:
-			if self.debug:
-				print(f"ERROR: Failed to read cache. {str(e)}")
+		# Check if file exists
+		if not os.path.exists(self.cache_file):
 			return None
+		with open(self.cache_file, "r") as file:
+			cache_data = json.load(file)
+		# Validate cache structure
+		if "timestamp" not in cache_data or "data" not in cache_data:
+			return None
+		# Check if cache is expired
+		if time.time() - cache_data["timestamp"] > self.cache_expiry_seconds:
+			return None
+		if self.debug:
+			print(f".. Using cached data from {self.cache_file}")
+		return cache_data["data"]
 
 	#======================================
 	def safeDownloadWebpage(self, url):
