@@ -8,7 +8,6 @@ import math
 import json
 import random
 import datetime
-import shelve
 # PIP modules
 import numpy
 import requests
@@ -38,8 +37,7 @@ class ComedLib(object):
 				print(f"WARNING: Could not set permissions for {self.cache_file}")
 
 		self.cache_expiry_seconds = 240  # Cache expiry time in seconds
-
-		scriptdir = os.path.dirname(__file__)
+		#scriptdir = os.path.dirname(__file__)
 		self.baseurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 		self.parsed_data_cache = None  # In-memory cache for parsed data
 		self.raw_data_cache = None  # In-memory cache for raw data
