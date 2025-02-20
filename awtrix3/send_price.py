@@ -30,14 +30,15 @@ def send_to_awtrix(app_data: dict):
 	ip = config["ip"]
 
 
-	app_name = app_data["name"]  # Extract app name
-	url = f"http://{ip}/api/custom?name={app_name}"  # Add app name to URL
 
 	# Send request with authentication
 	#print(f"Sending data to {ip}")
 	print(f"Sending {len(app_data)} data packets to {ip}")
-	url = f"http://{ip}/api/custom"
+	#url = f"http://{ip}/api/custom"
+	app_name = app_data["name"]  # Extract app name
+	url = f"http://{ip}/api/custom?name={app_name}"  # Add app name to URL
 	try:
+		print(f"  NAME: '{app_data.get('name', '')}'")
 		print(f"  TEXT: '{app_data.get('text', '')}'")
 	except AttributeError:
 		pass

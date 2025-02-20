@@ -16,7 +16,6 @@ import solarProduction
 def get_current_production() -> float:
 	"""
 	Gets the current electricity price from ComEd API.
-
 	Returns:
 		float: Current price in cents.
 	"""
@@ -57,25 +56,26 @@ def compile_solar_data():
 		"icon": icon_draw.awtrix_icons['solar energy'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
-		"repeat": 10,
+		"repeat": 20,
 		"center": True,
 		"duration": 5,
-		#"stack": True,
+		"stack": True,
 		#"lifetime": 60,
 	}
 
 	total_data = {
 		"name": "TotalSolar",
 		"text": f"{total_num/1000.:.1f} kWh",
+		"textCase": 2,
 		"icon": icon_draw.awtrix_icons['sunny'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
-		"repeat": 10,
+		"repeat": 20,
 		"center": False,
 		"noScroll": True,
 		"scrollSpeed": 1,
 		"duration": 5,
-		#"stack": True,
+		"stack": True,
 		#"lifetime": 60,
 	}
 

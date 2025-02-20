@@ -100,11 +100,11 @@ def compile_comed_price_data():
 		"icon": left_icon,  # Left-side icon (indicates pricing level)
 		"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
-		"repeat": 10,
+		"repeat": 20,
 		"draw": arrow,
 		"center": False,  # Disable text centering
 		"duration": 15,
-		#"stack": True,
+		"stack": True,
 		#"lifetime": 60,
 	}
 
