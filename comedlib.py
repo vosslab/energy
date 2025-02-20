@@ -25,9 +25,18 @@ class ComedLib(object):
 		"""Initializes the ComedLib object, setting up cache settings and base URL."""
 		self.useCache = True
 		self.debug = False
-		cache_dir = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-		self.cache_file = os.path.join(cache_dir, "comedlib", "comed_cache_file.json")
-		os.makedirs(os.path.dirname(self.cache_file), exist_ok=True)
+		# Use a single shared cache file in /tmp
+		self.cache_file = "/tmp/comed_cache_file.json"
+		# Ensure the file exists and set permissions
+		# Ensure the file exists and has correct permissions
+		if not os.path.exists(self.cache_file):
+			with open(self.cache_file, "w") as f:
+				f.write("{}")  # Initialize empty JSON cache
+			try:
+				os.chmod(self.cache_file, 0o666)  # Allow all users to read/write
+			except PermissionError:
+				print(f"WARNING: Could not set permissions for {self.cache_file}")
+
 		self.cache_expiry_seconds = 240  # Cache expiry time in seconds
 
 		scriptdir = os.path.dirname(__file__)

@@ -66,13 +66,16 @@ def get_current_price() -> float:
 	"""
 	comed = comedlib.ComedLib()
 	price = comed.getCurrentComedRate()
+	print(f"Current Power Price: {price:.2f}¢")
 	recent = comed.getMostRecentRate()
+	print(f"Recent  Power Price: {recent:.1f}¢")
 	if recent < price - 0.2:
 		trend = "down"
 	elif recent > price + 0.2:
 		trend = "up"
 	else:
 		trend = "none"
+	print(f"Trend: {trend}")
 	return price, trend
 
 #============================================
@@ -172,8 +175,6 @@ def main():
 	Main function to fetch the latest electricity price and send it to AWTRIX.
 	"""
 	price, trend = get_current_price()
-	print(f"Current Power Price: {price:.2f}¢")
-	print(f"Trend: {trend}")
 
 	send_to_awtrix(price, trend)
 
