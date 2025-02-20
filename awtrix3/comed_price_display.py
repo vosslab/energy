@@ -105,7 +105,7 @@ def compile_comed_price_data():
 		"center": False,  # Disable text centering
 		"duration": 15,
 		"stack": True,
-		#"lifetime": 60,
+		"lifetime": 120,
 	}
 
 	return data

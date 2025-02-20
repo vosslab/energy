@@ -15,6 +15,7 @@ awtrix_icons = {
 	'solar energy': 53183,
 	'sun with blue bg': 50,
 	'sunny': 2282,
+	'solar energy': 60102,
 	}
 
 

@@ -36,7 +36,8 @@ def get_active_awtrix_apps():
             apps = response.json()  # Convert response to dictionary
             print("\nActive AWTRIX Apps:")
             for app_name, position in apps.items():
-                print(f"  - {app_name}: Slot {position}")
+                #print(f"  - {app_name}: Slot {position}")
+                print(f"  - Slot {position}: {app_name}")
         else:
             print(f"Failed to fetch AWTRIX apps! Status Code: {response.status_code}")
     except Exception as e:

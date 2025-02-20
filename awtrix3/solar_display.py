@@ -36,6 +36,7 @@ def compile_solar_data():
 		price (float): The electricity price in cents.
 	"""
 	if not sun_location.is_the_sun_up_now():
+		print("Sun is set, no more solar until sunrise")
 		return None, None
 
 	current_num, total_num = get_current_production()
@@ -60,14 +61,15 @@ def compile_solar_data():
 		"center": True,
 		"duration": 5,
 		"stack": True,
-		#"lifetime": 60,
+		"lifetime": 120,
 	}
 
 	total_data = {
 		"name": "TotalSolar",
 		"text": f"{total_num/1000.:.1f} kWh",
 		"textCase": 2,
-		"icon": icon_draw.awtrix_icons['sunny'],
+		#"icon": icon_draw.awtrix_icons['sunny'],
+		"icon": icon_draw.awtrix_icons['solar energy'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 20,
@@ -76,7 +78,7 @@ def compile_solar_data():
 		"scrollSpeed": 1,
 		"duration": 5,
 		"stack": True,
-		#"lifetime": 60,
+		"lifetime": 120,
 	}
 
 	return current_data, total_data
