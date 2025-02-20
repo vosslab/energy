@@ -14,11 +14,11 @@ import solar_display
 import comed_price_display
 
 #============================================
-def send_to_awtrix(data_dict: dict):
+def send_to_awtrix(app_data: dict):
 	"""
 	Sends the data to AWTRIX 3 display.
 	"""
-	if data_dict is None:
+	if app_data is None:
 		return
 
 	# Load credentials from api.yml
@@ -29,15 +29,19 @@ def send_to_awtrix(data_dict: dict):
 	password = config["password"]
 	ip = config["ip"]
 
+
+	app_name = app_data["name"]  # Extract app name
+	url = f"http://{ip}/api/custom?name={app_name}"  # Add app name to URL
+
 	# Send request with authentication
 	#print(f"Sending data to {ip}")
-	print(f"Sending {len(data_dict)} data packets to {ip}")
+	print(f"Sending {len(app_data)} data packets to {ip}")
 	url = f"http://{ip}/api/custom"
 	try:
-		print(f"  TEXT: '{data_dict.get('text', '')}'")
+		print(f"  TEXT: '{app_data.get('text', '')}'")
 	except AttributeError:
 		pass
-	response = requests.post(url, json=data_dict, auth=HTTPBasicAuth(username, password))
+	response = requests.post(url, json=app_data, auth=HTTPBasicAuth(username, password))
 
 	# Print response for debugging
 	print(response.status_code, response.text)
@@ -51,12 +55,12 @@ def main():
 	data_list = []
 	current_data, total_data = solar_display.compile_solar_data()
 	data_list += [current_data, total_data]
-	#send_to_awtrix(current_data)
-	#send_to_awtrix(total_data)
+	send_to_awtrix(current_data)
+	send_to_awtrix(total_data)
 	comed_data_dict = comed_price_display.compile_comed_price_data()
 	data_list.append(comed_data_dict)
-	#send_to_awtrix(comed_data_dict)
-	send_to_awtrix(data_list)
+	send_to_awtrix(comed_data_dict)
+	#send_to_awtrix(data_list)
 
 #============================================
 if __name__ == '__main__':
