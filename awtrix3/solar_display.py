@@ -21,11 +21,12 @@ def get_current_production() -> float:
 		float: Current price in cents.
 	"""
 	data = solarProduction.getSolarUsage()
-	kw_num = None
+	current_num = data["Current Production"].get('Value', 0)
+	total_num = data["Today's Production"].get('Value', 0)
 	for key in data:
-		kw_num = data[key].get('Value', 0)/1000.
-		print(f"{kw_num} kW")
-	return kw_num
+		num = data[key].get('Value', 0)/1000.
+		print(f"{key}: {num:.3f} kW")
+	return current_num, total_num
 
 #============================================
 def compile_solar_data():
@@ -38,29 +39,44 @@ def compile_solar_data():
 	if not sun_location.is_the_sun_up_now():
 		return None
 
-	kw_num = get_current_production()
+	current_num, total_num = get_current_production()
 
 	# Get to percentage daylight
 	progress_value = sun_location.percent_of_daylight_complete()
 
-	data = {
+	if current_num > 1000:
+		text1 = f"{current_num/1000.:.1f} kW",
+	else:
+		text1 = f"{current_num:.0f} W",
+
+	data1 = {
 		"name": "SolarProduction",
-		"text": f"{kw_num:.1f} kW",
+		"text": text1,
+		"icon": icon_draw.awtrix_icons['solar energy'],
+		#"color": awtrix_color,  # Dynamic RGB color
+		"progress": progress_value,  # Progress bar (minutes past the hour)
+		"repeat": 10,
+		"center": True,  # Disable text centering
+	}
+
+	data2 = {
+		"name": "SolarProduction",
+		"text": f"{total_num:.1f} kW.hr",
 		"icon": icon_draw.awtrix_icons['sunny'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 10,
-		"center": False,  # Disable text centering
+		"center": True,  # Disable text centering
 	}
 
-	return data
+	return data1, data2
 
 #============================================
 def main():
 	"""
 	Main function to fetch the latest electricity price and send it to AWTRIX.
 	"""
-	comed_data_dict = compile_comed_price_data()
+	data_dict1 = compile_solar_data()
 	print(comed_data_dict)
 
 #============================================
