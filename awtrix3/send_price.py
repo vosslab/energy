@@ -65,13 +65,15 @@ def get_current_price() -> float:
 		float: Current price in cents.
 	"""
 	comed = comedlib.ComedLib()
+	comed.debug = True
 	price = comed.getCurrentComedRate()
 	print(f"Current Power Price: {price:.2f}¢")
 	recent = comed.getMostRecentRate()
 	print(f"Recent  Power Price: {recent:.1f}¢")
-	if recent < price - 0.2:
+	shift = 0.1
+	if recent < price - shift:
 		trend = "down"
-	elif recent > price + 0.2:
+	elif recent > price + shift:
 		trend = "up"
 	else:
 		trend = "none"
