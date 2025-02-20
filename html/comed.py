@@ -3,21 +3,19 @@
 import sys
 import time
 import cgitb
-import numpy
 from energylib import comedlib
 from energylib import htmltools
 
 # Enable traceback debugging for CGI
 cgitb.enable()
 
-sys.path.append('/home/pi/energy')
-
-def generate_html(output_file=None):
+def generate_html() -> str:
 	"""
-	Generates the Comed Hourly Prices HTML page.
-	If `output_file` is specified, writes the output to a file instead of printing.
+	Generates the Comed Hourly Prices HTML page as a string.
+	Returns:
+		str: The full HTML page content.
 	"""
-	html_content = """<!DOCTYPE html>
+	return """<!DOCTYPE html>
 <html>
 <head>
     <title>Comed Hourly Prices</title>
@@ -34,15 +32,7 @@ def generate_html(output_file=None):
 		comed_data=htmltools.htmlComedData()
 	)
 
-	# If an output file is provided, write to it
-	if output_file:
-		with open(output_file, "w") as f:
-			f.write(html_content)
-	else:
-		# CGI mode - print to standard output
-		print("Content-Type: text/html\n")
-		print(html_content)
-
 if __name__ == '__main__':
-	# If called directly, generate a static file instead of CGI output
-	generate_html("/var/www/html/comed.html")  # Adjust the path as needed
+	# Always print to standard output (for CGI)
+	print("Content-Type: text/html\n")
+	print(generate_html())
