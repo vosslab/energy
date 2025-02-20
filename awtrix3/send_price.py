@@ -9,11 +9,13 @@ import yaml
 import numpy
 import colorsys
 import requests
+import datetime
 from requests.auth import HTTPBasicAuth
 
 # Local Repo Modules
 import comedlib
 
+# AWTRIX Icons Dictionary
 awtrix_icons = {
 	'power into plug': 40828,
 	'STOP': 51783,
@@ -21,8 +23,12 @@ awtrix_icons = {
 	'green check mark': 4474,
 	'red x': 270,
 	'lightning': 95,
+	'green plus': 17093,
+	'green arrow up': 120,
+	'red arrow down': 124,
+	'green arrow down': 402,
+	'red arrow up': 4103,
 	}
-
 
 #============================================
 def color_price_awtrix(price: float) -> tuple:
@@ -60,10 +66,47 @@ def get_current_price() -> float:
 	"""
 	comed = comedlib.ComedLib()
 	price = comed.getCurrentComedRate()
-	return round(price, 2)
+	recent = comed.getMostRecentRate()
+	if recent < price - 0.2:
+		trend = "down"
+	elif recent > price + 0.2:
+		trend = "up"
+	else:
+		trend = "none"
+	return price, trend
 
 #============================================
-def send_to_awtrix(price: float):
+def draw_arrow(center_x: int, direction: str, color: str):
+	"""
+	Generates drawing instructions for an up or down arrow with a given center pixel.
+
+	Args:
+		center_x (int): X position of the center pixel.
+		center_y (int): Y position of the center pixel.
+		direction (str): "up" or "down" to determine arrow orientation.
+		color (str): Color of the arrow in hex format (e.g., "#FF0000").
+
+	Returns:
+		list: List of AWTRIX draw commands.
+	"""
+	if direction == "up":
+		arrow_list = [
+			{"dl": [center_x, 0, center_x,      5, color]},  # Shaft (1 pixel wide)
+			{"dl": [center_x, 0, center_x - 2,  2, color]},  # Left tip
+			{"dl": [center_x, 0, center_x + 2,  2, color]}   # Right tip
+		]
+	elif direction == "down":
+		arrow_list = [
+			{"dl": [center_x, 0, center_x,      5, color]},  # Shaft (1 pixel wide)
+			{"dl": [center_x, 5, center_x - 2,  3, color]},  # Left tip
+			{"dl": [center_x, 5, center_x + 2,  3, color]}   # Right tip
+		]
+	else:
+		raise ValueError("Direction must be 'up' or 'down'.")
+	return arrow_list
+
+#============================================
+def send_to_awtrix(price: float, trend: str):
 	"""
 	Sends the electricity price to AWTRIX 3 display.
 
@@ -80,26 +123,44 @@ def send_to_awtrix(price: float):
 	password = config["password"]
 
 	# AWTRIX API details
-	url = f"http://{ip}/api/custom"
 	awtrix_color = color_price_awtrix(price)
 
-	if price > 10:
-		icon = awtrix_icons['red x']
-	elif price < 2.5:
-		icon = awtrix_icons['green check mark']
+	# Calculate minutes past the hour using time module
+	minutes_past_hour = time.localtime().tm_min
+	# Convert to percentage
+	progress_value = int((minutes_past_hour / 60) * 100)
+
+	# Determine left icon (based on pricing level)
+	if price < 2.5:
+		left_icon = awtrix_icons['green check mark']
+	elif price > 10:
+		left_icon = awtrix_icons['red x']
 	else:
-		icon = awtrix_icons['power into plug']
+		left_icon = awtrix_icons['power into plug']
+
+	up_arrow = draw_arrow(29, "up", "#B22222")
+	down_arrow = draw_arrow(29, "down", "#228B22")
+	if trend == "up":
+		arrow = up_arrow
+	elif trend == "down":
+		arrow = down_arrow
+	else:
+		arrow = None
 
 	data = {
 		"name": "PowerPrice",
-		"text": f"{price}¢",
-		"icon": icon,
-		"color": awtrix_color,
-		"repeat": 3
+		"text": f"{price:.1f}¢",
+		"icon": left_icon,  # Left-side icon (indicates pricing level)
+		"color": awtrix_color,  # Dynamic RGB color
+		"progress": progress_value,  # Progress bar (minutes past the hour)
+		"repeat": 10,
+		"draw": arrow,
+		"center": False,  # Disable text centering
 	}
 
 	# Send request with authentication
 	print(f"Sending to {ip}")
+	url = f"http://{ip}/api/custom"
 	response = requests.post(url, json=data, auth=HTTPBasicAuth(username, password))
 
 	# Print response for debugging
@@ -110,9 +171,11 @@ def main():
 	"""
 	Main function to fetch the latest electricity price and send it to AWTRIX.
 	"""
-	price = get_current_price()
-	print(f"Current Power Price: {price}¢")
-	send_to_awtrix(price)
+	price, trend = get_current_price()
+	print(f"Current Power Price: {price:.2f}¢")
+	print(f"Trend: {trend}")
+
+	send_to_awtrix(price, trend)
 
 #============================================
 if __name__ == '__main__':
