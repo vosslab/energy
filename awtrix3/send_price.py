@@ -79,7 +79,7 @@ def get_current_price() -> float:
 	return price, trend
 
 #============================================
-def draw_arrow(center_x: int, direction: str, color: str):
+def draw_arrow(center_x: int, direction: str, color: str=None):
 	"""
 	Generates drawing instructions for an up or down arrow with a given center pixel.
 
@@ -93,6 +93,7 @@ def draw_arrow(center_x: int, direction: str, color: str):
 		list: List of AWTRIX draw commands.
 	"""
 	if direction == "up":
+		#color = up_color if color is None
 		arrow_list = [
 			{"dl": [center_x, 0, center_x,      5, color]},  # Shaft (1 pixel wide)
 			{"dl": [center_x, 0, center_x - 2,  2, color]},  # Left tip
@@ -103,6 +104,12 @@ def draw_arrow(center_x: int, direction: str, color: str):
 			{"dl": [center_x, 0, center_x,      5, color]},  # Shaft (1 pixel wide)
 			{"dl": [center_x, 5, center_x - 2,  3, color]},  # Left tip
 			{"dl": [center_x, 5, center_x + 2,  3, color]}   # Right tip
+		]
+	elif direction == "mid":
+		arrow_list = [
+			{"dl": [center_x-2, 3, center_x+2,  3, color]},  # Shaft (1 pixel wide)
+			{"dl": [center_x-2, 3, center_x,    5, color]},  # Left tip
+			{"dl": [center_x+2, 3, center_x,    1, color]}   # Right tip
 		]
 	else:
 		raise ValueError("Direction must be 'up' or 'down'.")
@@ -143,12 +150,13 @@ def send_to_awtrix(price: float, trend: str):
 
 	up_arrow = draw_arrow(29, "up", "#B22222")
 	down_arrow = draw_arrow(29, "down", "#228B22")
+	mid_arrow = draw_arrow(29, "mid", "#444444")
 	if trend == "up":
 		arrow = up_arrow
 	elif trend == "down":
 		arrow = down_arrow
 	else:
-		arrow = None
+		arrow = mid_arrow
 
 	data = {
 		"name": "PowerPrice",
