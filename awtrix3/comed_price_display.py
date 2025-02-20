@@ -106,3 +106,15 @@ def compile_comed_price_data():
 	}
 
 	return data
+
+#============================================
+def main():
+	"""
+	Main function to fetch the latest electricity price and send it to AWTRIX.
+	"""
+	comed_data_dict = compile_comed_price_data()
+	print(comed_data_dict)
+
+#============================================
+if __name__ == '__main__':
+	main()
