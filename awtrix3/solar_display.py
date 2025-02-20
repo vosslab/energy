@@ -61,7 +61,7 @@ def compile_solar_data():
 
 	data2 = {
 		"name": "SolarProduction",
-		"text": f"{total_num:.1f} kW.hr",
+		"text": f"{total_num/1000.:.1f} kW.hr",
 		"icon": icon_draw.awtrix_icons['sunny'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
