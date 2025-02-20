@@ -37,9 +37,11 @@ def compile_solar_data():
 		price (float): The electricity price in cents.
 	"""
 	if not sun_location.is_the_sun_up_now():
-		return None
+		return None, None
 
 	current_num, total_num = get_current_production()
+	if total_num == 0 or current_num == 0:
+		return None, None
 
 	# Get to percentage daylight
 	progress_value = sun_location.percent_of_daylight_complete()
