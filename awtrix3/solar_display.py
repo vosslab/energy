@@ -45,42 +45,42 @@ def compile_solar_data():
 	progress_value = sun_location.percent_of_daylight_complete()
 
 	if current_num > 1000:
-		text1 = f"{current_num/1000.:.1f} kW"
+		current_text1 = f"{current_num/1000.:.1f} kW"
 	else:
-		text1 = f"{current_num:.0f} W"
+		current_text1 = f"{current_num:.0f} W"
 
-	data1 = {
+	current_data = {
 		"name": "SolarProduction",
-		"text": text1,
+		"text": current_text1,
 		"icon": icon_draw.awtrix_icons['solar energy'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 10,
-		"center": True,  # Disable text centering
+		"center": True,
 		"duration": 5,
 	}
 
-	data2 = {
+	total_data = {
 		"name": "SolarProduction",
 		"text": f"{total_num/1000.:.1f} kWh",
 		"icon": icon_draw.awtrix_icons['sunny'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 10,
-		"center": True,  # Disable text centering
+		"center": True,
 		"duration": 5,
 	}
 
-	return data1, data2
+	return current_data, total_data
 
 #============================================
 def main():
 	"""
 	Main function to fetch the latest electricity price and send it to AWTRIX.
 	"""
-	data1, data2 = compile_solar_data()
-	print(data1)
-	print(data2)
+	current_data, total_data = compile_solar_data()
+	print(current_data)
+	print(total_data)
 
 #============================================
 if __name__ == '__main__':

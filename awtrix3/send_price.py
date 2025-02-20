@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 # Standard Library
+import time
+import random
 
 #pypi libraries
 import yaml
@@ -35,6 +37,7 @@ def send_to_awtrix(data_dict: dict):
 
 	# Print response for debugging
 	print(response.status_code, response.text)
+	time.sleep(random.random())
 
 #============================================
 def main():
@@ -43,9 +46,9 @@ def main():
 	"""
 	comed_data_dict = comed_price_display.compile_comed_price_data()
 	send_to_awtrix(comed_data_dict)
-	solar_data_dict1, solar_data_dict2 = solar_display.compile_solar_data()
-	send_to_awtrix(solar_data_dict1)
-	send_to_awtrix(solar_data_dict2)
+	current_data, total_data = solar_display.compile_solar_data()
+	send_to_awtrix(current_data)
+	send_to_awtrix(total_data)
 
 #============================================
 if __name__ == '__main__':
