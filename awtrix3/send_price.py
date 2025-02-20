@@ -15,33 +15,33 @@ import comed_price_display
 
 #============================================
 def get_active_awtrix_apps():
-    """
-    Fetches and lists the currently active apps on AWTRIX 3.
-    """
-    # Load credentials from api.yml
-    with open("api.yml", "r") as file:
-        config = yaml.safe_load(file)
+	"""
+	Fetches and lists the currently active apps on AWTRIX 3.
+	"""
+	# Load credentials from api.yml
+	with open("api.yml", "r") as file:
+		config = yaml.safe_load(file)
 
-    username = config["username"]
-    password = config["password"]
-    ip = config["ip"]
+	username = config["username"]
+	password = config["password"]
+	ip = config["ip"]
 
-    # API URL for getting active apps
-    url = f"http://{ip}/api/loop"
+	# API URL for getting active apps
+	url = f"http://{ip}/api/loop"
 
-    try:
-        response = requests.get(url, auth=HTTPBasicAuth(username, password))
+	try:
+		response = requests.get(url, auth=HTTPBasicAuth(username, password))
 
-        if response.status_code == 200:
-            apps = response.json()  # Convert response to dictionary
-            print("\nActive AWTRIX Apps:")
-            for app_name, position in apps.items():
-                #print(f"  - {app_name}: Slot {position}")
-                print(f"  - Slot {position}: {app_name}")
-        else:
-            print(f"Failed to fetch AWTRIX apps! Status Code: {response.status_code}")
-    except Exception as e:
-        print(f"⚠Error fetching AWTRIX apps: {e}")
+		if response.status_code == 200:
+				apps = response.json()  # Convert response to dictionary
+				print("\nActive AWTRIX Apps:")
+				for app_name, position in apps.items():
+					#print(f"  - {app_name}: Slot {position}")
+					print(f"  - Slot {position}: {app_name}")
+		else:
+				print(f"Failed to fetch AWTRIX apps! Status Code: {response.status_code}")
+	except Exception as e:
+		print(f"⚠Error fetching AWTRIX apps: {e}")
 
 #============================================
 def send_to_awtrix(app_data: dict):
