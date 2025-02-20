@@ -44,11 +44,11 @@ def main():
 	"""
 	Main function to fetch the latest electricity price and send it to AWTRIX.
 	"""
-	comed_data_dict = comed_price_display.compile_comed_price_data()
-	send_to_awtrix(comed_data_dict)
 	current_data, total_data = solar_display.compile_solar_data()
 	send_to_awtrix(current_data)
 	send_to_awtrix(total_data)
+	comed_data_dict = comed_price_display.compile_comed_price_data()
+	send_to_awtrix(comed_data_dict)
 
 #============================================
 if __name__ == '__main__':

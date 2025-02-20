@@ -95,7 +95,7 @@ def compile_comed_price_data():
 		arrow = mid_arrow
 
 	data = {
-		"name": "PowerPrice",
+		"name": "ComedPrice",
 		"text": f"{price:.1f}¢",
 		"icon": left_icon,  # Left-side icon (indicates pricing level)
 		"color": awtrix_color,  # Dynamic RGB color

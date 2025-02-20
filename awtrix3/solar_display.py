@@ -50,7 +50,7 @@ def compile_solar_data():
 		current_text1 = f"{current_num:.0f} W"
 
 	current_data = {
-		"name": "SolarProduction",
+		"name": "CurrentSolar",
 		"text": current_text1,
 		"icon": icon_draw.awtrix_icons['solar energy'],
 		#"color": awtrix_color,  # Dynamic RGB color
@@ -61,13 +61,15 @@ def compile_solar_data():
 	}
 
 	total_data = {
-		"name": "SolarProduction",
+		"name": "TotalSolar",
 		"text": f"{total_num/1000.:.1f} kWh",
 		"icon": icon_draw.awtrix_icons['sunny'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 10,
-		"center": True,
+		"center": False,
+		"noScroll": True,
+		"scrollSpeed": 1,
 		"duration": 5,
 	}
 
