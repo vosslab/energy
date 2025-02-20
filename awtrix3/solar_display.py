@@ -61,7 +61,7 @@ def compile_solar_data():
 		"center": True,
 		"duration": 5,
 		"stack": True,
-		"lifetime": 60,
+		#"lifetime": 60,
 	}
 
 	total_data = {
@@ -76,7 +76,7 @@ def compile_solar_data():
 		"scrollSpeed": 1,
 		"duration": 5,
 		"stack": True,
-		"lifetime": 60,
+		#"lifetime": 60,
 	}
 
 	return current_data, total_data
