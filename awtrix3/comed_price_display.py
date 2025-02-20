@@ -103,6 +103,7 @@ def compile_comed_price_data():
 		"repeat": 10,
 		"draw": arrow,
 		"center": False,  # Disable text centering
+		"duration": 15,
 	}
 
 	return data

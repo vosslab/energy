@@ -30,59 +30,11 @@ def send_to_awtrix(data_dict: dict):
 	# Send request with authentication
 	print(f"Sending data to {ip}")
 	url = f"http://{ip}/api/custom"
+	print(f"  TEXT: '{data_dict.get('text', '')}'")
 	response = requests.post(url, json=data_dict, auth=HTTPBasicAuth(username, password))
 
 	# Print response for debugging
 	print(response.status_code, response.text)
-
-#============================================
-def compile_comed_price_data():
-	"""
-	Compile the electricity price to a data dict
-
-	Args:
-		price (float): The electricity price in cents.
-	"""
-	price, trend = get_current_price()
-
-	# AWTRIX API details
-	awtrix_color = color_price_awtrix(price)
-
-	# Calculate minutes past the hour using time module
-	minutes_past_hour = time.localtime().tm_min
-	# Convert to percentage
-	progress_value = int((minutes_past_hour / 60) * 100)
-
-	# Determine left icon (based on pricing level)
-	if price < 2.5:
-		left_icon = icon_draw.awtrix_icons['green check mark']
-	elif price > 10:
-		left_icon = icon_draw.awtrix_icons['red x']
-	else:
-		left_icon = icon_draw.awtrix_icons['power into plug']
-
-	up_arrow = icon_draw.draw_arrow(29, "up", "#B22222")
-	down_arrow = icon_draw.draw_arrow(29, "down", "#228B22")
-	mid_arrow = icon_draw.draw_arrow(29, "mid", "#444444")
-	if trend == "up":
-		arrow = up_arrow
-	elif trend == "down":
-		arrow = down_arrow
-	else:
-		arrow = mid_arrow
-
-	data = {
-		"name": "PowerPrice",
-		"text": f"{price:.1f}¢",
-		"icon": left_icon,  # Left-side icon (indicates pricing level)
-		"color": awtrix_color,  # Dynamic RGB color
-		"progress": progress_value,  # Progress bar (minutes past the hour)
-		"repeat": 10,
-		"draw": arrow,
-		"center": False,  # Disable text centering
-	}
-
-	return data
 
 #============================================
 def main():
@@ -91,8 +43,9 @@ def main():
 	"""
 	comed_data_dict = comed_price_display.compile_comed_price_data()
 	send_to_awtrix(comed_data_dict)
-	solar_data_dict = solar_display.compile_solar_data()
-	send_to_awtrix(solar_data_dict)
+	solar_data_dict1, solar_data_dict2 = solar_display.compile_solar_data()
+	send_to_awtrix(solar_data_dict1)
+	send_to_awtrix(solar_data_dict2)
 
 #============================================
 if __name__ == '__main__':
