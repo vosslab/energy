@@ -45,7 +45,7 @@ def send_to_awtrix(app_data: dict):
 
 	# Print response for debugging
 	print(response.status_code, response.text)
-	time.sleep(random.random())
+	time.sleep(1.0 + random.random())
 
 #============================================
 def main():
