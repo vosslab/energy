@@ -60,7 +60,7 @@ def compile_solar_data():
 		"repeat": 10,
 		"center": True,
 		"duration": 5,
-		"stack": True,
+		#"stack": True,
 		#"lifetime": 60,
 	}
 
@@ -75,7 +75,7 @@ def compile_solar_data():
 		"noScroll": True,
 		"scrollSpeed": 1,
 		"duration": 5,
-		"stack": True,
+		#"stack": True,
 		#"lifetime": 60,
 	}
 
