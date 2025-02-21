@@ -54,7 +54,7 @@ def compile_solar_data():
 	current_data = {
 		"name": "CurrentSolar",
 		"text": current_text1,
-		"icon": icon_draw.awtrix_icons['solar energy'],
+		"icon": icon_draw.awtrix_icons['solar panels'],
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 20,

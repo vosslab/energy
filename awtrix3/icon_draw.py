@@ -12,7 +12,7 @@ awtrix_icons = {
 	'red arrow down': 124,
 	'green arrow down': 402,
 	'red arrow up': 4103,
-	'solar energy': 53183,
+	'solar panels': 53183,
 	'sun with blue bg': 50,
 	'sunny': 2282,
 	'solar energy': 60102,
