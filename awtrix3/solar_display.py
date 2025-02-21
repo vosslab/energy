@@ -64,9 +64,31 @@ def compile_solar_data():
 		"lifetime": 120,
 	}
 
+	#only space for 6 characters
+	if total_num <= 1:
+		total_text = 'zero'
+	elif total_num <= 9.9:
+		# digit + decimal point + digit + space + 'Wh' = 6
+		total_text = f"{total_num:.1f} Wh"
+	elif total_num <= 99:
+		# 2x digit + decimal point + digit + 'Wh' = 6
+		total_text = f"{total_num:.1f}Wh"
+	elif total_num <= 990:
+		# 3x digit + space + 'Wh' = 6
+		total_text = f"{total_num:.0f} Wh"
+	elif total_num <= 9900:
+		# digit + decimal point + digit + 'kWh' = 6
+		total_text = f"{total_num/1000.:.1f}kWh"
+	elif total_num <= 99000:
+		# 2x digit + space + 'kWh' = 6
+		total_text = f"{total_num/1000.:.0f} kWh"
+	else:
+		# 3x digit + 'kWh' = 6
+		total_text = f"{total_num/1000.:.0f}kWh"
+
 	total_data = {
 		"name": "TotalSolar",
-		"text": f"{total_num/1000.:.1f} kWh",
+		"text": total_text,
 		"textCase": 2,
 		#"icon": icon_draw.awtrix_icons['sunny'],
 		"icon": icon_draw.awtrix_icons['solar energy'],
@@ -80,7 +102,8 @@ def compile_solar_data():
 		"stack": True,
 		"lifetime": 120,
 	}
-
+	if total_text == 'zero':
+		total_data = None
 	return current_data, total_data
 
 #============================================
