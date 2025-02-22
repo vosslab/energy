@@ -12,6 +12,7 @@ from requests.auth import HTTPBasicAuth
 # Local Repo Modules
 import solar_display
 import comed_price_display
+import display_date
 
 #============================================
 def get_active_awtrix_apps():
@@ -79,18 +80,27 @@ def send_to_awtrix(app_data: dict):
 #============================================
 def main():
 	"""
-	Main function to fetch the latest electricity price and send it to AWTRIX.
+	Main function to fetch and send electricity pricing, solar data, and date info to AWTRIX.
 	"""
-	data_list = []
+
+	# Fetch solar energy data (current and total) and add them to the list
 	current_data, total_data = solar_display.compile_solar_data()
-	data_list += [current_data, total_data]
+	# Send solar data to AWTRIX
 	send_to_awtrix(current_data)
 	send_to_awtrix(total_data)
+
+	# Fetch the latest electricity price data and add to the list
 	comed_data_dict = comed_price_display.compile_comed_price_data()
-	data_list.append(comed_data_dict)
 	send_to_awtrix(comed_data_dict)
-	#send_to_awtrix(data_list)
+
+	# Fetch formatted date data (e.g., "Sat Feb 22") and send to AWTRIX
+	date_data = display_date.get_date_data()
+	send_to_awtrix(date_data)
+
+	# Introduce a small delay to avoid overwhelming the AWTRIX API
 	time.sleep(1.0 + random.random())
+
+	# Retrieve and log currently active apps on AWTRIX for debugging
 	get_active_awtrix_apps()
 
 #============================================

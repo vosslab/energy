@@ -91,7 +91,7 @@ def compile_solar_data():
 	total_data = {
 		"name": "TotalSolar",
 		"text": total_text,
-		"textCase": 2,
+		"textCase": 2, # keep mixed case, not all uppercase
 		#"icon": icon_draw.awtrix_icons['sunny'],
 		"icon": icon_draw.awtrix_icons['solar energy'],
 		#"color": awtrix_color,  # Dynamic RGB color

@@ -61,7 +61,6 @@ def arrow_price_awtrix(trend: str) -> list:
 	mid_arrow = icon_draw.draw_arrow(29, "mid", "#888888")
 	return mid_arrow
 
-
 #============================================
 def get_current_price() -> float:
 	"""
