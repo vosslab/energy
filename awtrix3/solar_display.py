@@ -72,7 +72,9 @@ def compile_solar_data():
 		total_text = f"{total_num:.1f} Wh"
 	elif total_num <= 99:
 		# 2x digit + decimal point + digit + 'Wh' = 6
-		total_text = f"{total_num:.1f}Wh"
+		#total_text = f"{total_num:.1f}Wh"
+		# 2x digit + space + 'Wh' = 5
+		total_text = f"{total_num:.0f} Wh"
 	elif total_num <= 990:
 		# 3x digit + space + 'Wh' = 6
 		total_text = f"{total_num:.0f} Wh"
@@ -95,7 +97,7 @@ def compile_solar_data():
 		#"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
 		"repeat": 20,
-		"center": False,
+		"center": True,
 		"noScroll": True,
 		"scrollSpeed": 1,
 		"duration": 5,
