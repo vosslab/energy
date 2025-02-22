@@ -230,6 +230,26 @@ class ComedLib(object):
 		return self.getUrl()
 
 	#======================================
+	def getCurrentComedRateUnSafe(self, data=None):
+		"""
+		Calculates the current average ComEd rate.
+
+		Args:
+			data (list, optional): Raw JSON data as a list of dictionaries. Defaults to None.
+
+		Returns:
+			float: The average rate for the most recent hour.
+		"""
+		if data is None:
+			data = self.downloadComedJsonData()
+		yvalues = self.parseComedData(data)
+		x2 = sorted(yvalues.keys())
+		key = x2[-1]
+		ylist = yvalues[key]
+		yarray = numpy.array(ylist, dtype=numpy.float64)
+		return yarray.mean()
+
+	#======================================
 	def getCurrentComedRate(self, data=None):
 		"""
 		Calculates the current average ComEd rate.

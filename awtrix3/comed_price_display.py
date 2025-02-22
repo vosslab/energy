@@ -71,7 +71,7 @@ def get_current_price() -> float:
 		float: Current price in cents.
 	"""
 	comed = comedlib.ComedLib()
-	price = comed.getCurrentComedRate()
+	price = comed.getCurrentComedRateUnSafe()
 	print(f"Current Power Price: {price:.2f}¢")
 	recent = comed.getMostRecentRate()
 	print(f"Recent  Power Price: {recent:.1f}¢")
