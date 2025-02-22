@@ -243,7 +243,7 @@ def _generate_status_header_html(comlib, comed_data) -> str:
 	# Get median and standard deviation of electricity rates
 	median, std = comlib.getMedianComedRate(comed_data)
 	# Get the current electricity rate
-	currentRate = comlib.getCurrentComedRate(comed_data)
+	currentRate = comlib.getCurrentComedRateUnSafe(comed_data)
 	# Get the predicted electricity rate and cutoff rate for usage
 	predictRate = comlib.getPredictedRate(comed_data)
 	cutoffRate = comlib.getReasonableCutOff()
