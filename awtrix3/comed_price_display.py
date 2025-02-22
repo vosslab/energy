@@ -37,6 +37,32 @@ def color_price_awtrix(price: float) -> tuple:
 	return awtrix_color
 
 #============================================
+def icon_price_awtrix(price: float) -> int:
+	if price < 0:
+		return icon_draw.awtrix_icons['download blue']
+	elif price < 3:
+		return icon_draw.awtrix_icons['green power plug']
+	elif price < 5:
+		return icon_draw.awtrix_icons['yellow power plug']
+	elif price < 7:
+		return icon_draw.awtrix_icons['orange power plug']
+	elif price < 10:
+		return icon_draw.awtrix_icons['red power plug']
+	return icon_draw.awtrix_icons['red x']
+
+#============================================
+def arrow_price_awtrix(trend: str) -> list:
+	if trend == "up":
+		up_arrow = icon_draw.draw_arrow(29, "up", "#B24444")
+		return up_arrow
+	elif trend == "down":
+		down_arrow = icon_draw.draw_arrow(29, "down", "#448B44")
+		return down_arrow
+	mid_arrow = icon_draw.draw_arrow(29, "mid", "#888888")
+	return mid_arrow
+
+
+#============================================
 def get_current_price() -> float:
 	"""
 	Gets the current electricity price from ComEd API.
@@ -76,30 +102,19 @@ def compile_comed_price_data():
 	# Convert to percentage
 	progress_value = int((minutes_past_hour / 60) * 100)
 
-	# Determine left icon (based on pricing level)
-	if price < 2.5:
-		left_icon = icon_draw.awtrix_icons['green check mark']
-	elif price > 10:
-		left_icon = icon_draw.awtrix_icons['red x']
-	else:
-		left_icon = icon_draw.awtrix_icons['power into plug']
+	# Determine icon (based on pricing level)
+	icon_id = icon_price_awtrix(price)
 
-	up_arrow = icon_draw.draw_arrow(29, "up", "#B22222")
-	down_arrow = icon_draw.draw_arrow(29, "down", "#228B22")
-	mid_arrow = icon_draw.draw_arrow(29, "mid", "#444444")
-	if trend == "up":
-		arrow = up_arrow
-	elif trend == "down":
-		arrow = down_arrow
-	else:
-		arrow = mid_arrow
+	# Determine arrow (based on pricing trend)
+	arrow = arrow_price_awtrix(trend)
 
 	data = {
 		"name": "ComedPrice",
 		"text": f"{price:.1f}¢",
-		"icon": left_icon,  # Left-side icon (indicates pricing level)
+		"icon": icon_id,
 		"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
+		"progressC": awtrix_color,
 		"repeat": 20,
 		"draw": arrow,
 		"center": False,  # Disable text centering

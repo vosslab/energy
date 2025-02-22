@@ -1,9 +1,9 @@
 
 # AWTRIX Icons Dictionary
 awtrix_icons = {
-	'power into plug': 40828,
 	'STOP': 51783,
 	'green box with check': 46832,
+	'green check mark small': 59,
 	'green check mark': 4474,
 	'red x': 270,
 	'lightning': 95,
@@ -16,6 +16,23 @@ awtrix_icons = {
 	'sun with blue bg': 50,
 	'sunny': 2282,
 	'solar energy': 60102,
+	'off red dot': 752,
+	'on green dot': 753,
+	'red on/off': 2598,
+	'yellow on/off': 7736,
+	'green on/off': 2599,
+	'download blue': 807,
+
+	'power into plug': 40828,
+	'power from plug': 59577,
+
+	'red power plug': 44034,
+	'orange power plug': 44036,
+	'yellow power plug': 45320,
+	'green power plug': 44571,
+
+	'running man': 22835,
+
 	}
 
 
