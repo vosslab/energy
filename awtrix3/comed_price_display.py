@@ -42,11 +42,11 @@ def icon_price_awtrix(price: float) -> int:
 		return icon_draw.awtrix_icons['download blue']
 	elif price < 3:
 		return icon_draw.awtrix_icons['green power plug']
-	elif price < 5:
+	elif price < 6:
 		return icon_draw.awtrix_icons['yellow power plug']
-	elif price < 7:
+	elif price < 9:
 		return icon_draw.awtrix_icons['orange power plug']
-	elif price < 10:
+	elif price < 12:
 		return icon_draw.awtrix_icons['red power plug']
 	return icon_draw.awtrix_icons['red x']
 
