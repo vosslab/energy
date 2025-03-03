@@ -21,11 +21,10 @@ def get_date_data():
 	number_date = {"dt": [32-box_width+1, 2, f"{day}", "#111111"]}
 	red_header = {"df": [32-box_width, 0, box_width, 2, "#B22222"]}
 
-
 	# Construct the AWTRIX data dictionary
 	date_display = {
 		"name": "DateDisplay",
-		"text": f"{weekday} {month}",
+		"text": f"{weekday}{month}",
 		"textCase": 2,  # Keep mixed case (not all uppercase)
 		"repeat": 20,   # Show for a longer duration
 		"center": True,  # Center-align the text
