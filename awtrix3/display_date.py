@@ -19,12 +19,13 @@ def get_date_data():
 	# x=10, y=0, width=8, height=7, color=white
 	white_outline = {"df": [32-box_width, 0, box_width, 8, "#eeeeee"]}
 	number_date = {"dt": [32-box_width+1, 2, f"{day}", "#111111"]}
+	day_month = {"dt": [0, 2, f"{weekday}{month}", "#dddddd"]}
 	red_header = {"df": [32-box_width, 0, box_width, 2, "#B22222"]}
 
 	# Construct the AWTRIX data dictionary
 	date_display = {
 		"name": "DateDisplay",
-		"text": f"{weekday}{month}",
+		#"text": f"{weekday}{month}",
 		"textCase": 2,  # Keep mixed case (not all uppercase)
 		"repeat": 20,   # Show for a longer duration
 		"center": True,  # Center-align the text
@@ -33,7 +34,7 @@ def get_date_data():
 		"noScroll": True,  # Prevent scrolling
 		"lifetime": 300,  # Keep it active for 5 minutes
 		"center": False,  # Disable text centering
-		"draw": [white_outline, number_date, red_header]  # Add the white box to the drawing queue
+		"draw": [white_outline, day_month, number_date, red_header]  # Add the white box to the drawing queue
 	}
 
 	return date_display
