@@ -97,6 +97,9 @@ def main():
 	date_data = display_date.get_date_data()
 	send_to_awtrix(date_data)
 
+	comed_data_dict['name'] = 'SComed2'
+	send_to_awtrix(comed_data_dict)
+
 	# Introduce a small delay to avoid overwhelming the AWTRIX API
 	time.sleep(1.0 + random.random())
 
