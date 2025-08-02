@@ -12,9 +12,15 @@ class ThermoStat(object):
 	def __init__(self):
 		self.debug = True
 		self.use_humid = True
-		self.hightemp = 82.1
+		self.hightemp = 86.1
 		#vacation override
 		self.cooltemp = 71.1
+		# neil preference
+		self.cooltemp = 69.1
+		# neil-heather compromise
+		self.cooltemp = 70.1
+		# super vacation override
+		#self.cooltemp = 80.1
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = self.debug
 		self.current_rate = None
@@ -168,7 +174,7 @@ if __name__ == "__main__":
 	now = datetime.datetime.now()
 	print("Current hour: {0:d}".format(now.hour))
 	#vacation override
-	if now.hour < 6 or now.hour >= 20:
+	if now.hour < 6 or now.hour >= 21:
 		print("only run program between 6am and 8:59pm => exit")
 		sys.exit(0)
 
