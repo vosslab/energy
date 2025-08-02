@@ -39,7 +39,12 @@ print_last_screen_output() {
 launch_session gen_html /home/pi/energy/html/ "python3 generate_comed_html.py" 150
 launch_session wemo /home/pi/energy "python3 wemoPlug-comed-old2.py" 300
 launch_session awtrix3 /home/pi/energy/awtrix3/ "python3 send_price.py" 150
-launch_session log_energy /home/pi/energy "python3 logEnergy.py" 300
+#launch_session log_energy /home/pi/energy "python3 logEnergy.py" 300
+# Only launch 'summer_ac' during June, July, August
+current_month=$(date +%m)
+if (( 6 <= 10#$current_month && 10#$current_month <= 8 )); then
+  launch_session summer_ac /home/pi/energy "python3 thermostat-comed.py" 300
+fi
 
 echo
 echo "Updated screen sessions:"
@@ -49,4 +54,7 @@ screen -ls
 print_last_screen_output gen_html
 print_last_screen_output wemo
 print_last_screen_output awtrix3
-print_last_screen_output log_energy
+#print_last_screen_output log_energy
+if (( 6 <= 10#$current_month && 10#$current_month <= 8 )); then
+  print_last_screen_output summer_ac
+fi
