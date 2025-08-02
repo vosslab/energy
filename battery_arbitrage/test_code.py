@@ -101,5 +101,8 @@ batteries = config.get("ecoworthy_batteries", [])
 print("Batteries:", batteries)
 
 for mac in batteries:
-    query_battery(mac)
+    try:
+       query_battery(mac)
+    except:
+       pass
 

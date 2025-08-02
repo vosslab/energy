@@ -151,6 +151,8 @@ def get_battery_array():
 
 if __name__ == "__main__":
     battery_array = get_battery_array()
+    results = battery_array.get_all_soc()
+    print(results)
     results = battery_array.get_all_data()
     for data in results:
         print(f"\nBattery {data['mac']}")
