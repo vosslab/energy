@@ -6,6 +6,10 @@ __pycache__/
 #data files
 *.yml
 *.tgz
+*.gz
+*.csv
+pyecobee_db*
+*.shelf
 
 # C extensions
 *.so
