@@ -87,7 +87,7 @@ def main():
 	current_data, total_data = solar_display.compile_solar_data()
 	# Send solar data to AWTRIX
 	send_to_awtrix(current_data)
-	send_to_awtrix(total_data)
+	#send_to_awtrix(total_data)
 
 	# Fetch the latest electricity price data and add to the list
 	comed_data_dict = comed_price_display.compile_comed_price_data()
