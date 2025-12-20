@@ -10,19 +10,77 @@ def get_date_data():
 
 	# Get the current date information
 	now = datetime.now()
-	weekday = now.strftime("%a")[:2]  # Short weekday name (e.g., "Sa")
+	weekday_name = now.strftime("%A")  # Full weekday name (e.g., "Saturday")
+	weekday = weekday_name[:2]  # Short weekday name for display (e.g., "Sa")
+	month_name = now.strftime("%B")   # Full month name (e.g., "February")
 	month = now.strftime("%b")        # Short month name (e.g., "Feb")
 	day = now.strftime("%d")          # Numeric day (e.g., "22")
 
-	# Define the white box behind the day number (positioned manually)
+	# Subtle palette for weekday/month text on the 32x8 display.
+	day_colors = {
+		"Monday": "#A347FF",  # Bright purple-violet
+		"Tuesday": "#FF3333",  # Vivid warm red
+		"Wednesday": "#FFDD33",  # Bright warm yellow
+		"Thursday": "#FF8800",  # Bold orange
+		"Friday": "#33DD66",  # Vibrant green
+		"Saturday": "#3366FF",  # Vivid blue
+		"Sunday": "#FFCC33",  # Rich gold-yellow
+	}
+	month_colors = {
+		"January": "#80bffe",  # Brighter cold blue
+		"February": "#ff8c80",  # Brighter scarlet red-orange
+		"March": "#80ff80",  # Shamrock green
+		"April": "#c88df2",  # Pastel lavender
+		"May": "#fde468",  # Golden yellow
+		"June": "#f986bf",  # Brighter deep magenta
+		"July": "#4dff4d",  # Vibrant green
+		"August": "#fe9967",  # Brighter fiery red-orange
+		"September": "#4CC3FE",  # Brighter sky blue
+		"October": "#FEA54C",  # Brighter pumpkin orange
+		"November": "#bf80fe",  # Brighter deep purple
+		"December": "#a6ff4d",  # Lime green
+	}
+
+	def _char_width(ch: str) -> int:
+		if ch in {"M", "W", "m", "w"}:
+			return 5
+		if ch == " ":
+			return 1
+		return 3
+
+	def _text_width(text: str, letter_gap: int = 1) -> int:
+		if not text:
+			return 0
+		width = 0
+		for i, ch in enumerate(text):
+			width += _char_width(ch)
+			if i < len(text) - 1:
+				width += letter_gap
+		return width
+
+	# Prefer a visible space between weekday and month, except for known tight combos.
+	use_space = True
+	if weekday in {"Mo", "We"} and month in {"Mar", "May"}:
+		use_space = False
+
 	box_width = 9
+	available_width = 32 - box_width
+	full_text = f"{weekday}{' ' if use_space else ''}{month}"
+	if _text_width(full_text) > available_width:
+		use_space = False
+
+	prefix = f"{weekday}{' ' if use_space else ''}"
+	month_x = _text_width(prefix)
+
+	# Define the white box behind the day number (positioned manually).
 	# x=10, y=0, width=8, height=7, color=white
 	white_outline = {"df": [32-box_width, 0, box_width, 8, "#eeeeee"]}
 	number_date = {"dt": [32-box_width+1, 2, f"{day}", "#111111"]}
-	day_month = {"dt": [0, 2, f"{weekday}{month}", "#dddddd"]}
+	weekday_draw = {"dt": [0, 2, f"{weekday}", day_colors.get(weekday_name, "#dddddd")]}
+	month_draw = {"dt": [month_x, 2, f"{month}", month_colors.get(month_name, "#dddddd")]}
 	red_header = {"df": [32-box_width, 0, box_width, 2, "#B22222"]}
 
-	# Construct the AWTRIX data dictionary
+	# Construct the AWTRIX data dictionary.
 	date_display = {
 		"name": "DateDisplay",
 		#"text": f"{weekday}{month}",
@@ -34,8 +92,8 @@ def get_date_data():
 		"noScroll": True,  # Prevent scrolling
 		"lifetime": 300,  # Keep it active for 5 minutes
 		"center": False,  # Disable text centering
-		"draw": [white_outline, day_month, number_date, red_header]  # Add the white box to the drawing queue
+		# Draw commands render in-order on the 32x8 canvas.
+		"draw": [white_outline, weekday_draw, month_draw, number_date, red_header]
 	}
 
 	return date_display
-

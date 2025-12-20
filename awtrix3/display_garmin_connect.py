@@ -36,8 +36,10 @@ password = credentials["password"]
 
 #============================================
 # Global Variables
-activity_cache = {}  # Cache dictionary to store fetched activity data
-client = None  # Global client instance
+# Cache keeps per-day activity lists to reduce repeated API calls.
+activity_cache = {}
+# Reuse a logged-in client across calls to avoid re-auth churn.
+client = None
 
 #============================================
 def connect_client() -> Garmin:

@@ -1,5 +1,6 @@
 
 # AWTRIX Icons Dictionary
+# IDs are from the AWTRIX icon library.
 awtrix_icons = {
 	'STOP': 51783,
 	'green box with check': 46832,
@@ -50,6 +51,7 @@ def draw_arrow(center_x: int, direction: str, color: str=None):
 	Returns:
 		list: List of AWTRIX draw commands.
 	"""
+	# Each "dl" entry draws a line: [x0, y0, x1, y1, color].
 	if direction == "up":
 		#color = up_color if color is None
 		arrow_list = [

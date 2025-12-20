@@ -13,3 +13,8 @@
 - Point `run_all_screens.sh` at the `apps/` entrypoints.
 - Add [`pip_requirements.txt`](pip_requirements.txt) and `Brewfile` for repo dependencies.
 - Comment out legacy-only Python dependencies in [`pip_requirements.txt`](pip_requirements.txt).
+- Add clarifying comments across the `awtrix3/` scripts.
+- Improve AWTRIX date spacing and add subtle weekday/month color accents.
+- Update AWTRIX weekday color palette to the provided day-specific colors.
+- Update AWTRIX month color palette to the provided month-specific colors.
+- Annotate AWTRIX weekday/month color hex values with approximate color names.

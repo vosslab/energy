@@ -9,6 +9,7 @@ import numpy
 import colorsys
 
 # Local Repo Modules
+# Ensure energylib is importable when running this file directly.
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
@@ -28,7 +29,7 @@ def color_price_awtrix(price: float) -> tuple:
 	Returns:
 		tuple: (formatted_price: str, awtrix_color: list[int])
 	"""
-	# Price to Hue Mapping (Similar to the HTML version)
+	# Price to hue mapping (hotter prices shift toward red).
 	x_price = numpy.array([-100., 0., 3., 5., 7., 9., 11., 100.], dtype=numpy.float64)
 	y_hue = numpy.array([315., 240., 180., 120., 60., 15., 5., 0.], dtype=numpy.float64)
 
@@ -102,7 +103,7 @@ def compile_comed_price_data():
 	# AWTRIX API details
 	awtrix_color = color_price_awtrix(price)
 
-	# Calculate minutes past the hour using time module
+	# Use minutes past the hour as a progress bar (0-100%).
 	minutes_past_hour = time.localtime().tm_min
 	# Convert to percentage
 	progress_value = int((minutes_past_hour / 60) * 100)
@@ -113,6 +114,7 @@ def compile_comed_price_data():
 	# Determine arrow (based on pricing trend)
 	arrow = arrow_price_awtrix(trend)
 
+	# AWTRIX payload: text, icon, color, and drawing commands.
 	data = {
 		"name": "ComedPrice",
 		"text": f"{price:.1f}¢",

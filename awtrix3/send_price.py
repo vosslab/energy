@@ -11,6 +11,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 # Local Repo Modules
+# AWTRIX apps are built as local payload generators.
 import solar_display
 import comed_price_display
 import display_date

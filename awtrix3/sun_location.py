@@ -39,7 +39,7 @@ def get_sun_times(day_of_year: int = None) -> dict:
 	if day_of_year is None:
 		day_of_year = datetime.date.today().timetuple().tm_yday
 
-	# Fitted sine wave parameters for Chicago
+	# Fitted sine wave parameters for Chicago (approximate).
 	sunrise_params = [-1.52, 0.0162, 80.4, 5.86]  # Sunrise
 	sunset_params = [1.59, 0.0162, 69.5, 17.87]   # Sunset
 

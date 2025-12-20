@@ -9,6 +9,7 @@ import numpy
 import colorsys
 
 # Local Repo Modules
+# Ensure energylib is importable when running this file directly.
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
@@ -49,7 +50,7 @@ def compile_solar_data():
 	#if total_num == 0 or current_num == 0:
 	#	return None, None
 
-	# Get to percentage daylight
+	# Map daylight progress to an AWTRIX progress bar (0-100).
 	progress_value = sun_location.percent_of_daylight_complete()
 
 	if current_num > 1000:
@@ -70,7 +71,7 @@ def compile_solar_data():
 		"lifetime": 120,
 	}
 
-	#only space for 6 characters
+	# Only space for ~6 characters on the AWTRIX display.
 	if total_num <= 1:
 		total_text = 'zero'
 	elif total_num <= 9.9:
