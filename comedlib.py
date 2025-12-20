@@ -458,23 +458,23 @@ if __name__ == '__main__':
 	start_time = time.time()
 
 	# Instantiate the ComedLib object
-	comedlib = ComedLib()
-	comedlib.debug = True  # Enable debugging output
+	comlib = ComedLib()
+	comlib.debug = True  # Enable debugging output
 
 	# Calculate and print the 24-hour median rate
-	medrate, std = comedlib.getMedianComedRate()
+	medrate, std = comlib.getMedianComedRate()
 	print(f"24hr Median Rate    {medrate:.3f}c +- {std:.3f}c")
 
 	# Calculate and print the current rate
-	currrate = comedlib.getCurrentComedRate()
+	currrate = comlib.getCurrentComedRate()
 	print(f"Hour Current Rate   {currrate:.3f}c")
 
 	# Calculate and print the predicted future rate
-	predictrate = comedlib.getPredictedRate()
+	predictrate = comlib.getPredictedRate()
 	print(f"Hour Predicted Rate {predictrate:.3f}c")
 
 	# Calculate and print the reasonable cutoff
-	cutoffrate = comedlib.getReasonableCutOff()
+	cutoffrate = comlib.getReasonableCutOff()
 	print(f"Reasonable Cutoff   {cutoffrate:.3f}c")
 
 	# Determine and print the house usage status based on the current rate and cutoff
