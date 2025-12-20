@@ -1,0 +1,85 @@
+# File guide
+
+High-level purpose of each file and folder in this repo.
+
+## Top-level docs
+- [`AGENTS.md`](AGENTS.md) describes local instructions for contributors.
+- [`CHANGELOG.md`](CHANGELOG.md) tracks notable repo changes.
+- [`LICENSE`](LICENSE) defines the project license.
+- [`MARKDOWN_STYLE.md`](MARKDOWN_STYLE.md) defines documentation style rules.
+- [`PYTHON_STYLE.md`](PYTHON_STYLE.md) defines Python coding style rules.
+
+## Top-level wrappers
+- `checkPrices-comed.py` wrapper for `apps/checkPrices-comed.py`.
+- `comedlib.py` wrapper for `energylib/comedlib.py`.
+- `commonlib.py` wrapper for `energylib/commonlib.py`.
+- `ecobeeEndOfHourOverride.py` wrapper for `apps/ecobeeEndOfHourOverride.py`.
+- `ecobeelib.py` wrapper for `energylib/ecobeelib.py`.
+- `htmltools.py` wrapper for `energylib/htmltools.py`.
+- `plot_comed.py` wrapper for `plots/plot_comed.py`.
+- `run_all_screens.sh` launches recurring scripts in `screen` sessions.
+- `setEcobeeTemp.py` wrapper for `apps/setEcobeeTemp.py`.
+- `solarProduction.py` wrapper for `energylib/solarProduction.py`.
+- `thermostat-comed.py` wrapper for `apps/thermostat-comed.py`.
+- `wemoPlug-comed.py` wrapper for `apps/wemoPlug-comed.py`.
+- `wemoPlug-comed-old.py` wrapper for `apps/wemoPlug-comed-old.py`.
+- `wemoPlug-comed-old2.py` wrapper for `apps/wemoPlug-comed-old2.py`.
+
+## Apps directory
+- `apps/checkPrices-comed.py` prints recent ComEd prices and plots the current day.
+- `apps/ecobeeEndOfHourOverride.py` sets an Ecobee hold that ends at the hour.
+- `apps/setEcobeeTemp.py` sets an Ecobee hold to a specific end time.
+- `apps/thermostat-comed.py` adjusts Ecobee cooling based on ComEd prices and humidity.
+- `apps/wemoPlug-comed.py` toggles WeMo plugs for charging based on ComEd prices.
+- `apps/wemoPlug-comed-old.py` legacy WeMo charging controller with fixed thresholds.
+- `apps/wemoPlug-comed-old2.py` legacy WeMo controller using updated `pywemo` calls.
+
+## Energy library directory
+- `energylib/__init__.py` marks the shared modules package.
+- `energylib/comedlib.py` fetches ComEd pricing data and computes derived rate metrics.
+- `energylib/commonlib.py` provides shared utilities (string cleanup, hashing, file helpers).
+- `energylib/ecobeelib.py` wraps Ecobee auth and thermostat data access via `pyecobee`.
+- `energylib/htmltools.py` renders HTML snippets for ComEd and Ecobee data.
+- `energylib/solarProduction.py` queries the inverter API and checks daylight status.
+
+## Plots directory
+- `plots/plot_comed.py` generates a ComEd pricing plot as a CGI image.
+
+## Awtrix3 directory
+- `awtrix3/comed_price_display.py` builds AWTRIX payloads for ComEd price display.
+- `awtrix3/display_date.py` builds an AWTRIX date tile with custom drawing.
+- `awtrix3/display_garmin_connect.py` reads Garmin Connect distances for display.
+- `awtrix3/icon_draw.py` defines AWTRIX icon IDs and arrow draw helpers.
+- `awtrix3/send_price.py` posts solar, price, and date tiles to an AWTRIX 3.
+- `awtrix3/solar_display.py` builds AWTRIX payloads for solar production.
+- `awtrix3/sun_location.py` estimates sunrise/sunset and daylight percentage.
+
+## Battery arbitrage directory
+- `battery_arbitrage/battery_info.py` reads Ecoworthy battery data over BLE.
+- `battery_arbitrage/main_arbitrage.py` decides charge or discharge from pricing.
+- `battery_arbitrage/test_code.py` exercises BLE battery queries for debugging.
+
+## HTML directory
+- `html/comed.py` CGI page showing ComEd pricing and links.
+- `html/fullhouse.py` CGI page with solar, usage, and price plot.
+- `html/generate_comed_html.py` writes a static ComEd HTML page.
+- `html/house.py` CGI page combining solar, usage, Ecobee, and ComEd data.
+- `html/test.py` legacy CGI test script.
+
+## lib_oled96 directory
+- `lib_oled96/lib_oled96.py` I2C OLED driver for SSD1306 displays.
+- `lib_oled96/example1-oled96-rpi.py` Raspberry Pi OLED example.
+- `lib_oled96/example2-oled96-rpi.py` extended Raspberry Pi OLED example.
+- `lib_oled96/example2-oled96-vgpio.py` virtual GPIO OLED example.
+- `lib_oled96/ReadMe.md` upstream notes and setup guidance for the OLED library.
+
+## Legacy directory
+- `legacy/__init__.py` marks the legacy scripts as a Python package.
+- `legacy/logEnergy.py` logs PECMAC125A usage with solar production samples.
+- `legacy/moneroMinerControl-comed.py` enables or disables mining based on ComEd prices.
+- `legacy/PECMAC125A.py` reads PECMAC125A I2C current data and logs it.
+- `legacy/readSMBus.py` reads PECMAC125A usage data via SMBus.
+- `legacy/smartReadUsage.py` combines SMBus reads and solar data into usage summaries.
+- `legacy/plot_usage.py` plots today's usage log as a CGI image.
+- `legacy/plot_yesterday_usage.py` plots yesterday's usage log as a CGI image.
+- `legacy/whilePEC.sh` runs `legacy/logEnergy.py` in a loop with a fixed delay.

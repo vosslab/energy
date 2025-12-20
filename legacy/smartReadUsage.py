@@ -5,8 +5,8 @@ import time
 import numpy
 #print(sys.path)
 
-import readSMBus
-import solarProduction
+from legacy import readSMBus
+from energylib import solarProduction
 
 ### all units in milliwatts (mW)
 debug = True
