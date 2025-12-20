@@ -1,0 +1,16 @@
+bluepy  # BLE battery reader (battery_arbitrage)
+ephem  # Solar sunrise/sunset calculations
+garminconnect  # Garmin Connect client
+matplotlib  # ComEd and usage plots
+numpy  # Numeric arrays and math
+# pillow  # Legacy-only (lib_oled96) PIL image support
+pyecobee  # Ecobee API wrapper
+pyflakes  # Linting helper for tests/run_pyflakes.sh
+pywemo  # WeMo plug control
+pytz  # Time zone handling for Ecobee
+pyyaml  # YAML configs (api.yml, garmin_login.yml, ecobee_defs.yml)
+requests  # HTTP client for APIs
+scipy  # Statistics helpers for ComEd pricing
+six  # Python 2/3 compatibility for pyecobee
+# smbus  # Legacy-only (legacy, lib_oled96) I2C/SMBus access
+# virtGPIO  # Legacy-only (lib_oled96) virtual GPIO support

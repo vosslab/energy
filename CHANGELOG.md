@@ -11,3 +11,5 @@
 - Remove compatibility wrappers and update imports to use `energylib` directly.
 - Update app and plot entrypoints to resolve `energylib` from the repo root.
 - Point `run_all_screens.sh` at the `apps/` entrypoints.
+- Add [`pip_requirements.txt`](pip_requirements.txt) and `Brewfile` for repo dependencies.
+- Comment out legacy-only Python dependencies in [`pip_requirements.txt`](pip_requirements.txt).
