@@ -19,3 +19,5 @@
 - Update AWTRIX month color palette to the provided month-specific colors.
 - Annotate AWTRIX weekday/month color hex values with approximate color names.
 - Deepen November/December AWTRIX month colors for higher saturation.
+- Add `apps/wemoPlug-comed-multi.py` for multi-plug support using the old2 pricing logic.
+- Move legacy WeMo scripts to `legacy/`.

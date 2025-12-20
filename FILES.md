@@ -17,9 +17,8 @@ High-level purpose of each file and folder in this repo.
 - `apps/ecobeeEndOfHourOverride.py` sets an Ecobee hold that ends at the hour.
 - `apps/setEcobeeTemp.py` sets an Ecobee hold to a specific end time.
 - `apps/thermostat-comed.py` adjusts Ecobee cooling based on ComEd prices and humidity.
-- `apps/wemoPlug-comed.py` toggles WeMo plugs for charging based on ComEd prices.
-- `apps/wemoPlug-comed-old.py` legacy WeMo charging controller with fixed thresholds.
-- `apps/wemoPlug-comed-old2.py` legacy WeMo controller using updated `pywemo` calls.
+- `apps/wemoPlug-comed-old2.py` WeMo controller using updated `pywemo` calls.
+- `apps/wemoPlug-comed-multi.py` multi-plug WeMo controller using the old2 pricing logic.
 
 ## Energy library directory
 - `energylib/__init__.py` marks the shared modules package.
@@ -64,6 +63,8 @@ High-level purpose of each file and folder in this repo.
 - `legacy/__init__.py` marks the legacy scripts as a Python package.
 - `legacy/logEnergy.py` logs PECMAC125A usage with solar production samples.
 - `legacy/moneroMinerControl-comed.py` enables or disables mining based on ComEd prices.
+- `legacy/wemoPlug-comed.py` legacy WeMo plug controller with a simplified cutoff model.
+- `legacy/wemoPlug-comed-old.py` legacy WeMo charging controller with fixed thresholds.
 - `legacy/PECMAC125A.py` reads PECMAC125A I2C current data and logs it.
 - `legacy/readSMBus.py` reads PECMAC125A usage data via SMBus.
 - `legacy/smartReadUsage.py` combines SMBus reads and solar data into usage summaries.
