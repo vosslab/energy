@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2025-12-20
-- Add [`FILES.md`](FILES.md) with a per-file guide for the repo.
+- Add [`docs/FILES.md`](docs/FILES.md) with a per-file guide for the repo.
 - Move PECMAC125A tooling, SMBus logger, and miner scripts into `legacy/`.
 - Add `apps/`, `energylib/`, and `plots/` directories with compatibility wrappers.
 - Move usage plotting and usage readers into `legacy/`.
@@ -21,3 +21,9 @@
 - Deepen November/December AWTRIX month colors for higher saturation.
 - Add `apps/wemoPlug-comed-multi.py` for multi-plug support using the old2 pricing logic.
 - Move legacy WeMo scripts to `legacy/`.
+- Add ComEd library comments and replace `sys.exit()` with exceptions.
+- Make ComEd cache writes atomic to prevent partial reads.
+- Fix regex escape warnings in [`energylib/commonlib.py`](energylib/commonlib.py).
+- Add commentary on the multi-plug WeMo decision logic.
+- Add [`docs/wemoPlug-comed-multi.md`](docs/wemoPlug-comed-multi.md) documenting the decision flow.
+- Move documentation guides into `docs/`.

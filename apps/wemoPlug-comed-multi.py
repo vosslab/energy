@@ -21,6 +21,12 @@ CL = commonlib.CommonLib()
 # add initial comment to log file
 # keep track of length of time charged or off
 
+# Decision overview:
+# - Pull current and predicted ComEd prices once per loop.
+# - Compute a cutoff based on ComEd's reasonable cutoff, then clamp to bounds.
+# - If predicted price is very high (2x cutoff after :20), disable for the hour.
+# - Otherwise enable if predicted is low, disable if predicted is high, or hold steady.
+
 #badHours = [5, 6, 17, 18]
 #badHours = [17, 18]
 badHours = []
@@ -29,11 +35,13 @@ wemoIpAddresses = [
 	"192.168.2.166",  # insight2
 ]
 
-#always start charge below this value
+# Always start charge below this value.
 lower_bound = 2.8
-#always stop  charge above this value
+# Always stop charge above this value.
 upper_bound = 8.2
+# Small bias to make the cutoff slightly more permissive or strict.
 cutoff_adjust = 0.1
+# Deadband around the cutoff to reduce churn.
 buffer_rate = 0.5
 
 class ComedSmartWemoPlug(object):
@@ -106,6 +114,9 @@ class ComedSmartWemoPlug(object):
 
 #======================================
 def _compute_rates(comlib):
+	"""
+	Compute current and predicted rates, then derive a bounded cutoff.
+	"""
 	current_rate = comlib.getCurrentComedRate()
 	predict_rate = comlib.getPredictedRate()
 	cutoff = comlib.getReasonableCutOff()
@@ -118,6 +129,9 @@ def _compute_rates(comlib):
 
 #======================================
 def _decision(now, current_rate, predict_rate, cutoff):
+	"""
+	Decide whether to enable, disable, or hold based on predicted prices.
+	"""
 	timestr = "%02d:%02d"%(now.hour, now.minute)
 	if predict_rate > 2.0*cutoff and now.minute > 20:
 		msg = "%s: charging LONG DISable !! double cutoff ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
@@ -144,6 +158,9 @@ def _decision(now, current_rate, predict_rate, cutoff):
 
 #======================================
 def _apply_action(wemo_plugs, action, msg):
+	"""
+	Apply the decision to every configured plug with a consistent log message.
+	"""
 	if action == "enable":
 		color = "green"
 	elif action in ("disable", "disable_long"):

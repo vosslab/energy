@@ -35,7 +35,7 @@ class CommonLib(object):
 
 	#=======================
 	def isint(self, n):
-		if re.search("^\d+$", n):
+		if re.search(r"^\d+$", n):
 			return True
 		return False
 
@@ -94,8 +94,8 @@ class CommonLib(object):
 		g = re.sub(" ", "_", g)
 		g = re.sub("\'", "", g)
 		g = re.sub("\"", "", g)
-		g = re.sub("\]", "_", g)
-		g = re.sub("\[", "_", g)
+		g = re.sub(r"\]", "_", g)
+		g = re.sub(r"\[", "_", g)
 
 		g = re.sub("^the_", "", g, re.IGNORECASE)
 		g = re.sub("^an_", "", g, re.IGNORECASE)
@@ -118,7 +118,7 @@ class CommonLib(object):
 		if re.search('[^a-z]feat[^a-z]', g):
 			print(g)
 
-		g = re.sub("\^", "_", g)
+		g = re.sub(r"\^", "_", g)
 		g = re.sub(",", "_", g)
 		g = re.sub("^-", "", g)
 		g = re.sub("_-", "-", g)
@@ -329,6 +329,5 @@ class CommonLib(object):
 			except KeyError: 
 				pass
 		return "%s%s%s%s" % (b, f, text, clear)
-
 
 

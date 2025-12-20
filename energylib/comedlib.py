@@ -24,7 +24,7 @@ class ComedLib(object):
 		"""Initializes the ComedLib object, setting up cache settings and base URL."""
 		self.useCache = True
 		self.debug = False
-		# Use a single shared cache file in /tmp
+		# Use a single shared cache file in /tmp (intentionally shared across users).
 		self.cache_file = "/tmp/comed_cache_file.json"
 		# Ensure the file exists and set permissions
 		# Ensure the file exists and has correct permissions
@@ -71,7 +71,7 @@ class ComedLib(object):
 			self.raw_data_cache = {'data': data, 'timestamp': time.time()}  # Update in-memory cache
 			return data
 
-		# Download new data if cache is not available or expired
+		# Download new data if cache is not available or expired.
 		if self.debug:
 			print(".. Downloading new comed data")
 		if url is None:
@@ -116,6 +116,7 @@ class ComedLib(object):
 			#print(f"{hours:.2f}<br/>")
 			if timestruct[2] != day:
 				hours -= 24.
+			# Duplicate each hour near the boundary to make step plots look continuous.
 			hour = int(hours) + 1
 			hour2 = float(hour) - 0.99
 			if hour in yvalues:
@@ -142,8 +143,11 @@ class ComedLib(object):
 			"data": data,
 			"timestamp": int(time.time())
 		}
-		with open(self.cache_file, "w") as file:
+		# Atomic write to avoid partial reads during updates.
+		tmp_file = f"{self.cache_file}.tmp"
+		with open(tmp_file, "w") as file:
 			json.dump(cache_data, file)
+		os.replace(tmp_file, self.cache_file)
 
 		if self.debug:
 			print(f".. Saved cache to {self.cache_file}")
@@ -205,8 +209,8 @@ class ComedLib(object):
 				fails += 1
 				verify = False
 		if fails >= 9:
-			print("ERROR: too many failed requests")
-			sys.exit(1)
+			# Raise to let callers decide whether to retry or continue.
+			raise RuntimeError("ERROR: too many failed requests")
 		return resp
 
 	#======================================
@@ -267,6 +271,7 @@ class ComedLib(object):
 		key = x2[-1]
 		ylist = yvalues[key]
 		yarray = numpy.array(ylist, dtype=numpy.float64)
+		# Clamp extreme negatives/zero to avoid skewing the average too low.
 		ypositive = numpy.where(yarray < 1.0, 1.0, yarray)
 		return ypositive.mean()
 
@@ -288,6 +293,7 @@ class ComedLib(object):
 		x2.sort()
 		key = x2[-1]
 		ylist = yvalues[key]
+		# Data is newest -> oldest, so index 0 is the most recent sample.
 		return ylist[0]
 
 	#======================================
@@ -486,5 +492,3 @@ if __name__ == '__main__':
 	# Measure end time and print run-time duration
 	end_time = time.time()
 	print(f"Script run time: {end_time - start_time:.2f} seconds")
-
-
