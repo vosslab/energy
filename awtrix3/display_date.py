@@ -37,8 +37,8 @@ def get_date_data():
 		"August": "#fe9967",  # Brighter fiery red-orange
 		"September": "#4CC3FE",  # Brighter sky blue
 		"October": "#FEA54C",  # Brighter pumpkin orange
-		"November": "#bf80fe",  # Brighter deep purple
-		"December": "#a6ff4d",  # Lime green
+		"November": "#8E44FF",  # Vivid purple
+		"December": "#4CD137",  # Bright leaf green
 	}
 
 	def _char_width(ch: str) -> int:
