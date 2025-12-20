@@ -12,7 +12,6 @@ sys.path.append('/home/pi/energy')
 import time
 #from energylib import comedlib
 from energylib import htmltools
-from energylib import smartReadUsage
 from energylib import solarProduction
 #from energylib import ecobeelib
 
@@ -41,18 +40,6 @@ except Exception as e:
     print("<h3>Solar Data</h3>Failed to load solar data<br/>")
     print(f"Error: {str(e)}<br/>")
 
-#======================================
-#======================================
-print("<h3>Energy Usage</h3>")
-usageText = smartReadUsage.fastReadSmbus()
-print("<span style='color: &#35;880000'>Current Usage:")
-print(" %s</span><br/>"%(usageText))
-
-#print('<br/>\n')
-#print("<img src='energylib/plot_usage.py'>")
-print("<a href='energylib/plot_usage.py'>Show Today Usage Plot</a>")
-print("<br/>")
-print("<a href='energylib/plot_yesterday_usage.py'>Show Yesterday Usage Plot</a>")
 
 #======================================
 #======================================
