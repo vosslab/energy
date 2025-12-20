@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard Library
+import os
 import time
 import random
 
@@ -15,12 +16,16 @@ import comed_price_display
 import display_date
 
 #============================================
+def _get_api_config_path() -> str:
+	return os.path.join(os.path.dirname(__file__), "api.yml")
+
+#============================================
 def get_active_awtrix_apps():
 	"""
 	Fetches and lists the currently active apps on AWTRIX 3.
 	"""
 	# Load credentials from api.yml
-	with open("api.yml", "r") as file:
+	with open(_get_api_config_path(), "r") as file:
 		config = yaml.safe_load(file)
 
 	username = config["username"]
@@ -53,7 +58,7 @@ def send_to_awtrix(app_data: dict):
 		return
 
 	# Load credentials from api.yml
-	with open("api.yml", "r") as file:
+	with open(_get_api_config_path(), "r") as file:
 		config = yaml.safe_load(file)
 
 	username = config["username"]

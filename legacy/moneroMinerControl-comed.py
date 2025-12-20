@@ -4,8 +4,8 @@ import sys
 import time
 import json
 import math
-import comedlib
-import commonlib
+from energylib import comedlib
+from energylib import commonlib
 import random
 import requests
 import datetime
@@ -130,4 +130,3 @@ if __name__ == '__main__':
 			continue
 		print(CL.colorString("mining enabled", "green"))
 		autominer.enable()
-

@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import math
 import time
 import numpy
 import datetime
-import comedlib
-import ecobeelib
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+	sys.path.insert(0, REPO_ROOT)
+
+from energylib import comedlib
+from energylib import ecobeelib
 
 class ThermoStat(object):
 	def __init__(self):

@@ -7,7 +7,7 @@
 
 import time
 import smbus
-import solarProduction
+from energylib import solarProduction
 
 def getCurrent():
 	# Get I2C bus

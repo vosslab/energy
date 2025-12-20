@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import time
 import math
 import pywemo
 import random
 import datetime
-import comedlib
-import commonlib
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+	sys.path.insert(0, REPO_ROOT)
+
+from energylib import comedlib
+from energylib import commonlib
 
 CL = commonlib.CommonLib()
 
@@ -218,4 +223,3 @@ if __name__ == '__main__':
 		else:
 			mystr = "%s: charging ~unchanged ( current %.2f | predict %.2f | cutoff %.2f c/kWh )"%(timestr, current_rate, predict_rate, cutoff)
 			print(CL.colorString(mystr, "brown"))
-

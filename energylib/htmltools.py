@@ -4,6 +4,7 @@ import numpy
 import colorsys
 import datetime
 from energylib import comedlib
+from energylib import ecobeelib
 
 def numberToHtmlColor(hue, saturation=0.9, value=0.6):
 	hue = max(0, min(hue, 1))  # Clamp hue between 0 and 1
@@ -27,7 +28,6 @@ def colorTemperature(temperature, precision=1):
 
 def htmlEcobee(weather=False):
 	htmltext = "<h3>Ecobee Stats</h3>"
-	import ecobeelib
 	myecobee = ecobeelib.MyEcobee()
 	myecobee.setLogger()
 	myecobee.readThermostatDefs()
@@ -175,8 +175,8 @@ def htmlComedData(showPlot: bool = False) -> str:
 
 	# Optionally include a plot of ComEd rates as an image in the HTML
 	if showPlot:
-		htmltext += "<img src='energylib/plot_comed.py'><br/>\n"
-	htmltext += "<a href='energylib/plot_comed.py'>Show Comed Price Plot</a>\n"
+		htmltext += "<img src='plots/plot_comed.py'><br/>\n"
+	htmltext += "<a href='plots/plot_comed.py'>Show Comed Price Plot</a>\n"
 
 	return htmltext
 
@@ -380,4 +380,3 @@ def _generate_hourly_averages_table(hourlyRates: dict) -> str:
 	html += "<br/>\n"
 
 	return html
-

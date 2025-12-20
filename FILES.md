@@ -9,21 +9,8 @@ High-level purpose of each file and folder in this repo.
 - [`MARKDOWN_STYLE.md`](MARKDOWN_STYLE.md) defines documentation style rules.
 - [`PYTHON_STYLE.md`](PYTHON_STYLE.md) defines Python coding style rules.
 
-## Top-level wrappers
-- `checkPrices-comed.py` wrapper for `apps/checkPrices-comed.py`.
-- `comedlib.py` wrapper for `energylib/comedlib.py`.
-- `commonlib.py` wrapper for `energylib/commonlib.py`.
-- `ecobeeEndOfHourOverride.py` wrapper for `apps/ecobeeEndOfHourOverride.py`.
-- `ecobeelib.py` wrapper for `energylib/ecobeelib.py`.
-- `htmltools.py` wrapper for `energylib/htmltools.py`.
-- `plot_comed.py` wrapper for `plots/plot_comed.py`.
+## Top-level scripts
 - `run_all_screens.sh` launches recurring scripts in `screen` sessions.
-- `setEcobeeTemp.py` wrapper for `apps/setEcobeeTemp.py`.
-- `solarProduction.py` wrapper for `energylib/solarProduction.py`.
-- `thermostat-comed.py` wrapper for `apps/thermostat-comed.py`.
-- `wemoPlug-comed.py` wrapper for `apps/wemoPlug-comed.py`.
-- `wemoPlug-comed-old.py` wrapper for `apps/wemoPlug-comed-old.py`.
-- `wemoPlug-comed-old2.py` wrapper for `apps/wemoPlug-comed-old2.py`.
 
 ## Apps directory
 - `apps/checkPrices-comed.py` prints recent ComEd prices and plots the current day.

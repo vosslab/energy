@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import time
 import math
 import numpy
-import comedlib
-import commonlib
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+	sys.path.insert(0, REPO_ROOT)
+
+from energylib import comedlib
+from energylib import commonlib
 
 #comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
 
@@ -95,4 +100,3 @@ if __name__ == '__main__':
 	pyplot.ylabel('Cents per kW hr')
 	pyplot.show()
 	pyplot.clf()
-

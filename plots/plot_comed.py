@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
 import io
+import os
 import sys
 import time
 import numpy
-import comedlib
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+	sys.path.insert(0, REPO_ROOT)
+
+from energylib import comedlib
 from matplotlib import use
 use('Agg')
 from matplotlib import pyplot
@@ -123,5 +129,3 @@ if testmode:
 	print(("<img src='data:image/png;base64,%s'/>"
 		%(figdata.getvalue().encode("base64").strip())))
 if testmode: print("</body></html>")
-
-

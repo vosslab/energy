@@ -9,7 +9,7 @@ import sys
 import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import comedlib
+from energylib import comedlib
 
 #import battery_info
 #battery_array = battery_info.get_battery_array()
