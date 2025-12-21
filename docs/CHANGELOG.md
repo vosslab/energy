@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-12-21
+- Add argparse flags for WeMo debug, refresh timing, and plug IP overrides.
+- Add WeMo connection diagnostics to the multi-plug controller.
+
 ## 2025-12-20
 - Add [`docs/FILES.md`](docs/FILES.md) with a per-file guide for the repo.
 - Move PECMAC125A tooling, SMBus logger, and miner scripts into `legacy/`.

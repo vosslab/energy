@@ -2,10 +2,14 @@
 
 Keep documentation concise, scannable, and consistent.
 
+## Content
+- use ASCII and ISO-8859-1 character encoding
+- escape UTF-8 symbols such as &alpha;, &beta;, etc.
+
 ## Headings
 - Use sentence case.
 - Start at `#` for the document title, then `##`, `###` as needed.
-- Keep headings short (3–6 words).
+- Keep headings short (3-6 words).
 
 ## Lists
 - Prefer `-` for bullets.

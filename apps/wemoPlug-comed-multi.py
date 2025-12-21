@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import math
+import argparse
 import pywemo
 import random
 import datetime
@@ -44,18 +45,60 @@ cutoff_adjust = 0.1
 # Deadband around the cutoff to reduce churn.
 buffer_rate = 0.5
 
+#======================================
+def parse_args():
+	"""
+	Parse command-line arguments.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Control WeMo plugs with ComEd pricing and multi-plug support."
+	)
+	parser.add_argument(
+		'-d', '--debug-wemo', dest='debug_wemo', action='store_true',
+		help='Show detailed WeMo connection diagnostics'
+	)
+	parser.add_argument(
+		'-r', '--refresh-seconds', dest='refresh_seconds', type=int, default=180,
+		help='Seconds between pricing refresh checks'
+	)
+	parser.add_argument(
+		'-i', '--wemo-ip', dest='wemo_ips', action='append',
+		help='WeMo IP address (repeat for multiple plugs)'
+	)
+	parser.set_defaults(debug_wemo=False)
+	args = parser.parse_args()
+	return args
+
 class ComedSmartWemoPlug(object):
-	def __init__(self, ipaddress):
+	def __init__(self, ipaddress, debug_wemo=False):
 		self.address = ipaddress
 		self.depth = 0
+		self.debug = debug_wemo
+		self.connected = False
 		self.connectToWemo()
 		return
 
 	#======================================
+	def _debug(self, msg):
+		if self.debug is not True:
+			return
+		print(CL.colorString(msg, "cyan"))
+
+	#======================================
 	def connectToWemo(self):
+		self._debug(f"connecting to WeMo plug at {self.address}")
+		time.sleep(random.random())
 		self.port = pywemo.ouimeaux_device.probe_wemo(self.address)
+		self._debug(f"WeMo probe success {self.address}:{self.port}")
 		self.wemoUrl = pywemo.setup_url_for_address(self.address)
+		self._debug(f"WeMo description url {self.wemoUrl}")
 		self.device = pywemo.discovery.device_from_description(self.wemoUrl)
+		self._debug(f"WeMo device object {self.device}")
+		if self.debug is True:
+			time.sleep(random.random())
+			state = self.device.get_state()
+			self._debug(f"WeMo state response {self.address} = {state}")
+		self.connected = True
 
 	#======================================
 	def enable(self):
@@ -180,12 +223,19 @@ def _apply_action(wemo_plugs, action, msg):
 
 #======================================
 if __name__ == '__main__':
+	args = parse_args()
 	count = 0
 	last_hour = -2
-	refreshTime = 180
+	refreshTime = args.refresh_seconds
 	wemo_plugs = []
-	for ipaddress in wemoIpAddresses:
-		wemo_plug = ComedSmartWemoPlug(ipaddress)
+	if args.wemo_ips:
+		wemo_ip_addresses = args.wemo_ips
+	else:
+		wemo_ip_addresses = wemoIpAddresses
+	if args.debug_wemo is True:
+		print(CL.colorString("WeMo debug mode enabled", "cyan"))
+	for ipaddress in wemo_ip_addresses:
+		wemo_plug = ComedSmartWemoPlug(ipaddress, debug_wemo=args.debug_wemo)
 		wemo_plugs.append(wemo_plug)
 	comlib = comedlib.ComedLib()
 	comlib.msg = False
