@@ -1,11 +1,16 @@
 # Changelog
 
+<<<<<<< HEAD
 ## 2025-12-21
 - Add argparse flags for WeMo debug, refresh timing, and plug IP overrides.
 - Add WeMo connection diagnostics to the multi-plug controller.
 
 ## 2025-12-20
 - Add [`docs/FILES.md`](docs/FILES.md) with a per-file guide for the repo.
+=======
+## 2025-12-20
+- Add [`FILES.md`](FILES.md) with a per-file guide for the repo.
+>>>>>>> 8591f32 (updated style guides)
 - Move PECMAC125A tooling, SMBus logger, and miner scripts into `legacy/`.
 - Add `apps/`, `energylib/`, and `plots/` directories with compatibility wrappers.
 - Move usage plotting and usage readers into `legacy/`.
@@ -15,6 +20,7 @@
 - Remove compatibility wrappers and update imports to use `energylib` directly.
 - Update app and plot entrypoints to resolve `energylib` from the repo root.
 - Point `run_all_screens.sh` at the `apps/` entrypoints.
+<<<<<<< HEAD
 - Add [`pip_requirements.txt`](pip_requirements.txt) and `Brewfile` for repo dependencies.
 - Comment out legacy-only Python dependencies in [`pip_requirements.txt`](pip_requirements.txt).
 - Add clarifying comments across the `awtrix3/` scripts.
@@ -31,3 +37,5 @@
 - Add commentary on the multi-plug WeMo decision logic.
 - Add [`docs/wemoPlug-comed-multi.md`](docs/wemoPlug-comed-multi.md) documenting the decision flow.
 - Move documentation guides into `docs/`.
+=======
+>>>>>>> 8591f32 (updated style guides)
