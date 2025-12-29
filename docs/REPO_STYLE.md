@@ -9,7 +9,7 @@ Repo-wide conventions for this project and related repos.
 - Keep `README.md` and `AGENTS.md` at the repo root.
 
 ## Naming
-- Use lowercase filenames with underscores; avoid spaces.
+- Use lowercase ascii filenames with underscores for most files; avoid spaces; 
 - Match script names to their primary purpose.
 - Use `.md` for docs, `.sh` for shell, `.py` for Python.
 
@@ -35,16 +35,19 @@ Repo-wide conventions for this project and related repos.
 - Keep repo docs in `docs/` unless a file is explicitly root-level.
 - Keep docs concise and current; remove stale docs when replacing them.
 
+Use ALL CAPS for all Markdown documentation filenames (*.md) so docs visually stand out from code and scripts at a glance. Use underscores between words, avoid spaces, and choose clear, descriptive names. Keep well-known root-level docs in their conventional forms (for example README.md, AGENTS.md), and apply the same ALL CAPS rule to files under docs/ (for example docs/INSTALL.md, docs/USAGE.md).
+
 ### Recommended common docs
 - `AGENTS.md`: agent instructions, tool constraints, and repo-specific workflow guardrails.
 - `README.md`: project purpose, quick start, and links to deeper documentation.
 - `LICENSE`: legal terms for using and redistributing the project; keep exact license text.
-- `docs/CHANGELOG.md`: chronological, user-facing changes by date/version; canonical release history.
+- `docs/CHANGELOG.md`: chronological, user facing record of changes, grouped by date. Timeline of what changed and when.
 - `docs/CODE_ARCHITECTURE.md`: high-level system design, major components, and data flow.
 - `docs/FILE_STRUCTURE.md`: directory map with what belongs where, including generated assets.
 - `docs/INSTALL.md`: setup steps, dependencies, and environment requirements.
 - `docs/NEWS.md`: curated release highlights and announcements, not a full changelog.
 - `docs/RELATED_PROJECTS.md`: sibling repos, shared libraries, and integration touchpoints.
+- `docs/RELEASE_HISTORY.md`: organized log of released versions and their release dates. Summarizes notable shipped qualities, including notes, major fixes, and compatibility notes.
 - `docs/ROADMAP.md`: planned work, priorities, and what is intentionally not started.
 - `docs/TODO.md`: backlog scratchpad for small tasks without timelines.
 - `docs/TROUBLESHOOTING.md`: known issues, fixes, and debugging steps with symptoms.
