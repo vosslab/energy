@@ -18,27 +18,27 @@ def get_date_data():
 
 	# Subtle palette for weekday/month text on the 32x8 display.
 	day_colors = {
-		"Monday": "#A347FF",  # Bright purple-violet
-		"Tuesday": "#FF3333",  # Vivid warm red
-		"Wednesday": "#FFDD33",  # Bright warm yellow
+		"Monday": "#8000ff",  # Bright purple-violet
+		"Tuesday": "#ff0000",  # Vivid warm red
+		"Wednesday": "#ffd500",  # Bright warm yellow
 		"Thursday": "#FF8800",  # Bold orange
-		"Friday": "#33DD66",  # Vibrant green
-		"Saturday": "#3366FF",  # Vivid blue
-		"Sunday": "#FFCC33",  # Rich gold-yellow
+		"Friday": "#00ff4c",  # Vibrant green
+		"Saturday": "#0040ff",  # Vivid blue
+		"Sunday": "#ffbf00",  # Rich gold-yellow
 	}
 	month_colors = {
-		"January": "#80bffe",  # Brighter cold blue
-		"February": "#ff8c80",  # Brighter scarlet red-orange
+		"January": "#3399ff",  # Brighter cold blue
+		"February": "#ff4733",  # Brighter scarlet red-orange
 		"March": "#80ff80",  # Shamrock green
-		"April": "#c88df2",  # Pastel lavender
-		"May": "#fde468",  # Golden yellow
-		"June": "#f986bf",  # Brighter deep magenta
-		"July": "#4dff4d",  # Vibrant green
-		"August": "#fe9967",  # Brighter fiery red-orange
-		"September": "#4CC3FE",  # Brighter sky blue
-		"October": "#FEA54C",  # Brighter pumpkin orange
-		"November": "#8E44FF",  # Vivid purple
-		"December": "#4CD137",  # Bright leaf green
+		"April": "#bf66ff",  # Pastel lavender
+		"May": "#ffdd33",  # Golden yellow
+		"June": "#ff4da6",  # Brighter deep magenta
+		"July": "#33ff33",  # Vibrant green
+		"August": "#ff7733",  # Brighter fiery red-orange
+		"September": "#1ab2ff",  # Brighter sky blue
+		"October": "#ff8000",  # Brighter pumpkin orange
+		"November": "#8533ff",  # Vivid purple
+		"December": "#00cc00",  # Bright green
 	}
 
 	def _char_width(ch: str) -> int:
