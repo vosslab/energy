@@ -1,12 +1,13 @@
+#!/usr/bin/env python3
 
 # Standard Library
 import os
 import sys
-import time
+import argparse
 
-#pypi libraries
-import numpy
-import colorsys
+# PIP3 modules
+import yaml
+import requests
 
 # Local Repo Modules
 # Ensure energylib is importable when running this file directly.
@@ -116,13 +117,84 @@ def compile_solar_data():
 	return current_data, total_data
 
 #============================================
+def get_api_config() -> dict:
+	"""
+	Load AWTRIX API configuration from api.yml.
+
+	Returns:
+		dict: Config with 'ip', 'username', 'password' keys.
+	"""
+	config_path = os.path.join(os.path.dirname(__file__), "api.yml")
+	with open(config_path, "r") as f:
+		config = yaml.safe_load(f)
+	return config
+
+#============================================
+def send_to_awtrix(app_data: dict) -> bool:
+	"""
+	Send data to AWTRIX 3 display.
+
+	Args:
+		app_data (dict): AWTRIX payload dictionary.
+
+	Returns:
+		bool: True if successful, False otherwise.
+	"""
+	if app_data is None:
+		print("No data to send")
+		return False
+
+	from requests.auth import HTTPBasicAuth
+
+	config = get_api_config()
+	ip = config["ip"]
+	username = config["username"]
+	password = config["password"]
+
+	app_name = app_data.get("name", "SolarDisplay")
+	url = f"http://{ip}/api/custom?name={app_name}"
+
+	print(f"Sending to AWTRIX at {ip}...")
+	response = requests.post(url, json=app_data, auth=HTTPBasicAuth(username, password))
+
+	if response.status_code == 200:
+		print(f"  Sent successfully: {app_data.get('text', '')}")
+		return True
+	else:
+		print(f"  Failed: {response.status_code} {response.text}")
+		return False
+
+#============================================
+def parse_args() -> argparse.Namespace:
+	"""
+	Parse command-line arguments.
+
+	Returns:
+		argparse.Namespace: Parsed arguments.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Solar production display for AWTRIX 3"
+	)
+	parser.add_argument(
+		"-d", "--dry-run", dest="dry_run", action="store_true",
+		help="Do not send, just print data"
+	)
+	parser.set_defaults(dry_run=False)
+	args = parser.parse_args()
+	return args
+
+#============================================
 def main():
 	"""
-	Main function to fetch the latest electricity price and send it to AWTRIX.
+	Main function to fetch solar data and send it to AWTRIX.
 	"""
+	args = parse_args()
 	current_data, total_data = compile_solar_data()
-	print(current_data)
-	print(total_data)
+	print(f"\nAWTRIX Current Data: {current_data}")
+	print(f"AWTRIX Total Data: {total_data}")
+	if not args.dry_run:
+		send_to_awtrix(current_data)
+		send_to_awtrix(total_data)
 
 #============================================
 if __name__ == '__main__':

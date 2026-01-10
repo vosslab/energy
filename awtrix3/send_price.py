@@ -15,6 +15,7 @@ from requests.auth import HTTPBasicAuth
 import solar_display
 import comed_price_display
 import display_date
+import sports_countdown
 
 #============================================
 def _get_api_config_path() -> str:
@@ -105,6 +106,10 @@ def main():
 
 	comed_data_dict['name'] = 'SComed2'
 	send_to_awtrix(comed_data_dict)
+
+	# Fetch sports countdown data (next game for enabled teams)
+	sports_data = sports_countdown.compile_sports_countdown_data()
+	send_to_awtrix(sports_data)
 
 	# Introduce a small delay to avoid overwhelming the AWTRIX API
 	time.sleep(1.0 + random.random())

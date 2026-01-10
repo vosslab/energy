@@ -1,0 +1,111 @@
+# Sports teams configuration for AWTRIX countdown display
+# Set enabled: true/false to control which teams are tracked
+# active_months: list of months (1-12) when the league is in season
+
+# League icons (shared across teams in a league)
+league_icons:
+  nfl: 1302      # Football spinning
+  nba: 4113      # Basketball
+  wnba: 4113     # Basketball
+  mlb: 2092      # Baseball
+  nhl: 6747      # Hockey
+  f1: 51444      # Racing
+
+teams:
+  # NFL - September through February
+  - name: "Chicago Bears"
+    league: nfl
+    espn_team_id: CHI
+    short_name: BEAR
+    enabled: true
+    active_months: [1, 2, 9, 10, 11, 12]
+    # Letter display: letter in colored box on right side
+    letter: "C"
+    letter_color: "#0B162A"  # Navy blue letter
+    box_color: "#C83803"     # Orange box background
+    text_color: "#C83803"    # Orange countdown text
+    colors:
+      - "#0B162A"  # Navy blue
+      - "#C83803"  # Orange
+
+  # NBA - October through June
+  - name: "Chicago Bulls"
+    league: nba
+    espn_team_id: CHI
+    short_name: BULL
+    icon_id: 68924  # Chicago Bulls logo
+    enabled: false  # Not following this year
+    active_months: [1, 2, 3, 4, 5, 6, 10, 11, 12]
+    colors:
+      - "#CE1141"  # Red
+      - "#000000"  # Black
+
+  # MLB - March through November
+  - name: "Chicago Cubs"
+    league: mlb
+    espn_team_id: CHC
+    short_name: CUBS
+    icon_id: 2092  # Generic baseball, replace with Cubs icon if found
+    enabled: false
+    active_months: [3, 4, 5, 6, 7, 8, 9, 10, 11]
+    colors:
+      - "#0E3386"  # Blue
+      - "#CC3433"  # Red
+
+  - name: "Chicago White Sox"
+    league: mlb
+    espn_team_id: CHW
+    short_name: SOX
+    icon_id: 2092
+    enabled: false
+    active_months: [3, 4, 5, 6, 7, 8, 9, 10, 11]
+    colors:
+      - "#27251F"  # Black
+      - "#C4CED4"  # Silver
+
+  # NHL - October through June
+  - name: "Chicago Blackhawks"
+    league: nhl
+    espn_team_id: CHI
+    short_name: HAWK
+    icon_id: 6747  # Generic hockey, replace with Blackhawks icon if found
+    enabled: false
+    active_months: [1, 2, 3, 4, 5, 6, 10, 11, 12]
+    colors:
+      - "#CF0A2C"  # Red
+      - "#000000"  # Black
+
+  # WNBA - May through October
+  - name: "Chicago Sky"
+    league: wnba
+    espn_team_id: CHI
+    short_name: SKY
+    icon_id: 22139  # Basketball swish
+    enabled: false
+    active_months: [5, 6, 7, 8, 9, 10]
+    colors:
+      - "#5091CD"  # Sky blue
+      - "#FFC72C"  # Yellow
+
+  - name: "Indiana Fever"
+    league: wnba
+    espn_team_id: IND
+    short_name: FEVR
+    icon_id: 45118  # Basketball basket
+    enabled: false
+    active_months: [5, 6, 7, 8, 9, 10]
+    colors:
+      - "#E03A3E"  # Red
+      - "#FFCD00"  # Yellow
+
+  # Formula 1 - March through December
+  - name: "Formula 1"
+    league: f1
+    espn_team_id: ""  # Not used for F1
+    short_name: F1
+    icon_id: 51444  # Racing flag or car icon
+    enabled: false
+    active_months: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    colors:
+      - "#E10600"  # F1 Red
+      - "#FFFFFF"  # White
