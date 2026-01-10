@@ -58,6 +58,10 @@ def send_to_awtrix(app_data: dict):
 	"""
 	if app_data is None:
 		return
+	if isinstance(app_data, list):
+		for one_app in app_data:
+			send_to_awtrix(one_app)
+		return
 
 	# Load credentials from api.yml
 	with open(_get_api_config_path(), "r") as file:
@@ -69,7 +73,8 @@ def send_to_awtrix(app_data: dict):
 
 	# Send request with authentication
 	#print(f"Sending data to {ip}")
-	print(f"Sending {len(app_data)} data packets to {ip}")
+	app_name = app_data.get("name", "")
+	print(f"Sending '{app_name}' to {ip}")
 	#url = f"http://{ip}/api/custom"
 	app_name = app_data["name"]  # Extract app name
 	url = f"http://{ip}/api/custom?name={app_name}"  # Add app name to URL
@@ -108,7 +113,7 @@ def main():
 	send_to_awtrix(comed_data_dict)
 
 	# Fetch sports countdown data (next game for enabled teams)
-	sports_data = sports_countdown.compile_sports_countdown_data()
+	sports_data = sports_countdown.compile_sports_countdown_apps()
 	send_to_awtrix(sports_data)
 
 	# Introduce a small delay to avoid overwhelming the AWTRIX API

@@ -10,6 +10,7 @@ import os
 import time
 import random
 import argparse
+import math
 from datetime import datetime
 
 # PIP3 modules
@@ -51,6 +52,111 @@ def ensure_min_brightness(hex_color: str, min_brightness: float = 0.5) -> str:
 	# Format as hex
 	result = f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
 	return result
+
+#============================================
+def _hex_to_rgb01(hex_color: str) -> tuple:
+	hex_color = (hex_color or "").strip().lstrip("#")
+	if len(hex_color) != 6:
+		return None
+	r = int(hex_color[0:2], 16) / 255.0
+	g = int(hex_color[2:4], 16) / 255.0
+	b = int(hex_color[4:6], 16) / 255.0
+	return (r, g, b)
+
+#============================================
+def _relative_luminance(hex_color: str) -> float:
+	"""
+	Compute relative luminance per WCAG (0=dark, 1=light).
+	"""
+	rgb = _hex_to_rgb01(hex_color)
+	if rgb is None:
+		return 0.0
+
+	def _lin(c: float) -> float:
+		return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+	r, g, b = rgb
+	rl, gl, bl = _lin(r), _lin(g), _lin(b)
+	return 0.2126 * rl + 0.7152 * gl + 0.0722 * bl
+
+#============================================
+def choose_bg_and_text_colors(primary: str, alternate: str, debug: bool = False, label: str = "") -> tuple:
+	"""
+	Choose box background and text colors from two team colors.
+
+	ESPN team colors are hex strings without a leading '#'.
+	"""
+	primary = (primary or "").strip()
+	alternate = (alternate or "").strip()
+	if primary and not primary.startswith("#"):
+		primary = f"#{primary}"
+	if alternate and not alternate.startswith("#"):
+		alternate = f"#{alternate}"
+
+	if not primary and not alternate:
+		if debug:
+			print(f"  colors[{label}]: missing primary+alternate -> bg=#333333 fg=#ffffff")
+		return ("#333333", "#ffffff")
+
+	if primary and not alternate:
+		bg = primary
+		fg = "#ffffff"
+		if debug:
+			print(f"  colors[{label}]: primary-only bg={bg} fg={fg}")
+		return (bg, fg)
+
+	if alternate and not primary:
+		bg = alternate
+		fg = "#000000" if _relative_luminance(bg) > 0.6 else "#ffffff"
+		if debug:
+			print(f"  colors[{label}]: alternate-only bg={bg} fg={fg}")
+		return (bg, fg)
+
+	lp = _relative_luminance(primary)
+	la = _relative_luminance(alternate)
+
+	def _contrast_ratio(bg_color: str, fg_color: str) -> float:
+		lbg = _relative_luminance(bg_color)
+		lfg = _relative_luminance(fg_color)
+		l1 = max(lbg, lfg)
+		l2 = min(lbg, lfg)
+		return (l1 + 0.05) / (l2 + 0.05)
+
+	def _best_text_for_bg(bg_color: str, preferred_fg: str) -> tuple:
+		if preferred_fg:
+			cr = _contrast_ratio(bg_color, preferred_fg)
+			if cr >= 2.5:
+				return (preferred_fg, cr)
+		black_cr = _contrast_ratio(bg_color, "#000000")
+		white_cr = _contrast_ratio(bg_color, "#ffffff")
+		if black_cr >= white_cr:
+			return ("#000000", black_cr)
+		return ("#ffffff", white_cr)
+
+	# Evaluate both orientations and pick the better one; break ties by preferring the brighter background.
+	fg1, cr1 = _best_text_for_bg(primary, alternate)
+	fg2, cr2 = _best_text_for_bg(alternate, primary)
+
+	if cr2 > cr1 or (cr2 == cr1 and la > lp):
+		bg = alternate
+		fg = fg2
+		cr = cr2
+	else:
+		bg = primary
+		fg = fg1
+		cr = cr1
+
+	# If the chosen foreground is a "light" team color, ensure it is not too dim on AWTRIX.
+	if _relative_luminance(fg) > _relative_luminance(bg):
+		fg = ensure_min_brightness(fg, min_brightness=0.65)
+
+	if debug:
+		print(
+			f"  colors[{label}]: primary={primary} (L={lp:.3f}) alt={alternate} (L={la:.3f})"
+			f" -> bg={bg} fg={fg} (contrast={cr:.2f})"
+		)
+
+	return (bg, fg)
 
 #============================================
 # ESPN API endpoints by league
@@ -219,6 +325,95 @@ def fetch_espn_next_game(league: str, team_id: str) -> dict:
 	return None
 
 #============================================
+def fetch_espn_next_league_event(league: str) -> dict:
+	"""
+	Fetch the next upcoming event for an ESPN league.
+
+	Args:
+		league (str): League code (nfl, nba, mlb, nhl, wnba, ...).
+
+	Returns:
+		dict: Event info with 'datetime' and 'opponent' (matchup) keys, or None.
+	"""
+	if league not in ESPN_LEAGUES:
+		print(f"Unknown ESPN league: {league}")
+		return None
+
+	sport_path = ESPN_LEAGUES[league]
+	url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
+
+	time.sleep(random.random())
+
+	response = requests.get(url, timeout=10)
+	if response.status_code != 200:
+		print(f"ESPN API error {response.status_code} for league {league}")
+		return None
+
+	data = response.json()
+	events = data.get("events", [])
+
+	from datetime import timezone
+	now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+
+	for event in events:
+		event_date_str = event.get("date", "")
+		if not event_date_str:
+			continue
+
+		event_date_str = event_date_str.replace("Z", "+00:00")
+		event_dt = datetime.fromisoformat(event_date_str)
+
+		event_dt_utc = event_dt.replace(tzinfo=None)
+		if event_dt_utc <= now_utc:
+			continue
+
+		# Build a compact matchup string like "GB@CHI" when possible.
+		matchup = event.get("name", "TBD")
+		competitions = event.get("competitions", [])
+		home_team = None
+		away_team = None
+		if competitions:
+			competitors = competitions[0].get("competitors", [])
+			home = None
+			away = None
+			for comp in competitors:
+				team = comp.get("team", {})
+				abbr = team.get("abbreviation", None)
+				if abbr is None:
+					continue
+				if comp.get("homeAway", "") == "home":
+					home = abbr
+					home_team = {
+						"abbreviation": abbr,
+						"location": team.get("location", ""),
+						"color": team.get("color", None),
+						"alternateColor": team.get("alternateColor", None),
+					}
+				elif comp.get("homeAway", "") == "away":
+					away = abbr
+					away_team = {
+						"abbreviation": abbr,
+						"location": team.get("location", ""),
+						"color": team.get("color", None),
+						"alternateColor": team.get("alternateColor", None),
+					}
+			if home and away:
+				matchup = f"{away}@{home}"
+
+		result = {
+			"datetime": event_dt,
+			"datetime_local": event_dt.replace(tzinfo=None),
+			"opponent": matchup,
+			"home_team": home_team,
+			"away_team": away_team,
+			"home": None,
+			"event_name": event.get("name", ""),
+		}
+		return result
+
+	return None
+
+#============================================
 def fetch_f1_next_race() -> dict:
 	"""
 	Fetch next F1 race from Ergast API.
@@ -271,9 +466,12 @@ def fetch_next_game(team_config: dict) -> dict:
 	"""
 	league = team_config.get("league", "").lower()
 	team_id = team_config.get("espn_team_id", "")
+	mode = team_config.get("mode", "team").lower()
 
 	if league == "f1":
 		game = fetch_f1_next_race()
+	elif mode == "league" and league in ESPN_LEAGUES:
+		game = fetch_espn_next_league_event(league)
 	elif league in ESPN_LEAGUES:
 		game = fetch_espn_next_game(league, team_id)
 	else:
@@ -355,15 +553,15 @@ def get_countdown_color(target_dt: datetime) -> list:
 		return [255, 50, 50]
 
 #============================================
-def compile_sports_countdown_data(config_path: str = None) -> dict:
+def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) -> list:
 	"""
-	Compile countdown data for the next upcoming game across all enabled teams.
+	Compile countdown data for each enabled team/league entry.
 
 	Args:
-		config_path (str): Path to teams YAML config.
+		config_path (str): Path to sports_teams.yaml config.
 
 	Returns:
-		dict: AWTRIX display data dictionary.
+		list: List of AWTRIX display payload dictionaries.
 	"""
 	teams, league_icons = load_teams_config(config_path)
 
@@ -371,8 +569,8 @@ def compile_sports_countdown_data(config_path: str = None) -> dict:
 		print("No enabled teams found in config")
 		return None
 
-	# Fetch next game for each enabled team
-	upcoming_games = []
+	app_payloads = []
+
 	for team in teams:
 		team_name = team.get("name", "Unknown")
 
@@ -382,93 +580,259 @@ def compile_sports_countdown_data(config_path: str = None) -> dict:
 			continue
 
 		print(f"Checking {team_name}...")
-		game = fetch_next_game(team)
-		if game:
-			upcoming_games.append(game)
-			print(f"  Next game: {game.get('opponent', game.get('name', 'TBD'))}")
-		else:
+		next_game = fetch_next_game(team)
+		if not next_game:
 			print("  No upcoming games")
+			continue
 
-	if not upcoming_games:
+		team_config = next_game["team_config"]
+		short_name = team_config.get("short_name", team_name.split()[-1][:4].upper())
+		league = team_config.get("league", "").lower()
+		mode = team_config.get("mode", "team").lower()
+		show_matchup = bool(team_config.get("show_matchup", False))
+		colors = team_config.get("colors", ["#FFFFFF", "#FFFFFF"])
+
+		# Unique AWTRIX app name per team/entry (e.g., "BEARCountdown")
+		app_name = f"{short_name}Countdown"
+
+		# Format countdown
+		countdown_str = format_countdown(next_game["datetime"])
+
+		# Get league icon
+		league_icon = league_icons.get(league, icon_draw.awtrix_icons.get("running man", 22835))
+
+		# Check if entry uses letter-in-box display
+		letter = team_config.get("letter", None)
+
+		# Calculate box width based on letter width (M,W are 5px, others 3px)
+		def _char_width(ch: str) -> int:
+			if ch in {"M", "W", "m", "w"}:
+				return 5
+			return 3
+
+		# Layout: [Icon 8px] [Text] [Box on right]
+		# Box width = 2px margin + letter + 2px margin
+		letter_width = _char_width(letter) if letter else 3
+		BOX_WIDTH = 2 + letter_width + 2  # 7 for most, 9 for M/W
+		BOX_X = 32 - BOX_WIDTH  # Box on right side
+
+		# Get entry colors
+		box_color = team_config.get("box_color", colors[1] if len(colors) > 1 else "#FFFFFF")
+		letter_color = team_config.get("letter_color", colors[0] if colors else "#000000")
+		text_color = team_config.get("text_color", box_color)
+
+		# For league mode, optionally compress matchup + countdown into a single-line string.
+		def _location_to_code(location: str) -> str:
+			parts = [p for p in location.replace("-", " ").split(" ") if p]
+			if len(parts) >= 2:
+				return (parts[0][0] + parts[1][0]).upper()
+			if len(parts) == 1:
+				return parts[0][:2].upper()
+			return ""
+
+		def _countdown_token(target_dt: datetime) -> str:
+			from datetime import timezone
+			now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+			target_utc = target_dt.replace(tzinfo=None)
+			total_seconds = (target_utc - now_utc).total_seconds()
+			if total_seconds < 0:
+				return "0H"
+
+			hours = total_seconds / 3600.0
+			if hours >= 24:
+				days = int(math.ceil(hours / 24.0))
+				if debug:
+					print(f"  countdown: hours={hours:.3f} -> days={days} (ceiling)")
+				return f"{max(0, days)}d"
+			# Avoid "0H" when < 1 hour remains; minutes are intentionally not shown.
+			hours_int = int(math.ceil(hours))
+			if debug:
+				print(f"  countdown: seconds={total_seconds:.0f} hours={hours:.3f} -> {hours_int}H (ceiling)")
+			return f"{max(0, hours_int)}H"
+
+		matchup_text = countdown_str
+		use_icon = True
+		draw_commands = []
+		payload_color = text_color
+
+		if mode == "league" and show_matchup:
+			away_team = next_game.get("away_team", None) or {}
+			home_team = next_game.get("home_team", None) or {}
+			away_loc = away_team.get("location", "")
+			home_loc = home_team.get("location", "")
+			away_loc2 = _location_to_code(away_loc)
+			home_loc2 = _location_to_code(home_loc)
+			away_abbr = (away_team.get("abbreviation", "") or "").upper()
+			home_abbr = (home_team.get("abbreviation", "") or "").upper()
+			token = _countdown_token(next_game["datetime"])
+
+			# In league matchup mode, draw the layout explicitly:
+			# [AwayBox] <space> 7h <space> [HomeBox]
+			# This keeps the entire display single-line and avoids icons.
+			use_icon = False
+			payload_color = get_countdown_color(next_game["datetime"])
+
+			def _text_width(text: str) -> int:
+				if not text:
+					return 0
+				width = 0
+				for i, ch in enumerate(text):
+					width += _char_width(ch)
+					if i < len(text) - 1:
+						width += 1
+				return width
+
+			def _build_boxed_layout(away_text: str, home_text: str) -> tuple:
+				away_w = _text_width(away_text)
+				home_w = _text_width(home_text)
+				token_w = _text_width(token)
+
+				away_bg, away_fg = choose_bg_and_text_colors(
+					away_team.get("color", None),
+					away_team.get("alternateColor", None),
+					debug=debug,
+					label=f"away:{away_text}",
+				)
+				home_bg, home_fg = choose_bg_and_text_colors(
+					home_team.get("color", None),
+					home_team.get("alternateColor", None),
+					debug=debug,
+					label=f"home:{home_text}",
+				)
+
+				# Try tighter settings first if needed; prefer visible padding when possible.
+				try_params = [
+					(1, 2),
+					(1, 1),
+					(0, 1),
+					(0, 0),
+				]
+
+				for padding_x, gap in try_params:
+					away_box_w = away_w + (padding_x * 2)
+					home_box_w = home_w + (padding_x * 2)
+					total = away_box_w + gap + token_w + gap + home_box_w
+					if total > 32:
+						continue
+
+					away_box_x = 0
+					token_x = away_box_x + away_box_w + gap
+					home_box_x = token_x + token_w + gap
+					if home_box_x + home_box_w > 32:
+						continue
+
+					box_h = 7
+					meta = {
+						"away_text": away_text,
+						"home_text": home_text,
+						"token": token,
+						"padding_x": padding_x,
+						"gap": gap,
+						"total_width": total,
+						"away_box_w": away_box_w,
+						"home_box_w": home_box_w,
+						"token_w": token_w,
+						"away_box_x": away_box_x,
+						"token_x": token_x,
+						"home_box_x": home_box_x,
+					}
+					return ([
+						{"df": [away_box_x, 0, away_box_w, box_h, away_bg]},
+						{"dt": [away_box_x + padding_x, 1, away_text, away_fg]},
+						{"dt": [token_x, 1, token, payload_color]},
+						{"df": [home_box_x, 0, home_box_w, box_h, home_bg]},
+						{"dt": [home_box_x + padding_x, 1, home_text, home_fg]},
+					], meta)
+
+				return (None, None)
+
+			# Prefer team abbreviations (3 letters), then fall back to compact location codes (2 letters).
+			away_candidates = []
+			home_candidates = []
+			if away_abbr:
+				away_candidates.append(away_abbr)
+				away_candidates.append(away_abbr[:2])
+			if away_loc2:
+				away_candidates.append(away_loc2)
+			if home_abbr:
+				home_candidates.append(home_abbr.title())
+				home_candidates.append(home_abbr[:2].title())
+			if home_loc2:
+				home_candidates.append(home_loc2.title())
+
+			draw_commands = None
+			draw_meta = None
+			for away_text in away_candidates:
+				for home_text in home_candidates:
+					draw_commands, draw_meta = _build_boxed_layout(away_text, home_text)
+					if draw_commands is not None:
+						break
+				if draw_commands is not None:
+					break
+
+			if draw_commands is not None and draw_meta is not None:
+				matchup_text = ""
+			else:
+				# Fallback: show a compact matchup string with urgency coloring.
+				matchup_text = next_game.get("opponent", "TBD")
+				draw_commands = []
+
+			if debug:
+				print("  league debug:")
+				print(f"    away_team: {away_team}")
+				print(f"    home_team: {home_team}")
+				print(f"    chosen_token: {token}")
+				print(f"    away_candidates: {away_candidates}")
+				print(f"    home_candidates: {home_candidates}")
+				if draw_meta is not None:
+					print(f"    draw_meta: {draw_meta}")
+				else:
+					print("    draw_meta: none (fell back to plain text)")
+
+		if letter and mode != "league":
+			# Team box on right side (7 rows, leave bottom row black)
+			box_draw = {"df": [BOX_X, 0, BOX_WIDTH, 7, box_color]}
+			draw_commands.append(box_draw)
+			# Team letter (small font dt works, centered in box)
+			letter_draw = {"dt": [BOX_X + 2, 1, letter, letter_color]}
+			draw_commands.append(letter_draw)
+
+		# AWTRIX payload
+		data = {
+			"name": app_name,
+			"text": matchup_text,
+			"color": payload_color,
+			"textCase": 2,  # Preserve lowercase
+			"repeat": 20,
+			"center": False,
+			"duration": 10,
+			"stack": True,
+			"lifetime": 300,
+			"noScroll": True,
+		}
+		if use_icon:
+			data["icon"] = league_icon
+		if draw_commands:
+			data["draw"] = draw_commands
+
+		print(f"  Next: {next_game.get('opponent', next_game.get('name', 'TBD'))} ({countdown_str})")
+		app_payloads.append(data)
+
+	if not app_payloads:
 		print("No upcoming games found for any enabled team")
 		return None
 
-	# Sort by datetime to find the soonest game
-	upcoming_games.sort(key=lambda g: g["datetime"])
-	next_game = upcoming_games[0]
+	return app_payloads
 
-	# Extract display info
-	team_config = next_game["team_config"]
-	team_name = team_config.get("name", "Team")
-	short_name = team_config.get("short_name", team_name.split()[-1][:4].upper())
-	league = team_config.get("league", "").lower()
-	colors = team_config.get("colors", ["#FFFFFF", "#FFFFFF"])
-
-	# Unique AWTRIX app name per team (e.g., "BEARCountdown")
-	app_name = f"{short_name}Countdown"
-
-	# Format countdown
-	countdown_str = format_countdown(next_game["datetime"])
-
-	# Get league icon
-	league_icon = league_icons.get(league, icon_draw.awtrix_icons.get("running man", 22835))
-
-	# Check if team uses letter-in-box display
-	letter = team_config.get("letter", None)
-
-	# Calculate box width based on letter width (M,W are 5px, others 3px)
-	def _char_width(ch: str) -> int:
-		if ch in {"M", "W", "m", "w"}:
-			return 5
-		return 3
-
-	# Layout: [Icon 8px] [Text] [Box on right]
-	# Box width = 2px margin + letter + 2px margin
-	letter_width = _char_width(letter) if letter else 3
-	BOX_WIDTH = 2 + letter_width + 2  # 7 for most, 9 for M/W
-	BOX_X = 32 - BOX_WIDTH  # Box on right side
-
-	# Get team colors
-	box_color = team_config.get("box_color", colors[1] if len(colors) > 1 else "#FFFFFF")
-	letter_color = team_config.get("letter_color", colors[0] if colors else "#000000")
-	text_color = team_config.get("text_color", box_color)
-
-	# Note: letter_color should contrast with box_color (configured in YAML)
-
-	# Build draw commands for box on right side
-	draw_commands = []
-
-	if letter:
-		# Team box on right side (7 rows, leave bottom row black)
-		box_draw = {"df": [BOX_X, 0, BOX_WIDTH, 7, box_color]}
-		draw_commands.append(box_draw)
-		# Team letter (small font dt works, centered in box)
-		letter_draw = {"dt": [BOX_X + 2, 1, letter, letter_color]}
-		draw_commands.append(letter_draw)
-
-	# AWTRIX payload: icon on left, text after icon, draw box on right
-	data = {
-		"name": app_name,
-		"text": countdown_str,
-		"icon": league_icon,
-		"color": text_color,
-		"textCase": 2,  # Preserve lowercase
-		"repeat": 20,
-		"center": False,
-		"duration": 10,
-		"stack": True,
-		"lifetime": 300,
-		"noScroll": True,
-		"draw": draw_commands,
-	}
-
-	# Add game info to output for debugging
-	print(f"\nNext game: {team_name}")
-	print(f"  vs {next_game.get('opponent', next_game.get('name', 'TBD'))}")
-	print(f"  {next_game['datetime']}")
-	print(f"  Countdown: {countdown_str}")
-
-	return data
+#============================================
+def compile_sports_countdown_data(config_path: str = None) -> dict:
+	"""
+	Backward compatible API: return the first compiled app payload (if any).
+	"""
+	apps = compile_sports_countdown_apps(config_path)
+	if not apps:
+		return None
+	return apps[0]
 
 #============================================
 def get_api_config() -> dict:
@@ -484,12 +848,12 @@ def get_api_config() -> dict:
 	return config
 
 #============================================
-def send_to_awtrix(app_data: dict) -> bool:
+def send_to_awtrix(app_data) -> bool:
 	"""
 	Send data to AWTRIX 3 display.
 
 	Args:
-		app_data (dict): AWTRIX payload dictionary.
+		app_data: AWTRIX payload dictionary, or a list of payload dictionaries.
 
 	Returns:
 		bool: True if successful, False otherwise.
@@ -504,6 +868,13 @@ def send_to_awtrix(app_data: dict) -> bool:
 	ip = config["ip"]
 	username = config["username"]
 	password = config["password"]
+
+	if isinstance(app_data, list):
+		all_ok = True
+		for one_app in app_data:
+			ok = send_to_awtrix(one_app)
+			all_ok = all_ok and ok
+		return all_ok
 
 	app_name = app_data.get("name", "SportsCountdown")
 	url = f"http://{ip}/api/custom?name={app_name}"
@@ -537,7 +908,12 @@ def parse_args() -> argparse.Namespace:
 		"-d", "--dry-run", dest="dry_run", action="store_true",
 		help="Do not send, just print data"
 	)
+	parser.add_argument(
+		"--debug", dest="debug", action="store_true",
+		help="Verbose output for layout, colors, and ESPN data"
+	)
 	parser.set_defaults(dry_run=False)
+	parser.set_defaults(debug=False)
 	args = parser.parse_args()
 	return args
 
@@ -547,7 +923,7 @@ def main():
 	Main function to fetch sports countdown and display AWTRIX data.
 	"""
 	args = parse_args()
-	data = compile_sports_countdown_data(args.config_path)
+	data = compile_sports_countdown_apps(args.config_path, debug=args.debug)
 	if data:
 		print(f"\nAWTRIX Data: {data}")
 		if not args.dry_run:

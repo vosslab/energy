@@ -3,6 +3,18 @@
 ## 2026-01-10
 - Add [`awtrix3/sports_countdown.py`](../awtrix3/sports_countdown.py) for sports game countdown display.
 - Add [`awtrix3/sports_teams.yaml`](../awtrix3/sports_teams.yaml) config for team tracking with enable/disable flags.
+- Add [`awtrix3/AWTRIX3_PYTHON_SPEC.md`](../awtrix3/AWTRIX3_PYTHON_SPEC.md) describing AWTRIX script conventions.
+- Document text spacing/width budgeting patterns used by `sports_countdown.py` and `display_date.py`.
+- Support league-wide countdown entries (for example, "next NFL game") alongside team-specific countdown apps.
+- Add compact single-screen league matchup+countdown display via `show_matchup: true` (for example, `[LA] 7H [Ca]`).
+- Auto-fit league matchup boxes to use 3-letter abbreviations when they fit (for example, `[LAC] 7H [Car]`).
+- Fall back to 2-letter abbreviations when wide letters (like `W`/`M`) prevent 3-letter boxes from fitting.
+- Prefer brighter team color for box background with darker text when possible (better contrast when one color is black).
+- Clamp `<1H` countdown token to `1H` (no minutes displayed).
+- Round league countdown tokens up (ceiling) so the display doesn't understate time remaining (for example, `150m` -> `3H`).
+- Add `--debug` flag to `sports_countdown.py` for verbose color/layout/ESPN data decisions.
+- Document upstream AWTRIX font glyph reference link in the AWTRIX spec.
+- Document AWTRIX display constraints and ESPN API fields relevant to future sports countdown expansions.
 - Support ESPN API for NFL, NBA, MLB, NHL, WNBA leagues.
 - Support Ergast API for Formula 1 race schedule.
 - Add `active_months` config to skip API calls for off-season leagues.
@@ -29,7 +41,6 @@
 - Remove compatibility wrappers and update imports to use `energylib` directly.
 - Update app and plot entrypoints to resolve `energylib` from the repo root.
 - Point `run_all_screens.sh` at the `apps/` entrypoints.
-<<<<<<< HEAD
 - Add [`pip_requirements.txt`](pip_requirements.txt) and `Brewfile` for repo dependencies.
 - Comment out legacy-only Python dependencies in [`pip_requirements.txt`](pip_requirements.txt).
 - Add clarifying comments across the `awtrix3/` scripts.
