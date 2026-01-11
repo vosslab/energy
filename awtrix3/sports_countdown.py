@@ -822,12 +822,12 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			use_icon = False
 			payload_color = get_countdown_color(next_game["datetime"])
 
-			# NFL uses fixed-width layout: 9+14+9 columns with 2-letter abbreviations
-			if league == "nfl":
+			# Football leagues use fixed-width layout: 9+14+9 columns with 2-letter abbreviations
+			if league in ("nfl", "ncaaf"):
 				draw_commands, draw_meta = _build_nfl_layout(away_team, home_team, next_game["datetime"])
 				matchup_text = ""
 				if debug:
-					print("  league debug (NFL fixed layout):")
+					print(f"  league debug ({league.upper()} fixed layout):")
 					print(f"    away_team: {away_team}")
 					print(f"    home_team: {home_team}")
 					if draw_meta is not None:

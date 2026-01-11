@@ -1,12 +1,13 @@
 # Changelog
 
 ## 2026-01-10
-- NFL league mode uses fixed-width layout: 9px team boxes + 14px center time area.
-- NFL league mode always uses 2-letter team abbreviations (never 3).
-- NFL countdown uses `'` for hours and `"` for minutes (e.g., `15'` or `45"`).
-- NFL countdown shows days for 4+ days, hours for 2+ hours, minutes otherwise.
-- NFL uses both ESPN team colors: brighter as background, darker as text (no white/black fallback).
-- Improved time centering in NFL layout (round-up bias for odd pixel differences).
+- Football leagues (NFL, NCAAF) use fixed-width layout: 9px team boxes + 14px center time area.
+- Football leagues always use 2-letter team abbreviations (never 3).
+- Football countdown uses `'` for hours and `"` for minutes (e.g., `15'` or `45"`).
+- Football countdown shows days for 4+ days, hours for 2+ hours, minutes otherwise.
+- Football leagues use both ESPN team colors: brighter as background, darker as text.
+- Improved time centering in football layout (round-up bias for odd pixel differences).
+- Add College Football Playoffs (CFP) league mode entry to `sports_teams.yaml`.
 - Add [`awtrix3/sports_countdown.py`](../awtrix3/sports_countdown.py) for sports game countdown display.
 - Add [`awtrix3/sports_teams.yaml`](../awtrix3/sports_teams.yaml) config for team tracking with enable/disable flags.
 - Add [`awtrix3/AWTRIX3_PYTHON_SPEC.md`](../awtrix3/AWTRIX3_PYTHON_SPEC.md) describing AWTRIX script conventions.

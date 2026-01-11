@@ -5,6 +5,7 @@
 # League icons (shared across teams in a league)
 league_icons:
   nfl: 1302      # Football spinning
+  ncaaf: 1302    # Football spinning (college)
   nba: 4113      # Basketball
   wnba: 4113     # Basketball
   mlb: 2092      # Baseball
@@ -38,6 +39,17 @@ teams:
     show_matchup: true
     active_months: [1, 2, 9, 10, 11, 12]
     # In league mode, show_matchup renders a single-line layout like: [LA] 7H [Ca]
+
+  # College Football Playoffs - December through January
+  - name: "CFP Next Game"
+    league: ncaaf
+    mode: league
+    espn_team_id: ""   # Not used in league mode
+    short_name: CFP
+    enabled: true
+    show_matchup: true
+    active_months: [1, 12]
+    # Uses same fixed-width layout as NFL: [Away 9px] [Time 14px] [Home 9px]
 
   # NBA - October through June
   - name: "Chicago Bulls"
