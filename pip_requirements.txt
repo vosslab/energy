@@ -12,5 +12,6 @@ pyyaml  # YAML configs (api.yml, garmin_login.yml, ecobee_defs.yml)
 requests  # HTTP client for APIs
 scipy  # Statistics helpers for ComEd pricing
 six  # Python 2/3 compatibility for pyecobee
+tabulate  # Debug table formatting for sports_countdown
 # smbus  # Legacy-only (legacy, lib_oled96) I2C/SMBus access
 # virtGPIO  # Legacy-only (lib_oled96) virtual GPIO support

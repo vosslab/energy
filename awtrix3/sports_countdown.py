@@ -17,6 +17,7 @@ from datetime import datetime
 import yaml
 import colorsys
 import requests
+import tabulate
 
 # Local repo modules
 import icon_draw
@@ -858,6 +859,31 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			if debug:
 				print(f"  nfl_layout: away={away_abbr}({away_text_w}px) time={token}({token_w}px) home={home_abbr}({home_text_w}px)")
 				print(f"  nfl_layout: positions away_text={away_text_x} time={time_text_x} home_text={home_text_x}")
+				# Summary table
+				away_primary = (away_team.get("color", "") or "").strip()
+				if away_primary and not away_primary.startswith("#"):
+					away_primary = f"#{away_primary}"
+				away_alternate = (away_team.get("alternateColor", "") or "").strip()
+				if away_alternate and not away_alternate.startswith("#"):
+					away_alternate = f"#{away_alternate}"
+				home_primary = (home_team.get("color", "") or "").strip()
+				if home_primary and not home_primary.startswith("#"):
+					home_primary = f"#{home_primary}"
+				home_alternate = (home_team.get("alternateColor", "") or "").strip()
+				if home_alternate and not home_alternate.startswith("#"):
+					home_alternate = f"#{home_alternate}"
+				away_rgb = _rgb_sum(away_primary)
+				home_rgb = _rgb_sum(home_primary)
+				away_status = "primary" if away_bg == away_primary else "alternate"
+				home_status = "primary" if home_bg == home_primary else "alternate"
+				table_data = [
+					[away_abbr, away_primary, away_alternate, away_rgb, f"{away_bg} ({away_status})"],
+					[home_abbr, home_primary, home_alternate, home_rgb, f"{home_bg} ({home_status})"],
+				]
+				table_str = tabulate.tabulate(table_data, headers=["Team", "Primary", "Secondary", "RGB", "Background"], tablefmt="pretty")
+				# Indent each line
+				for line in table_str.split("\n"):
+					print(f"  {line}")
 
 			return (draw, meta)
 
