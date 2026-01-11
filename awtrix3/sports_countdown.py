@@ -650,6 +650,158 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 				print(f"  countdown: seconds={total_seconds:.0f} hours={hours:.3f} -> {hours_int}H (ceiling)")
 			return f"{max(0, hours_int)}H"
 
+		def _nfl_countdown_token(target_dt: datetime) -> str:
+			"""
+			NFL-specific countdown format using ' for hours and " for minutes.
+			Shows the lowest unit possible: days (>=4d), hours (>=2h), or minutes.
+			"""
+			from datetime import timezone
+			now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+			target_utc = target_dt.replace(tzinfo=None)
+			total_seconds = (target_utc - now_utc).total_seconds()
+			if total_seconds < 0:
+				return '0"'
+
+			total_minutes = int(math.ceil(total_seconds / 60.0))
+			total_hours = total_seconds / 3600.0
+			total_days = total_seconds / 86400.0
+
+			# 4+ days: show days
+			if total_days >= 4:
+				days = int(math.ceil(total_days))
+				days = min(days, 99)  # cap at 99
+				if debug:
+					print(f"  nfl_countdown: {total_seconds:.0f}s -> {days}d")
+				return f"{days}d"
+			# 2+ hours: show hours with '
+			if total_hours >= 2:
+				hours = int(math.ceil(total_hours))
+				hours = min(hours, 99)  # cap at 99
+				if debug:
+					print(f"  nfl_countdown: {total_seconds:.0f}s -> {hours}'")
+				return f"{hours}'"
+			# Otherwise: show minutes with "
+			minutes = max(1, total_minutes)  # at least 1 minute
+			minutes = min(minutes, 99)  # cap at 99
+			if debug:
+				print(f"  nfl_countdown: {total_seconds:.0f}s -> {minutes}\"")
+			return f'{minutes}"'
+
+		def _build_nfl_layout(away_team: dict, home_team: dict, target_dt: datetime) -> tuple:
+			"""
+			Build fixed-width NFL layout: 9 columns per team box, 14 columns for time.
+			Always uses 2-letter abbreviations.
+			Layout: [Away 9px] [Time 14px] [Home 9px] = 32px total
+			"""
+			# Get 2-letter abbreviations (first 2 chars of ESPN abbreviation)
+			away_abbr = (away_team.get("abbreviation", "") or "")[:2].upper()
+			home_abbr = (home_team.get("abbreviation", "") or "")[:2].upper()
+
+			# Use NFL countdown format with ' and "
+			token = _nfl_countdown_token(target_dt)
+			token_w = _text_width(token)
+
+			# Fixed box dimensions
+			BOX_W = 9
+			BOX_H = 7
+			TIME_W = 14  # 32 - 9 - 9 = 14
+
+			# Calculate text widths for centering within boxes
+			away_text_w = _text_width(away_abbr)
+			home_text_w = _text_width(home_abbr)
+
+			# Box positions
+			away_box_x = 0
+			time_x = BOX_W
+			home_box_x = BOX_W + TIME_W
+
+			# Center text within boxes (box is 9px, text varies)
+			away_text_x = away_box_x + (BOX_W - away_text_w) // 2
+			home_text_x = home_box_x + (BOX_W - home_text_w) // 2
+
+			# Center time in middle area (round up for slight right bias when odd)
+			time_text_x = time_x + (TIME_W - token_w + 1) // 2
+
+			# NFL team colors: brighter color for background, darker for text
+			def _nfl_team_colors(team: dict, label: str) -> tuple:
+				"""Use brighter ESPN color as bg, darker as text."""
+				primary = (team.get("color", "") or "").strip()
+				alternate = (team.get("alternateColor", "") or "").strip()
+				if primary and not primary.startswith("#"):
+					primary = f"#{primary}"
+				if alternate and not alternate.startswith("#"):
+					alternate = f"#{alternate}"
+
+				# Fallback if missing colors
+				if not primary and not alternate:
+					return ("#333333", "#ffffff")
+				if not primary:
+					primary = alternate
+				if not alternate:
+					alternate = primary
+
+				# Compare luminance: brighter = background, darker = text
+				lum_primary = _relative_luminance(primary)
+				lum_alternate = _relative_luminance(alternate)
+
+				if lum_primary >= lum_alternate:
+					bg = primary
+					fg = alternate
+				else:
+					bg = alternate
+					fg = primary
+
+				# Ensure text color has minimum brightness for visibility
+				fg = ensure_min_brightness(fg, min_brightness=0.5)
+
+				if debug:
+					print(f"  nfl_colors[{label}]: primary={primary}(L={lum_primary:.3f}) alt={alternate}(L={lum_alternate:.3f}) -> bg={bg} fg={fg}")
+				return (bg, fg)
+
+			away_bg, away_fg = _nfl_team_colors(away_team, f"away:{away_abbr}")
+			home_bg, home_fg = _nfl_team_colors(home_team, f"home:{home_abbr}")
+
+			# Time color based on urgency
+			time_color = get_countdown_color(target_dt)
+
+			draw = [
+				# Away team box (left)
+				{"df": [away_box_x, 0, BOX_W, BOX_H, away_bg]},
+				{"dt": [away_text_x, 1, away_abbr, away_fg]},
+				# Time in center (no box, just text)
+				{"dt": [time_text_x, 1, token, time_color]},
+				# Home team box (right)
+				{"df": [home_box_x, 0, BOX_W, BOX_H, home_bg]},
+				{"dt": [home_text_x, 1, home_abbr, home_fg]},
+			]
+
+			meta = {
+				"away_text": away_abbr,
+				"home_text": home_abbr,
+				"token": token,
+				"layout": "nfl_fixed",
+				"away_box_x": away_box_x,
+				"time_x": time_text_x,
+				"home_box_x": home_box_x,
+			}
+
+			if debug:
+				print(f"  nfl_layout: away={away_abbr}({away_text_w}px) time={token}({token_w}px) home={home_abbr}({home_text_w}px)")
+				print(f"  nfl_layout: positions away_text={away_text_x} time={time_text_x} home_text={home_text_x}")
+
+			return (draw, meta)
+
+		# Helper function for text width calculation (used by both NFL and generic layouts)
+		def _text_width(text: str) -> int:
+			if not text:
+				return 0
+			width = 0
+			for i, ch in enumerate(text):
+				width += _char_width(ch)
+				if i < len(text) - 1:
+					width += 1
+			return width
+
 		matchup_text = countdown_str
 		use_icon = True
 		draw_commands = []
@@ -664,130 +816,132 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			home_loc2 = _location_to_code(home_loc)
 			away_abbr = (away_team.get("abbreviation", "") or "").upper()
 			home_abbr = (home_team.get("abbreviation", "") or "").upper()
-			token = _countdown_token(next_game["datetime"])
 
 			# In league matchup mode, draw the layout explicitly:
-			# [AwayBox] <space> 7h <space> [HomeBox]
 			# This keeps the entire display single-line and avoids icons.
 			use_icon = False
 			payload_color = get_countdown_color(next_game["datetime"])
 
-			def _text_width(text: str) -> int:
-				if not text:
-					return 0
-				width = 0
-				for i, ch in enumerate(text):
-					width += _char_width(ch)
-					if i < len(text) - 1:
-						width += 1
-				return width
+			# NFL uses fixed-width layout: 9+14+9 columns with 2-letter abbreviations
+			if league == "nfl":
+				draw_commands, draw_meta = _build_nfl_layout(away_team, home_team, next_game["datetime"])
+				matchup_text = ""
+				if debug:
+					print("  league debug (NFL fixed layout):")
+					print(f"    away_team: {away_team}")
+					print(f"    home_team: {home_team}")
+					if draw_meta is not None:
+						print(f"    draw_meta: {draw_meta}")
+			else:
+				# Non-NFL leagues use the generic variable-width layout
+				token = _countdown_token(next_game["datetime"])
 
-			def _build_boxed_layout(away_text: str, home_text: str) -> tuple:
-				away_w = _text_width(away_text)
-				home_w = _text_width(home_text)
-				token_w = _text_width(token)
+				def _build_boxed_layout(away_text: str, home_text: str) -> tuple:
+					away_w = _text_width(away_text)
+					home_w = _text_width(home_text)
+					token_w = _text_width(token)
 
-				away_bg, away_fg = choose_bg_and_text_colors(
-					away_team.get("color", None),
-					away_team.get("alternateColor", None),
-					debug=debug,
-					label=f"away:{away_text}",
-				)
-				home_bg, home_fg = choose_bg_and_text_colors(
-					home_team.get("color", None),
-					home_team.get("alternateColor", None),
-					debug=debug,
-					label=f"home:{home_text}",
-				)
+					away_bg, away_fg = choose_bg_and_text_colors(
+						away_team.get("color", None),
+						away_team.get("alternateColor", None),
+						debug=debug,
+						label=f"away:{away_text}",
+					)
+					home_bg, home_fg = choose_bg_and_text_colors(
+						home_team.get("color", None),
+						home_team.get("alternateColor", None),
+						debug=debug,
+						label=f"home:{home_text}",
+					)
 
-				# Try tighter settings first if needed; prefer visible padding when possible.
-				try_params = [
-					(1, 2),
-					(1, 1),
-					(0, 1),
-					(0, 0),
-				]
+					# Try tighter settings first if needed; prefer visible padding when possible.
+					try_params = [
+						(1, 2),
+						(1, 1),
+						(0, 1),
+						(0, 0),
+					]
 
-				for padding_x, gap in try_params:
-					away_box_w = away_w + (padding_x * 2)
-					home_box_w = home_w + (padding_x * 2)
-					total = away_box_w + gap + token_w + gap + home_box_w
-					if total > 32:
-						continue
+					for padding_x, gap in try_params:
+						away_box_w = away_w + (padding_x * 2)
+						home_box_w = home_w + (padding_x * 2)
+						total = away_box_w + gap + token_w + gap + home_box_w
+						if total > 32:
+							continue
 
-					away_box_x = 0
-					token_x = away_box_x + away_box_w + gap
-					home_box_x = token_x + token_w + gap
-					if home_box_x + home_box_w > 32:
-						continue
+						away_box_x = 0
+						token_x = away_box_x + away_box_w + gap
+						home_box_x = token_x + token_w + gap
+						if home_box_x + home_box_w > 32:
+							continue
 
-					box_h = 7
-					meta = {
-						"away_text": away_text,
-						"home_text": home_text,
-						"token": token,
-						"padding_x": padding_x,
-						"gap": gap,
-						"total_width": total,
-						"away_box_w": away_box_w,
-						"home_box_w": home_box_w,
-						"token_w": token_w,
-						"away_box_x": away_box_x,
-						"token_x": token_x,
-						"home_box_x": home_box_x,
-					}
-					return ([
-						{"df": [away_box_x, 0, away_box_w, box_h, away_bg]},
-						{"dt": [away_box_x + padding_x, 1, away_text, away_fg]},
-						{"dt": [token_x, 1, token, payload_color]},
-						{"df": [home_box_x, 0, home_box_w, box_h, home_bg]},
-						{"dt": [home_box_x + padding_x, 1, home_text, home_fg]},
-					], meta)
+						box_h = 7
+						meta = {
+							"away_text": away_text,
+							"home_text": home_text,
+							"token": token,
+							"padding_x": padding_x,
+							"gap": gap,
+							"total_width": total,
+							"away_box_w": away_box_w,
+							"home_box_w": home_box_w,
+							"token_w": token_w,
+							"away_box_x": away_box_x,
+							"token_x": token_x,
+							"home_box_x": home_box_x,
+						}
+						return ([
+							{"df": [away_box_x, 0, away_box_w, box_h, away_bg]},
+							{"dt": [away_box_x + padding_x, 1, away_text, away_fg]},
+							{"dt": [token_x, 1, token, payload_color]},
+							{"df": [home_box_x, 0, home_box_w, box_h, home_bg]},
+							{"dt": [home_box_x + padding_x, 1, home_text, home_fg]},
+						], meta)
 
-				return (None, None)
+					return (None, None)
 
-			# Prefer team abbreviations (3 letters), then fall back to compact location codes (2 letters).
-			away_candidates = []
-			home_candidates = []
-			if away_abbr:
-				away_candidates.append(away_abbr)
-				away_candidates.append(away_abbr[:2])
-			if away_loc2:
-				away_candidates.append(away_loc2)
-			if home_abbr:
-				home_candidates.append(home_abbr.title())
-				home_candidates.append(home_abbr[:2].title())
-			if home_loc2:
-				home_candidates.append(home_loc2.title())
+				# Prefer team abbreviations (3 letters), then fall back to compact location codes (2 letters).
+				away_candidates = []
+				home_candidates = []
+				if away_abbr:
+					away_candidates.append(away_abbr)
+					away_candidates.append(away_abbr[:2])
+				if away_loc2:
+					away_candidates.append(away_loc2)
+				if home_abbr:
+					home_candidates.append(home_abbr.title())
+					home_candidates.append(home_abbr[:2].title())
+				if home_loc2:
+					home_candidates.append(home_loc2.title())
 
-			draw_commands = None
-			draw_meta = None
-			for away_text in away_candidates:
-				for home_text in home_candidates:
-					draw_commands, draw_meta = _build_boxed_layout(away_text, home_text)
+				draw_commands = None
+				draw_meta = None
+				for away_text in away_candidates:
+					for home_text in home_candidates:
+						draw_commands, draw_meta = _build_boxed_layout(away_text, home_text)
+						if draw_commands is not None:
+							break
 					if draw_commands is not None:
 						break
-				if draw_commands is not None:
-					break
 
-			if draw_commands is not None and draw_meta is not None:
-				matchup_text = ""
-			else:
-				# Fallback: show a compact matchup string with urgency coloring.
-				matchup_text = next_game.get("opponent", "TBD")
-				draw_commands = []
-
-			if debug:
-				print("  league debug:")
-				print(f"    away_team: {away_team}")
-				print(f"    home_team: {home_team}")
-				print(f"    chosen_token: {token}")
-				print(f"    away_candidates: {away_candidates}")
-				print(f"    home_candidates: {home_candidates}")
-				if draw_meta is not None:
-					print(f"    draw_meta: {draw_meta}")
+				if draw_commands is not None and draw_meta is not None:
+					matchup_text = ""
 				else:
-					print("    draw_meta: none (fell back to plain text)")
+					# Fallback: show a compact matchup string with urgency coloring.
+					matchup_text = next_game.get("opponent", "TBD")
+					draw_commands = []
+
+				if debug:
+					print("  league debug:")
+					print(f"    away_team: {away_team}")
+					print(f"    home_team: {home_team}")
+					print(f"    chosen_token: {token}")
+					print(f"    away_candidates: {away_candidates}")
+					print(f"    home_candidates: {home_candidates}")
+					if draw_meta is not None:
+						print(f"    draw_meta: {draw_meta}")
+					else:
+						print("    draw_meta: none (fell back to plain text)")
 
 		if letter and mode != "league":
 			# Team box on right side (7 rows, leave bottom row black)
