@@ -3,8 +3,10 @@
 ## 2026-01-10
 - Football leagues (NFL, NCAAF) use fixed-width layout: 9px team boxes + 14px center time area.
 - Football leagues always use 2-letter team abbreviations (never 3).
-- Football countdown uses `'` for hours and `"` for minutes (e.g., `15'` or `45"`).
-- Football countdown shows days for 4+ days, hours for 2+ hours, minutes otherwise.
+- Football countdown shows game time (e.g., `I2p`, `3a`) when under 24 hours away.
+- Football countdown shows days for 4+ days, hours with `'` otherwise (e.g., `36'`).
+- Football time display uses 'I' instead of '1' for narrow display (AWTRIX 'I' is 1px wide).
+- Team abbreviations use serifed 'I' (3px) when no M/W present, narrow 'I' (1px) otherwise.
 - Football leagues use both ESPN team colors: brighter as background, darker as text.
 - Improved time centering in football layout (round-up bias for odd pixel differences).
 - Add College Football Playoffs (CFP) league mode entry to `sports_teams.yaml`.

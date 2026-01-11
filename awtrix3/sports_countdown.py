@@ -604,10 +604,12 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 		# Check if entry uses letter-in-box display
 		letter = team_config.get("letter", None)
 
-		# Calculate box width based on letter width (M,W are 5px, others 3px)
+		# Calculate box width based on letter width (M,W are 5px, I is 1px, others 3px)
 		def _char_width(ch: str) -> int:
 			if ch in {"M", "W", "m", "w"}:
 				return 5
+			if ch == "I":
+				return 1  # AWTRIX 'I' is a single vertical line
 			return 3
 
 		# Layout: [Icon 8px] [Text] [Box on right]
@@ -652,19 +654,46 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 
 		def _nfl_countdown_token(target_dt: datetime) -> str:
 			"""
-			NFL-specific countdown format using ' for hours and " for minutes.
-			Shows the lowest unit possible: days (>=4d), hours (>=2h), or minutes.
+			NFL-specific countdown/time format.
+			<24 hours: show game time like "I2p" or "3a" (uses 'I' for narrow '1')
+			4+ days: show days like "9d"
+			Otherwise: show hours like "36'"
 			"""
 			from datetime import timezone
 			now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
 			target_utc = target_dt.replace(tzinfo=None)
 			total_seconds = (target_utc - now_utc).total_seconds()
 			if total_seconds < 0:
-				return '0"'
+				return "now"
 
-			total_minutes = int(math.ceil(total_seconds / 60.0))
 			total_hours = total_seconds / 3600.0
 			total_days = total_seconds / 86400.0
+
+			# <24 hours: show game time (e.g., "I2p", "3a")
+			# Use 'I' instead of '1' for narrow display (AWTRIX 'I' is 1px wide)
+			if total_hours < 24:
+				# Convert to local time for display
+				local_dt = target_dt.astimezone()
+				hour = local_dt.hour
+				if hour == 0:
+					time_str = "I2a"  # 12am
+				elif hour < 10:
+					time_str = f"{hour}a"
+				elif hour == 10:
+					time_str = "IOa"  # 10am - use 'I' for 1, 'O' for 0
+				elif hour == 11:
+					time_str = "IIa"  # 11am
+				elif hour == 12:
+					time_str = "I2p"  # 12pm
+				elif hour < 22:
+					time_str = f"{hour - 12}p"
+				elif hour == 22:
+					time_str = "IOp"  # 10pm
+				else:
+					time_str = "IIp"  # 11pm
+				if debug:
+					print(f"  nfl_countdown: {total_seconds:.0f}s -> {time_str} (game time)")
+				return time_str
 
 			# 4+ days: show days
 			if total_days >= 4:
@@ -673,19 +702,47 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 				if debug:
 					print(f"  nfl_countdown: {total_seconds:.0f}s -> {days}d")
 				return f"{days}d"
-			# 2+ hours: show hours with '
-			if total_hours >= 2:
-				hours = int(math.ceil(total_hours))
-				hours = min(hours, 99)  # cap at 99
-				if debug:
-					print(f"  nfl_countdown: {total_seconds:.0f}s -> {hours}'")
-				return f"{hours}'"
-			# Otherwise: show minutes with "
-			minutes = max(1, total_minutes)  # at least 1 minute
-			minutes = min(minutes, 99)  # cap at 99
+
+			# Otherwise: show hours with '
+			hours = int(math.ceil(total_hours))
+			hours = min(hours, 99)  # cap at 99
 			if debug:
-				print(f"  nfl_countdown: {total_seconds:.0f}s -> {minutes}\"")
-			return f'{minutes}"'
+				print(f"  nfl_countdown: {total_seconds:.0f}s -> {hours}'")
+			return f"{hours}'"
+
+		def _draw_team_abbr(x: int, y: int, text: str, color) -> list:
+			"""
+			Draw team abbreviation with serifed I when there's room.
+			Uses serifed I (3px) if text has no M/W, otherwise narrow I (1px).
+			"""
+			has_wide = any(ch in text for ch in "MWmw")
+			cmds = []
+			cur_x = x
+			for ch in text:
+				# Use serifed I if no wide letters in abbreviation
+				if ch == "I" and not has_wide:
+					# Draw 3px wide serifed I: top serif, stem, bottom serif
+					cmds.append({"dl": [cur_x, y, cur_x + 2, y, color]})        # top serif
+					cmds.append({"dl": [cur_x + 1, y + 1, cur_x + 1, y + 3, color]})  # stem
+					cmds.append({"dl": [cur_x, y + 4, cur_x + 2, y + 4, color]})  # bottom serif
+					cur_x += 3 + 1  # 3px char + 1px kerning
+				else:
+					cmds.append({"dt": [cur_x, y, ch, color]})
+					cur_x += _char_width(ch) + 1
+			return cmds
+
+		def _team_abbr_width(text: str) -> int:
+			"""Calculate width of team abbreviation with serifed I logic."""
+			has_wide = any(ch in text for ch in "MWmw")
+			width = 0
+			for i, ch in enumerate(text):
+				if ch == "I" and not has_wide:
+					width += 3  # serifed I
+				else:
+					width += _char_width(ch)
+				if i < len(text) - 1:
+					width += 1  # kerning
+			return width
 
 		def _build_nfl_layout(away_team: dict, home_team: dict, target_dt: datetime) -> tuple:
 			"""
@@ -706,9 +763,9 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			BOX_H = 7
 			TIME_W = 14  # 32 - 9 - 9 = 14
 
-			# Calculate text widths for centering within boxes
-			away_text_w = _text_width(away_abbr)
-			home_text_w = _text_width(home_abbr)
+			# Calculate text widths for centering within boxes (using serifed I logic)
+			away_text_w = _team_abbr_width(away_abbr)
+			home_text_w = _team_abbr_width(home_abbr)
 
 			# Box positions
 			away_box_x = 0
@@ -764,16 +821,18 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			# Time color based on urgency
 			time_color = get_countdown_color(target_dt)
 
+			# Build draw commands
 			draw = [
 				# Away team box (left)
 				{"df": [away_box_x, 0, BOX_W, BOX_H, away_bg]},
-				{"dt": [away_text_x, 1, away_abbr, away_fg]},
-				# Time in center (no box, just text)
-				{"dt": [time_text_x, 1, token, time_color]},
 				# Home team box (right)
 				{"df": [home_box_x, 0, BOX_W, BOX_H, home_bg]},
-				{"dt": [home_text_x, 1, home_abbr, home_fg]},
+				# Time in center (uses 'I' for narrow '1' - AWTRIX 'I' is 1px wide)
+				{"dt": [time_text_x, 1, token, time_color]},
 			]
+			# Add team abbreviations with serifed I where appropriate
+			draw.extend(_draw_team_abbr(away_text_x, 1, away_abbr, away_fg))
+			draw.extend(_draw_team_abbr(home_text_x, 1, home_abbr, home_fg))
 
 			meta = {
 				"away_text": away_abbr,
