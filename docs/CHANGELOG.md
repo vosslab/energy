@@ -7,7 +7,7 @@
 - Football countdown shows days for 4+ days, hours with `'` otherwise (e.g., `36'`).
 - Football time display uses 'I' instead of '1' for narrow display (AWTRIX 'I' is 1px wide).
 - Team abbreviations use serifed 'I' (3px) when no M/W present, narrow 'I' (1px) otherwise.
-- Football leagues use both ESPN team colors: brighter as background, darker as text.
+- Football leagues prefer primary ESPN color as background; swap to alternate only if R+G+B < 128.
 - Improved time centering in football layout (round-up bias for odd pixel differences).
 - Add College Football Playoffs (CFP) league mode entry to `sports_teams.yaml`.
 - Add [`awtrix3/sports_countdown.py`](../awtrix3/sports_countdown.py) for sports game countdown display.

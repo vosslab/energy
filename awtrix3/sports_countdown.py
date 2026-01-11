@@ -779,9 +779,20 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			# Center time in middle area (round up for slight right bias when odd)
 			time_text_x = time_x + (TIME_W - token_w + 1) // 2
 
-			# NFL team colors: brighter color for background, darker for text
+			# NFL team colors: prefer primary as background unless too dark
+			MIN_RGB_SUM = 128  # threshold for "too dark" background (R+G+B)
+			def _rgb_sum(hex_color: str) -> int:
+				"""Sum of RGB values (0-765)."""
+				hex_color = (hex_color or "").strip().lstrip("#")
+				if len(hex_color) != 6:
+					return 0
+				r = int(hex_color[0:2], 16)
+				g = int(hex_color[2:4], 16)
+				b = int(hex_color[4:6], 16)
+				return r + g + b
+
 			def _nfl_team_colors(team: dict, label: str) -> tuple:
-				"""Use brighter ESPN color as bg, darker as text."""
+				"""Use primary ESPN color as bg, alternate as text (swap if primary too dark)."""
 				primary = (team.get("color", "") or "").strip()
 				alternate = (team.get("alternateColor", "") or "").strip()
 				if primary and not primary.startswith("#"):
@@ -797,11 +808,11 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 				if not alternate:
 					alternate = primary
 
-				# Compare luminance: brighter = background, darker = text
-				lum_primary = _relative_luminance(primary)
-				lum_alternate = _relative_luminance(alternate)
+				rgb_primary = _rgb_sum(primary)
+				rgb_alternate = _rgb_sum(alternate)
 
-				if lum_primary >= lum_alternate:
+				# Use primary as background unless it's too dark
+				if rgb_primary >= MIN_RGB_SUM:
 					bg = primary
 					fg = alternate
 				else:
@@ -812,7 +823,7 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 				fg = ensure_min_brightness(fg, min_brightness=0.5)
 
 				if debug:
-					print(f"  nfl_colors[{label}]: primary={primary}(L={lum_primary:.3f}) alt={alternate}(L={lum_alternate:.3f}) -> bg={bg} fg={fg}")
+					print(f"  nfl_colors[{label}]: primary={primary}(rgb={rgb_primary}) alt={alternate}(rgb={rgb_alternate}) -> bg={bg} fg={fg}")
 				return (bg, fg)
 
 			away_bg, away_fg = _nfl_team_colors(away_team, f"away:{away_abbr}")
