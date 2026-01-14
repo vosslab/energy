@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-01-14
+- Resolve merge conflict artifacts in `AGENTS.md`.
 - Add per-file progress markers to `tests/run_ascii_compliance.sh`: green `.` for clean, yellow `+` for auto-fixed, red `!` for unfixable issues.
 - Include the offending character after the U+ codepoint in `tests/check_ascii_compliance.py` output when printable.
 - Auto-fix common arrow characters in `tests/check_ascii_compliance.py` (for example, `\u2192` to `->`, `\u2190` to `<-`).
