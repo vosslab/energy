@@ -18,7 +18,7 @@ teams:
     league: nfl
     espn_team_id: CHI
     short_name: BEAR
-    enabled: true
+    enabled: false
     active_months: [1, 2, 9, 10, 11, 12]
     # Letter display: letter in colored box on right side
     letter: "C"
@@ -46,7 +46,7 @@ teams:
     mode: league
     espn_team_id: ""   # Not used in league mode
     short_name: CFP
-    enabled: true
+    enabled: false
     show_matchup: true
     active_months: [1, 12]
     # Uses same fixed-width layout as NFL: [Away 9px] [Time 14px] [Home 9px]
