@@ -46,7 +46,7 @@ disable charging based on ComEd pricing.
 ## Hourly guardrails
 - If `hour` is in `badHours` and minute < 20:
   - Disable all plugs, then sleep until `hour:20`.
-- The optional “always enable before 5AM” block is present but commented out.
+- The optional "always enable before 5AM" block is present but commented out.
 
 ## Logging
 - Each decision prints a shared message including current/predicted/cutoff.

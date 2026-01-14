@@ -1,4 +1,4 @@
-# Sports teams configuration for AWTRIX countdown display
+# Sports teams configuration for AWTRIX schedule display
 # Set enabled: true/false to control which teams are tracked
 # active_months: list of months (1-12) when the league is in season
 
@@ -24,7 +24,7 @@ teams:
     letter: "C"
     letter_color: "#0B162A"  # Navy blue letter
     box_color: "#C83803"     # Orange box background
-    text_color: "#C83803"    # Orange countdown text
+    text_color: "#C83803"    # Orange schedule text
     colors:
       - "#0B162A"  # Navy blue
       - "#C83803"  # Orange

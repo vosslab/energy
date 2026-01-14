@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-01-14
+- Add per-file progress markers to `tests/run_ascii_compliance.sh`: green `.` for clean, yellow `+` for auto-fixed, red `!` for unfixable issues.
+- Include the offending character after the U+ codepoint in `tests/check_ascii_compliance.py` output when printable.
+- Auto-fix common arrow characters in `tests/check_ascii_compliance.py` (for example, `\u2192` to `->`, `\u2190` to `<-`).
+- Report the total number of files with ASCII errors in `tests/run_ascii_compliance.sh`, listing paths when fewer than five.
+- Convert the ASCII compliance runner to `tests/run_ascii_compliance.py`, leaving `tests/run_ascii_compliance.sh` as a wrapper.
+- Add top-5 Unicode character counts to the ASCII compliance report, plus per-file error counts when five or fewer files fail.
+- Add [`awtrix3/AWTRIX3_AUTHORING_GUIDE.md`](../awtrix3/AWTRIX3_AUTHORING_GUIDE.md) documenting how to author AWTRIX 3 custom app scripts in this repo.
+- Sports schedule league mode shows weekday tokens (for example, `Sat`) instead of hour counts for future games, and shows a compact time token (for example, `3p`) for games happening today.
+- Rename `awtrix3/sports_countdown.py` to `awtrix3/sports_schedule.py` and update callers.
+- Remove remaining "countdown" naming in `awtrix3/` (function names, comments, and app name suffixes) in favor of schedule/next-game terms.
+
 ## 2026-01-10
 - Football leagues (NFL, NCAAF) use fixed-width layout: 9px team boxes + 14px center time area.
 - Football leagues always use 2-letter team abbreviations (never 3).
@@ -11,10 +23,10 @@
 - Add `--debug` summary table showing team colors, RGB values, and background selection.
 - Improved time centering in football layout (round-up bias for odd pixel differences).
 - Add College Football Playoffs (CFP) league mode entry to `sports_teams.yaml`.
-- Add [`awtrix3/sports_countdown.py`](../awtrix3/sports_countdown.py) for sports game countdown display.
+- Add [`awtrix3/sports_schedule.py`](../awtrix3/sports_schedule.py) for sports game countdown display (originally added as `sports_countdown.py`).
 - Add [`awtrix3/sports_teams.yaml`](../awtrix3/sports_teams.yaml) config for team tracking with enable/disable flags.
 - Add [`awtrix3/AWTRIX3_PYTHON_SPEC.md`](../awtrix3/AWTRIX3_PYTHON_SPEC.md) describing AWTRIX script conventions.
-- Document text spacing/width budgeting patterns used by `sports_countdown.py` and `display_date.py`.
+- Document text spacing/width budgeting patterns used by `sports_schedule.py` and `display_date.py`.
 - Support league-wide countdown entries (for example, "next NFL game") alongside team-specific countdown apps.
 - Add compact single-screen league matchup+countdown display via `show_matchup: true` (for example, `[LA] 7H [Ca]`).
 - Auto-fit league matchup boxes to use 3-letter abbreviations when they fit (for example, `[LAC] 7H [Car]`).
@@ -22,7 +34,7 @@
 - Prefer brighter team color for box background with darker text when possible (better contrast when one color is black).
 - Clamp `<1H` countdown token to `1H` (no minutes displayed).
 - Round league countdown tokens up (ceiling) so the display doesn't understate time remaining (for example, `150m` -> `3H`).
-- Add `--debug` flag to `sports_countdown.py` for verbose color/layout/ESPN data decisions.
+- Add `--debug` flag to `sports_schedule.py` for verbose color/layout/ESPN data decisions.
 - Document upstream AWTRIX font glyph reference link in the AWTRIX spec.
 - Document AWTRIX display constraints and ESPN API fields relevant to future sports countdown expansions.
 - Support ESPN API for NFL, NBA, MLB, NHL, WNBA leagues.

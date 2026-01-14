@@ -1,9 +1,11 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+ascii_compliance.txt
+pyflakes.txt
+.DS_Store
+
 *.py[cod]
 *$py.class
 
-pyflakes.txt
 
 #data files
 *.yml

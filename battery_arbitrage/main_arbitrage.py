@@ -72,7 +72,7 @@ if __name__ == '__main__':
         print("Status: CHARGE --- PULL ENERGY FROM GRID")
         syscontrol.charge()
     else:
-        print("Status: OFF")å
+        print("Status: OFF")
         syscontrol.turn_off()
 
     # Measure end time and print run-time duration

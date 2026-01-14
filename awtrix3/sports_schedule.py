@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Sports countdown module for AWTRIX 3 display.
-Fetches next game times from ESPN/Ergast APIs and displays countdown.
+Sports schedule module for AWTRIX 3 display.
+Fetches next game times from ESPN/Ergast APIs and displays a compact day/time token.
 """
 
 # Standard Library
@@ -10,7 +10,6 @@ import os
 import time
 import random
 import argparse
-import math
 from datetime import datetime
 
 # PIP3 modules
@@ -486,44 +485,77 @@ def fetch_next_game(team_config: dict) -> dict:
 	return game
 
 #============================================
-def format_countdown(target_dt: datetime) -> str:
+def format_game_time_token(target_dt: datetime) -> str:
 	"""
-	Format time remaining as a readable countdown string.
+	Format the next event time as a compact AWTRIX token.
 
 	Args:
-		target_dt (datetime): Target datetime (UTC).
+		target_dt (datetime): Target datetime.
 
 	Returns:
-		str: Formatted countdown like "8h 12m" or "2d 5h".
+		str: If the event is today (local), a time token like "3p"; otherwise a weekday token like "Sa".
 	"""
 	from datetime import timezone
 	now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
 	target_utc = target_dt.replace(tzinfo=None)
-
-	delta = target_utc - now_utc
-	total_seconds = int(delta.total_seconds())
-
-	if total_seconds < 0:
+	if target_utc < now_utc:
 		return "LIVE"
 
-	days = total_seconds // 86400
-	hours = (total_seconds % 86400) // 3600
-	minutes = (total_seconds % 3600) // 60
-
-	# Round minutes to nearest 5 (matches 300s lifetime)
-	minutes = (minutes // 5) * 5
-
-	if days > 0:
-		countdown_str = f"{days}d{hours}h"
-	elif hours > 0:
-		countdown_str = f"{hours}h{minutes:02d}"
-	else:
-		countdown_str = f"{minutes}m"
-
-	return countdown_str
+	local_dt = _to_local_dt(target_dt)
+	now_local = datetime.now()
+	if local_dt.date() == now_local.date():
+		return _awtrix_hour_token(local_dt)
+	return _awtrix_dow_token(local_dt, letters=2)
 
 #============================================
-def get_countdown_color(target_dt: datetime) -> list:
+def _to_local_dt(dt: datetime) -> datetime:
+	"""
+	Convert timezone-aware datetimes to local time; return naive datetimes unchanged.
+	"""
+	if dt.tzinfo is None or dt.utcoffset() is None:
+		return dt
+	return dt.astimezone()
+
+#============================================
+def _awtrix_hour_token(local_dt: datetime) -> str:
+	"""
+	Return a compact hour token like "3p" or "I2a".
+
+	Uses 'I' for the digit 1 (narrow on AWTRIX) and 'O' for 0 in 10/11/12 hour forms.
+	"""
+	hour = local_dt.hour
+	suffix = "a" if hour < 12 else "p"
+
+	if hour == 0:
+		h12 = 12
+	elif hour > 12:
+		h12 = hour - 12
+	else:
+		h12 = hour
+
+	if h12 == 10:
+		hour_str = "IO"
+	elif h12 == 11:
+		hour_str = "II"
+	elif h12 == 12:
+		hour_str = "I2"
+	else:
+		hour_str = str(h12)
+
+	return f"{hour_str}{suffix}"
+
+#============================================
+def _awtrix_dow_token(local_dt: datetime, letters: int = 2) -> str:
+	"""
+	Return a weekday token like "Mo" or "Mon".
+	"""
+	abbr3 = local_dt.strftime("%a")
+	if letters == 3:
+		return abbr3
+	return abbr3[:2]
+
+#============================================
+def get_time_token_color(target_dt: datetime) -> list:
 	"""
 	Get color based on time remaining (green -> yellow -> orange -> red).
 
@@ -554,9 +586,9 @@ def get_countdown_color(target_dt: datetime) -> list:
 		return [255, 50, 50]
 
 #============================================
-def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) -> list:
+def compile_sports_schedule_apps(config_path: str = None, debug: bool = False) -> list:
 	"""
-	Compile countdown data for each enabled team/league entry.
+	Compile schedule data for each enabled team/league entry.
 
 	Args:
 		config_path (str): Path to sports_teams.yaml config.
@@ -593,11 +625,11 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 		show_matchup = bool(team_config.get("show_matchup", False))
 		colors = team_config.get("colors", ["#FFFFFF", "#FFFFFF"])
 
-		# Unique AWTRIX app name per team/entry (e.g., "BEARCountdown")
-		app_name = f"{short_name}Countdown"
+		# Unique AWTRIX app name per team/entry (e.g., "BEARNextGame")
+		app_name = f"{short_name}NextGame"
 
-		# Format countdown
-		countdown_str = format_countdown(next_game["datetime"])
+		# Format schedule token (weekday for future days, time for today)
+		schedule_token = format_game_time_token(next_game["datetime"])
 
 		# Get league icon
 		league_icon = league_icons.get(league, icon_draw.awtrix_icons.get("running man", 22835))
@@ -624,7 +656,18 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 		letter_color = team_config.get("letter_color", colors[0] if colors else "#000000")
 		text_color = team_config.get("text_color", box_color)
 
-		# For league mode, optionally compress matchup + countdown into a single-line string.
+		# Helper function for text width calculation (used by tokens and layouts)
+		def _text_width(text: str) -> int:
+			if not text:
+				return 0
+			width = 0
+			for i, ch in enumerate(text):
+				width += _char_width(ch)
+				if i < len(text) - 1:
+					width += 1
+			return width
+
+		# For league mode, optionally compress matchup + token into a single-line string.
 		def _location_to_code(location: str) -> str:
 			parts = [p for p in location.replace("-", " ").split(" ") if p]
 			if len(parts) >= 2:
@@ -633,32 +676,11 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 				return parts[0][:2].upper()
 			return ""
 
-		def _countdown_token(target_dt: datetime) -> str:
-			from datetime import timezone
-			now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
-			target_utc = target_dt.replace(tzinfo=None)
-			total_seconds = (target_utc - now_utc).total_seconds()
-			if total_seconds < 0:
-				return "0H"
-
-			hours = total_seconds / 3600.0
-			if hours >= 24:
-				days = int(math.ceil(hours / 24.0))
-				if debug:
-					print(f"  countdown: hours={hours:.3f} -> days={days} (ceiling)")
-				return f"{max(0, days)}d"
-			# Avoid "0H" when < 1 hour remains; minutes are intentionally not shown.
-			hours_int = int(math.ceil(hours))
-			if debug:
-				print(f"  countdown: seconds={total_seconds:.0f} hours={hours:.3f} -> {hours_int}H (ceiling)")
-			return f"{max(0, hours_int)}H"
-
-		def _nfl_countdown_token(target_dt: datetime) -> str:
+		def _day_or_time_token(target_dt: datetime, prefer_three: bool = False, max_width_px: int = None) -> str:
 			"""
-			NFL-specific countdown/time format.
-			<24 hours: show game time like "I2p" or "3a" (uses 'I' for narrow '1')
-			4+ days: show days like "9d"
-			Otherwise: show hours like "36'"
+			Return a compact token for league-mode layouts:
+			- Today (local): show time like "3p"
+			- Otherwise: show weekday like "Sa" or "Sat" (pick based on preference/width)
 			"""
 			from datetime import timezone
 			now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -667,49 +689,29 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			if total_seconds < 0:
 				return "now"
 
-			total_hours = total_seconds / 3600.0
-			total_days = total_seconds / 86400.0
-
-			# <24 hours: show game time (e.g., "I2p", "3a")
-			# Use 'I' instead of '1' for narrow display (AWTRIX 'I' is 1px wide)
-			if total_hours < 24:
-				# Convert to local time for display
-				local_dt = target_dt.astimezone()
-				hour = local_dt.hour
-				if hour == 0:
-					time_str = "I2a"  # 12am
-				elif hour < 10:
-					time_str = f"{hour}a"
-				elif hour == 10:
-					time_str = "IOa"  # 10am - use 'I' for 1, 'O' for 0
-				elif hour == 11:
-					time_str = "IIa"  # 11am
-				elif hour == 12:
-					time_str = "I2p"  # 12pm
-				elif hour < 22:
-					time_str = f"{hour - 12}p"
-				elif hour == 22:
-					time_str = "IOp"  # 10pm
-				else:
-					time_str = "IIp"  # 11pm
+			local_dt = _to_local_dt(target_dt)
+			now_local = datetime.now()
+			if local_dt.date() == now_local.date():
+				time_str = _awtrix_hour_token(local_dt)
 				if debug:
-					print(f"  nfl_countdown: {total_seconds:.0f}s -> {time_str} (game time)")
+					print(f"  token: today -> {time_str}")
 				return time_str
 
-			# 4+ days: show days
-			if total_days >= 4:
-				days = int(math.ceil(total_days))
-				days = min(days, 99)  # cap at 99
-				if debug:
-					print(f"  nfl_countdown: {total_seconds:.0f}s -> {days}d")
-				return f"{days}d"
+			token3 = _awtrix_dow_token(local_dt, letters=3)
+			token2 = _awtrix_dow_token(local_dt, letters=2)
+			token = token3 if prefer_three else token2
 
-			# Otherwise: show hours with '
-			hours = int(math.ceil(total_hours))
-			hours = min(hours, 99)  # cap at 99
-			if debug:
-				print(f"  nfl_countdown: {total_seconds:.0f}s -> {hours}'")
-			return f"{hours}'"
+			if max_width_px is None:
+				return token
+
+			if _text_width(token) <= max_width_px:
+				return token
+
+			alt = token2 if token == token3 else token3
+			if _text_width(alt) <= max_width_px:
+				return alt
+
+			return token2
 
 		def _draw_team_abbr(x: int, y: int, text: str, color) -> list:
 			"""
@@ -755,14 +757,13 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			away_abbr = (away_team.get("abbreviation", "") or "")[:2].upper()
 			home_abbr = (home_team.get("abbreviation", "") or "")[:2].upper()
 
-			# Use NFL countdown format with ' and "
-			token = _nfl_countdown_token(target_dt)
-			token_w = _text_width(token)
-
 			# Fixed box dimensions
 			BOX_W = 9
 			BOX_H = 7
 			TIME_W = 14  # 32 - 9 - 9 = 14
+
+			token = _day_or_time_token(target_dt, prefer_three=True, max_width_px=TIME_W)
+			token_w = _text_width(token)
 
 			# Calculate text widths for centering within boxes (using serifed I logic)
 			away_text_w = _team_abbr_width(away_abbr)
@@ -831,7 +832,7 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			home_bg, home_fg = _nfl_team_colors(home_team, f"home:{home_abbr}")
 
 			# Time color based on urgency
-			time_color = get_countdown_color(target_dt)
+			time_color = get_time_token_color(target_dt)
 
 			# Build draw commands
 			draw = [
@@ -887,18 +888,7 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 
 			return (draw, meta)
 
-		# Helper function for text width calculation (used by both NFL and generic layouts)
-		def _text_width(text: str) -> int:
-			if not text:
-				return 0
-			width = 0
-			for i, ch in enumerate(text):
-				width += _char_width(ch)
-				if i < len(text) - 1:
-					width += 1
-			return width
-
-		matchup_text = countdown_str
+		matchup_text = schedule_token
 		use_icon = True
 		draw_commands = []
 		payload_color = text_color
@@ -916,7 +906,7 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 			# In league matchup mode, draw the layout explicitly:
 			# This keeps the entire display single-line and avoids icons.
 			use_icon = False
-			payload_color = get_countdown_color(next_game["datetime"])
+			payload_color = get_time_token_color(next_game["datetime"])
 
 			# Football leagues use fixed-width layout: 9+14+9 columns with 2-letter abbreviations
 			if league in ("nfl", "ncaaf"):
@@ -930,9 +920,14 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 						print(f"    draw_meta: {draw_meta}")
 			else:
 				# Non-NFL leagues use the generic variable-width layout
-				token = _countdown_token(next_game["datetime"])
+				token_candidates = [
+					_day_or_time_token(next_game["datetime"], prefer_three=True),
+					_day_or_time_token(next_game["datetime"], prefer_three=False),
+				]
+				# De-dup (time tokens are identical for both preferences)
+				token_candidates = list(dict.fromkeys(token_candidates))
 
-				def _build_boxed_layout(away_text: str, home_text: str) -> tuple:
+				def _build_boxed_layout(away_text: str, home_text: str, token: str) -> tuple:
 					away_w = _text_width(away_text)
 					home_w = _text_width(home_text)
 					token_w = _text_width(token)
@@ -1012,9 +1007,14 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 
 				draw_commands = None
 				draw_meta = None
-				for away_text in away_candidates:
-					for home_text in home_candidates:
-						draw_commands, draw_meta = _build_boxed_layout(away_text, home_text)
+				chosen_token = token_candidates[0]
+				for token in token_candidates:
+					chosen_token = token
+					for away_text in away_candidates:
+						for home_text in home_candidates:
+							draw_commands, draw_meta = _build_boxed_layout(away_text, home_text, token)
+							if draw_commands is not None:
+								break
 						if draw_commands is not None:
 							break
 					if draw_commands is not None:
@@ -1031,7 +1031,7 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 					print("  league debug:")
 					print(f"    away_team: {away_team}")
 					print(f"    home_team: {home_team}")
-					print(f"    chosen_token: {token}")
+					print(f"    chosen_token: {chosen_token}")
 					print(f"    away_candidates: {away_candidates}")
 					print(f"    home_candidates: {home_candidates}")
 					if draw_meta is not None:
@@ -1065,7 +1065,7 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 		if draw_commands:
 			data["draw"] = draw_commands
 
-		print(f"  Next: {next_game.get('opponent', next_game.get('name', 'TBD'))} ({countdown_str})")
+		print(f"  Next: {next_game.get('opponent', next_game.get('name', 'TBD'))} ({schedule_token})")
 		app_payloads.append(data)
 
 	if not app_payloads:
@@ -1075,11 +1075,11 @@ def compile_sports_countdown_apps(config_path: str = None, debug: bool = False) 
 	return app_payloads
 
 #============================================
-def compile_sports_countdown_data(config_path: str = None) -> dict:
+def compile_sports_schedule_data(config_path: str = None) -> dict:
 	"""
 	Backward compatible API: return the first compiled app payload (if any).
 	"""
-	apps = compile_sports_countdown_apps(config_path)
+	apps = compile_sports_schedule_apps(config_path)
 	if not apps:
 		return None
 	return apps[0]
@@ -1126,7 +1126,7 @@ def send_to_awtrix(app_data) -> bool:
 			all_ok = all_ok and ok
 		return all_ok
 
-	app_name = app_data.get("name", "SportsCountdown")
+	app_name = app_data.get("name", "SportsSchedule")
 	url = f"http://{ip}/api/custom?name={app_name}"
 
 	print(f"Sending to AWTRIX at {ip}...")
@@ -1148,7 +1148,7 @@ def parse_args() -> argparse.Namespace:
 		argparse.Namespace: Parsed arguments.
 	"""
 	parser = argparse.ArgumentParser(
-		description="Sports countdown display for AWTRIX 3"
+		description="Sports schedule display for AWTRIX 3"
 	)
 	parser.add_argument(
 		"-c", "--config", dest="config_path", type=str, default=None,
@@ -1170,10 +1170,10 @@ def parse_args() -> argparse.Namespace:
 #============================================
 def main():
 	"""
-	Main function to fetch sports countdown and display AWTRIX data.
+	Main function to fetch sports schedule and display AWTRIX data.
 	"""
 	args = parse_args()
-	data = compile_sports_countdown_apps(args.config_path, debug=args.debug)
+	data = compile_sports_schedule_apps(args.config_path, debug=args.debug)
 	if data:
 		print(f"\nAWTRIX Data: {data}")
 		if not args.dry_run:

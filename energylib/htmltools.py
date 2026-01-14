@@ -206,7 +206,7 @@ def equivalent_gas_cost(electricity_cost_cents_per_kwh):
 	# EPA-estimated efficiency for the 2021 Kia Niro EV in miles per kilowatt-hour
 	ev_efficiency_miles_per_kwh = 3.5
 
-	# EPA’s standard conversion factor of 33.7 kWh being equivalent to one gallon of gasoline
+	# EPA's standard conversion factor of 33.7 kWh being equivalent to one gallon of gasoline
 
 	# Calculate the gas-to-electricity conversion rate
 	# This rate represents how many miles a gas car can travel compared to an EV, using equivalent energy

@@ -126,6 +126,10 @@ def apply_simple_fixes(text: str) -> tuple[str, bool]:
 	# Replace ellipsis with three dots.
 	fixed_text = fixed_text.replace("\u2026", "...")
 
+	# Replace arrow characters with ASCII equivalents.
+	fixed_text = fixed_text.replace("\u2192", "->")
+	fixed_text = fixed_text.replace("\u2190", "<-")
+
 	# Replace bullet points and middot with an asterisk.
 	fixed_text = fixed_text.replace("\u2022", "*")
 	fixed_text = fixed_text.replace("\u00B7", "*")
@@ -210,10 +214,13 @@ def main() -> int:
 	issues = find_non_latin1_chars(fixed_text)
 
 	for line_number, column_number, codepoint in issues:
+		display_char = chr(codepoint)
+		if not display_char.isprintable():
+			display_char = "?"
 		codepoint_text = f"U+{codepoint:04X}"
 		message = (
 			f"{input_file}:{line_number}:{column_number}: "
-			f"non-ISO-8859-1 character {codepoint_text}"
+			f"non-ISO-8859-1 character {codepoint_text} {display_char}"
 		)
 		print(message, file=sys.stderr)
 
@@ -225,10 +232,11 @@ def main() -> int:
 	if changed:
 		write_text(input_file, fixed_text)
 
-	return_code = 0
 	if issues:
-		return_code = 1
-	return return_code
+		return 1
+	if changed:
+		return 2
+	return 0
 
 
 if __name__ == "__main__":

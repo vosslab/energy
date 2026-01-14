@@ -15,7 +15,7 @@ from requests.auth import HTTPBasicAuth
 import solar_display
 import comed_price_display
 import display_date
-import sports_countdown
+import sports_schedule
 
 #============================================
 def _get_api_config_path() -> str:
@@ -49,7 +49,7 @@ def get_active_awtrix_apps():
 		else:
 				print(f"Failed to fetch AWTRIX apps! Status Code: {response.status_code}")
 	except Exception as e:
-		print(f"⚠Error fetching AWTRIX apps: {e}")
+		print(f"WARNING: Error fetching AWTRIX apps: {e}")
 
 #============================================
 def send_to_awtrix(app_data: dict):
@@ -112,8 +112,8 @@ def main():
 	comed_data_dict['name'] = 'SComed2'
 	send_to_awtrix(comed_data_dict)
 
-	# Fetch sports countdown data (next game for enabled teams)
-	sports_data = sports_countdown.compile_sports_countdown_apps()
+	# Fetch sports schedule data (next game for enabled teams)
+	sports_data = sports_schedule.compile_sports_schedule_apps()
 	send_to_awtrix(sports_data)
 
 	# Introduce a small delay to avoid overwhelming the AWTRIX API
