@@ -1,4 +1,4 @@
-#!/opt/homebrew/opt/python@3.12/bin/python3.12
+#!/usr/bin/env python3
 import os
 import random
 import re
@@ -45,10 +45,28 @@ EXTENSIONS = {
 	".swift",
 }
 SKIP_DIRS = {".git", ".venv", "old_shell_folder"}
-PYTHON_BIN = "/opt/homebrew/opt/python@3.12/bin/python3.12"
+PYTHON_BIN = sys.executable
 ERROR_RE = re.compile(r":[0-9]+:[0-9]+:")
 CODEPOINT_RE = re.compile(r"non-ISO-8859-1 character U\+([0-9A-Fa-f]{4,6})")
 ERROR_SAMPLE_COUNT = 5
+
+
+#============================================
+def is_emoji_codepoint(codepoint: int) -> bool:
+	"""
+	Check whether a codepoint is likely an emoji.
+
+	Args:
+		codepoint: Integer Unicode codepoint.
+
+	Returns:
+		bool: True if the codepoint falls in a common emoji range.
+	"""
+	if 0x1F000 <= codepoint <= 0x1FAFF:
+		return True
+	if 0x2600 <= codepoint <= 0x27BF:
+		return True
+	return False
 
 
 #============================================
@@ -299,6 +317,11 @@ def main() -> int:
 	error_files = list_error_files(error_lines)
 	error_file_count = len(error_files)
 	file_counts, codepoint_counts = count_error_details(error_lines)
+	emoji_count = 0
+	for codepoint in codepoint_counts:
+		codepoint_int = int(codepoint, 16)
+		if is_emoji_codepoint(codepoint_int):
+			emoji_count += codepoint_counts[codepoint]
 
 	if error_file_count <= 5:
 		print(f"Files with errors ({error_file_count})")
@@ -324,6 +347,9 @@ def main() -> int:
 			if not display_char.isprintable() or display_char.isspace():
 				display_char = "?"
 			print(f"U+{codepoint} {display_char}: {count}")
+	if emoji_count:
+		print("")
+		print(f"Found {emoji_count} emoji codepoints; handle them case by case.")
 
 	print("Found {} ASCII compliance errors written to REPO_ROOT/ascii_compliance.txt".format(
 		len(all_lines),
