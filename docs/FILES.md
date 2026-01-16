@@ -4,10 +4,13 @@ High-level purpose of each file and folder in this repo.
 
 ## Docs
 - [`../AGENTS.md`](../AGENTS.md) describes local instructions for contributors.
+- [`../README.md`](../README.md) summarizes the repo purpose and quick start.
 - [`../CHANGELOG.md`](../CHANGELOG.md) tracks notable repo changes.
 - [`../LICENSE`](../LICENSE) defines the project license.
+- [`INSTALL.md`](INSTALL.md) lists dependency manifests and requirements.
 - [`MARKDOWN_STYLE.md`](MARKDOWN_STYLE.md) defines documentation style rules.
 - [`PYTHON_STYLE.md`](PYTHON_STYLE.md) defines Python coding style rules.
+- [`USAGE.md`](USAGE.md) lists entry points and configuration files.
 - [`wemoPlug-comed-multi.md`](wemoPlug-comed-multi.md) documents the multi-plug decision logic.
 
 ## Top-level scripts

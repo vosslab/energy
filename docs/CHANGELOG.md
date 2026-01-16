@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-01-16
+- Add `README.md` with repo overview, documentation links, and a quick start.
+- Add [`docs/INSTALL.md`](INSTALL.md) and [`docs/USAGE.md`](USAGE.md) covering dependencies,
+  entry points, and configuration files.
+- Update [`docs/FILES.md`](FILES.md) to list the new documentation.
+
 ## 2026-01-14
 - Resolve merge conflict artifacts in `AGENTS.md`.
 - Add per-file progress markers to `tests/run_ascii_compliance.sh`: green `.` for clean, yellow `+` for auto-fixed, red `!` for unfixable issues.
