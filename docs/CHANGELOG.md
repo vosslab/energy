@@ -1,14 +1,17 @@
 # Changelog
 
 ## 2026-01-16
+- Refresh `README.md` with a standardized doc map and quick start.
 - Add `README.md` with repo overview, documentation links, and a quick start.
-- Add [`docs/INSTALL.md`](INSTALL.md) and [`docs/USAGE.md`](USAGE.md) covering dependencies,
+- Add [INSTALL.md](INSTALL.md) and [USAGE.md](USAGE.md) covering dependencies,
   entry points, and configuration files.
-- Update [`docs/FILES.md`](FILES.md) to list the new documentation.
-- Add [`docs/CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) with component and data flow notes.
-- Add [`docs/FILE_STRUCTURE.md`](FILE_STRUCTURE.md) with a directory map and conventions.
+- Update [FILES.md](FILES.md) to list the new documentation.
+- Add [CODE_ARCHITECTURE.md](CODE_ARCHITECTURE.md) with component and data flow notes.
+- Add [FILE_STRUCTURE.md](FILE_STRUCTURE.md) with a directory map and conventions.
 - Fix `apps/checkPrices-comed.py` plot alpha to use a valid 0-1 range.
 - Add architecture and file structure links to `README.md`.
+- Link file references across `README.md` and docs for easier navigation.
+- Normalize internal Markdown link text to match target file paths.
 
 ## 2026-01-14
 - Resolve merge conflict artifacts in `AGENTS.md`.
@@ -18,7 +21,7 @@
 - Report the total number of files with ASCII errors in `tests/run_ascii_compliance.sh`, listing paths when fewer than five.
 - Convert the ASCII compliance runner to `tests/run_ascii_compliance.py`, leaving `tests/run_ascii_compliance.sh` as a wrapper.
 - Add top-5 Unicode character counts to the ASCII compliance report, plus per-file error counts when five or fewer files fail.
-- Add [`awtrix3/AWTRIX3_AUTHORING_GUIDE.md`](../awtrix3/AWTRIX3_AUTHORING_GUIDE.md) documenting how to author AWTRIX 3 custom app scripts in this repo.
+- Add [../awtrix3/AWTRIX3_AUTHORING_GUIDE.md](../awtrix3/AWTRIX3_AUTHORING_GUIDE.md) documenting how to author AWTRIX 3 custom app scripts in this repo.
 - Sports schedule league mode shows weekday tokens (for example, `Sat`) instead of hour counts for future games, and shows a compact time token (for example, `3p`) for games happening today.
 - Rename `awtrix3/sports_countdown.py` to `awtrix3/sports_schedule.py` and update callers.
 - Remove remaining "countdown" naming in `awtrix3/` (function names, comments, and app name suffixes) in favor of schedule/next-game terms.
@@ -34,9 +37,9 @@
 - Add `--debug` summary table showing team colors, RGB values, and background selection.
 - Improved time centering in football layout (round-up bias for odd pixel differences).
 - Add College Football Playoffs (CFP) league mode entry to `sports_teams.yaml`.
-- Add [`awtrix3/sports_schedule.py`](../awtrix3/sports_schedule.py) for sports game countdown display (originally added as `sports_countdown.py`).
-- Add [`awtrix3/sports_teams.yaml`](../awtrix3/sports_teams.yaml) config for team tracking with enable/disable flags.
-- Add [`awtrix3/AWTRIX3_PYTHON_SPEC.md`](../awtrix3/AWTRIX3_PYTHON_SPEC.md) describing AWTRIX script conventions.
+- Add [../awtrix3/sports_schedule.py](../awtrix3/sports_schedule.py) for sports game countdown display (originally added as `sports_countdown.py`).
+- Add [../awtrix3/sports_teams.yaml](../awtrix3/sports_teams.yaml) config for team tracking with enable/disable flags.
+- Add [../awtrix3/AWTRIX3_PYTHON_SPEC.md](../awtrix3/AWTRIX3_PYTHON_SPEC.md) describing AWTRIX script conventions.
 - Document text spacing/width budgeting patterns used by `sports_schedule.py` and `display_date.py`.
 - Support league-wide countdown entries (for example, "next NFL game") alongside team-specific countdown apps.
 - Add compact single-screen league matchup+countdown display via `show_matchup: true` (for example, `[LA] 7H [Ca]`).
@@ -64,7 +67,7 @@
 - Add WeMo connection diagnostics to the multi-plug controller.
 
 ## 2025-12-20
-- Add [`docs/FILES.md`](docs/FILES.md) with a per-file guide for the repo.
+- Add [docs/FILES.md](docs/FILES.md) with a per-file guide for the repo.
 - Move PECMAC125A tooling, SMBus logger, and miner scripts into `legacy/`.
 - Add `apps/`, `energylib/`, and `plots/` directories with compatibility wrappers.
 - Move usage plotting and usage readers into `legacy/`.
@@ -74,8 +77,8 @@
 - Remove compatibility wrappers and update imports to use `energylib` directly.
 - Update app and plot entrypoints to resolve `energylib` from the repo root.
 - Point `run_all_screens.sh` at the `apps/` entrypoints.
-- Add [`pip_requirements.txt`](pip_requirements.txt) and `Brewfile` for repo dependencies.
-- Comment out legacy-only Python dependencies in [`pip_requirements.txt`](pip_requirements.txt).
+- Add [pip_requirements.txt](pip_requirements.txt) and `Brewfile` for repo dependencies.
+- Comment out legacy-only Python dependencies in [pip_requirements.txt](pip_requirements.txt).
 - Add clarifying comments across the `awtrix3/` scripts.
 - Improve AWTRIX date spacing and add subtle weekday/month color accents.
 - Update AWTRIX weekday color palette to the provided day-specific colors.
@@ -86,7 +89,7 @@
 - Move legacy WeMo scripts to `legacy/`.
 - Add ComEd library comments and replace `sys.exit()` with exceptions.
 - Make ComEd cache writes atomic to prevent partial reads.
-- Fix regex escape warnings in [`energylib/commonlib.py`](energylib/commonlib.py).
+- Fix regex escape warnings in [energylib/commonlib.py](energylib/commonlib.py).
 - Add commentary on the multi-plug WeMo decision logic.
-- Add [`docs/wemoPlug-comed-multi.md`](docs/wemoPlug-comed-multi.md) documenting the decision flow.
+- Add [docs/wemoPlug-comed-multi.md](docs/wemoPlug-comed-multi.md) documenting the decision flow.
 - Move documentation guides into `docs/`.

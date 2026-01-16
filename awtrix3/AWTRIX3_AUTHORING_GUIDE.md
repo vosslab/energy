@@ -109,7 +109,7 @@ Before shipping a new app, verify these three things that prevent 80% of display
 2. **Set `lifetime` >= refresh interval + buffer** (e.g., 5-min cron -> `lifetime: 360`)
 3. **Keep `name` stable and unique** across runs to avoid orphan apps
 
-For the full list of payload fields, see [AWTRIX3_PYTHON_SPEC.md](AWTRIX3_PYTHON_SPEC.md#awtrix-payload-format-custom-app).
+For the full list of payload fields, see [AWTRIX3_PYTHON_SPEC.md#awtrix-payload-format-custom-app](AWTRIX3_PYTHON_SPEC.md#awtrix-payload-format-custom-app).
 
 ## Payload timing: `lifetime` vs `duration`
 
@@ -157,7 +157,7 @@ Rule: lifetime >= cron_interval + buffer
 
 Each example focuses on one idea. Copy, adapt, ship.
 
-**Indentation note:** This repo uses **tabs** for Python indentation (see [PYTHON_STYLE.md](../docs/PYTHON_STYLE.md)).
+**Indentation note:** This repo uses **tabs** for Python indentation (see [../docs/PYTHON_STYLE.md](../docs/PYTHON_STYLE.md)).
 The minimal template above uses tabs. Examples below use spaces for markdown readability—convert to tabs when pasting into code.
 
 ### Example 1: Hello world text app
@@ -334,7 +334,7 @@ Remember:
 ## Draw commands cookbook
 
 The display is 32 pixels wide (x=0..31) and 8 pixels tall (y=0..7). For the basic draw command
-reference, see [AWTRIX3_PYTHON_SPEC.md](AWTRIX3_PYTHON_SPEC.md#draw-commands).
+reference, see [AWTRIX3_PYTHON_SPEC.md#draw-commands](AWTRIX3_PYTHON_SPEC.md#draw-commands).
 
 Commands in `draw` render in order, so later commands can overwrite earlier pixels.
 
@@ -381,7 +381,7 @@ box_x = 32 - box_width  # x=23
 apps because the font is variable-width and the display is only 32 pixels wide.
 
 For the underlying rules and spacing contract, see
-[AWTRIX3_PYTHON_SPEC.md](AWTRIX3_PYTHON_SPEC.md#text-spacing-and-pixel-budgeting).
+[AWTRIX3_PYTHON_SPEC.md#text-spacing-and-pixel-budgeting](AWTRIX3_PYTHON_SPEC.md#text-spacing-and-pixel-budgeting).
 
 ### The core problem
 
@@ -914,7 +914,7 @@ For external API calls (ESPN, etc.), wrap in try/except and return `None` from `
 ## Troubleshooting
 
 Quick reference for common display issues. For deeper problems (timezone drift, API failures, orphan
-apps), see [AWTRIX3_PYTHON_SPEC.md](AWTRIX3_PYTHON_SPEC.md#troubleshooting-and-gotchas).
+apps), see [AWTRIX3_PYTHON_SPEC.md#troubleshooting-and-gotchas](AWTRIX3_PYTHON_SPEC.md#troubleshooting-and-gotchas).
 
 | Symptom | Likely cause | Solution |
 |---------|--------------|----------|

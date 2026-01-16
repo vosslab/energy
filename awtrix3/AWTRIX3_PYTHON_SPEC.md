@@ -229,7 +229,7 @@ These rules exist because every violation has caused production bugs:
    If your app shows team names, test with `MIAMI` and `WASHINGTON`, not `LA` and `NY`.
 
 For practical worked examples of these rules, see
-[AWTRIX3_AUTHORING_GUIDE.md](AWTRIX3_AUTHORING_GUIDE.md#text-spacing-the-32x8-challenge).
+[AWTRIX3_AUTHORING_GUIDE.md#text-spacing-the-32x8-challenge](AWTRIX3_AUTHORING_GUIDE.md#text-spacing-the-32x8-challenge).
 
 ## ESPN API data available
 
@@ -468,7 +468,7 @@ Debugging:
 Hard-won lessons from production use. Each entry follows: **Symptom -> Likely cause -> Fix**.
 
 For basic display issues (app not appearing, text cut off, etc.), see the troubleshooting table in
-[AWTRIX3_AUTHORING_GUIDE.md](AWTRIX3_AUTHORING_GUIDE.md#troubleshooting).
+[AWTRIX3_AUTHORING_GUIDE.md#troubleshooting](AWTRIX3_AUTHORING_GUIDE.md#troubleshooting).
 
 ### Timezone drift (wrong game times)
 
