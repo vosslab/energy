@@ -5,6 +5,9 @@
 - Add [`docs/INSTALL.md`](INSTALL.md) and [`docs/USAGE.md`](USAGE.md) covering dependencies,
   entry points, and configuration files.
 - Update [`docs/FILES.md`](FILES.md) to list the new documentation.
+- Add [`docs/CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) with component and data flow notes.
+- Add [`docs/FILE_STRUCTURE.md`](FILE_STRUCTURE.md) with a directory map and conventions.
+- Fix `apps/checkPrices-comed.py` plot alpha to use a valid 0-1 range.
 
 ## 2026-01-14
 - Resolve merge conflict artifacts in `AGENTS.md`.

@@ -7,6 +7,8 @@ High-level purpose of each file and folder in this repo.
 - [`../README.md`](../README.md) summarizes the repo purpose and quick start.
 - [`../CHANGELOG.md`](../CHANGELOG.md) tracks notable repo changes.
 - [`../LICENSE`](../LICENSE) defines the project license.
+- [`CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) summarizes components and data flow.
+- [`FILE_STRUCTURE.md`](FILE_STRUCTURE.md) documents the repo layout and conventions.
 - [`INSTALL.md`](INSTALL.md) lists dependency manifests and requirements.
 - [`MARKDOWN_STYLE.md`](MARKDOWN_STYLE.md) defines documentation style rules.
 - [`PYTHON_STYLE.md`](PYTHON_STYLE.md) defines Python coding style rules.
