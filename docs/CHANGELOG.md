@@ -8,6 +8,7 @@
 - Add [`docs/CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) with component and data flow notes.
 - Add [`docs/FILE_STRUCTURE.md`](FILE_STRUCTURE.md) with a directory map and conventions.
 - Fix `apps/checkPrices-comed.py` plot alpha to use a valid 0-1 range.
+- Add architecture and file structure links to `README.md`.
 
 ## 2026-01-14
 - Resolve merge conflict artifacts in `AGENTS.md`.

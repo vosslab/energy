@@ -9,6 +9,8 @@ self-hosted setup where you manage device credentials and local network access.
 - Install and dependencies: [docs/INSTALL.md](docs/INSTALL.md)
 - Usage and entry points: [docs/USAGE.md](docs/USAGE.md)
 - File guide: [docs/FILES.md](docs/FILES.md)
+- Code architecture: [docs/CODE_ARCHITECTURE.md](docs/CODE_ARCHITECTURE.md)
+- File structure: [docs/FILE_STRUCTURE.md](docs/FILE_STRUCTURE.md)
 - WeMo multi-plug decision flow: [docs/wemoPlug-comed-multi.md](docs/wemoPlug-comed-multi.md)
 
 ## Quick start
