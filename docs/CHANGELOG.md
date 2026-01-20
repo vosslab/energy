@@ -6,6 +6,7 @@
 - Document ASCII-only table and diagram rules in `docs/MARKDOWN_STYLE.md`.
 - Add a simple Markdown table example to `docs/MARKDOWN_STYLE.md`.
 - Force enable in `apps/wemoPlug-comed-multi.py` when the raw recent price is below 1.0c.
+- Normalize Python script shebangs to `#!/usr/bin/env python3`, add missing shebangs for CGI scripts, and remove the library shebang from `legacy/lib_oled96/lib_oled96.py`.
 
 ## 2026-01-16
 - Refresh `README.md` with a standardized doc map and quick start.

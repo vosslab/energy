@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Substantially derived from code by (c) 2015 Richard Hull The MIT License (MIT)
 # https://github.com/rm-hull/ssd1306:
 #       "Permission is hereby granted, free of charge, to any person obtaining a copy

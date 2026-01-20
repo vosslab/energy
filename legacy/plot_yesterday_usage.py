@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #Traceback manager for CGI scripts
 import cgitb
 cgitb.enable()
@@ -124,4 +126,3 @@ if testmode:
 	print(("<img src='data:image/png;base64,%s'/>"
 		%(figdata.getvalue().encode("base64").strip())))
 if testmode: print("</body></html>")
-
