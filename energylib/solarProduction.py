@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import time
 import json
 import ephem
 import random
 import requests
-import datetime
 
 inverter_ip = "192.168.2.188"
 

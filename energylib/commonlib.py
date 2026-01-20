@@ -193,7 +193,7 @@ class CommonLib(object):
 		"""
 		if not os.path.isfile(filename):
 			apDisplay.printError("MD5SUM, file not found: "+filename)
-		f = file(filename, 'rb')
+		f = open(filename, 'rb')
 		#this next library is deprecated in python 2.6+, need to use hashlib
 		import hashlib
 		m = hashlib.md5()
@@ -213,7 +213,7 @@ class CommonLib(object):
 		if not os.path.isfile(filename):
 			print(self.colorString("MD5SUM, file not found: "+filename, "red"))
 			sys.exit(1)
-		f = file(filename, 'rb')
+		f = open(filename, 'rb')
 		#this next library is deprecated in python 2.6+, need to use hashlib
 		import hashlib
 		m = hashlib.md5()
@@ -329,5 +329,4 @@ class CommonLib(object):
 			except KeyError:
 				pass
 		return "%s%s%s%s" % (b, f, text, clear)
-
 

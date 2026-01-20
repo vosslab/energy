@@ -8,8 +8,6 @@ import sys
 sys.path.append('/home/pi/energy')
 
 import time
-import numpy
-from energylib import comedlib
 from energylib import htmltools
 from energylib import solarProduction
 

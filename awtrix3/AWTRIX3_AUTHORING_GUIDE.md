@@ -509,7 +509,7 @@ def compile_price_display(price_cents: float) -> dict:
 
     # Step 2: Format and measure
     text = f"{price_cents:.1f}¢"  # e.g., "5.2¢"
-    width = estimate_width(text)   # "5.2¢" = 3+1+3+1+3 + 3 gaps = 14px ✓
+    width = estimate_width(text)   # "5.2¢" = 3+1+3+1+3 + 3 gaps = 14px OK
 
     # Step 3: Verify fit
     if width > available:
@@ -534,8 +534,8 @@ Total:     32px
 - Gap:      1px
 = Available: 23px
 
-Text "5.2¢": 5(3) + .(1) + 2(3) + ¢(3) + 3 gaps(3) = 13px ✓
-Text "12.5¢": 1(2) + 2(3) + .(1) + 5(3) + ¢(3) + 4 gaps(4) = 16px ✓
+Text "5.2¢": 5(3) + .(1) + 2(3) + ¢(3) + 3 gaps(3) = 13px OK
+Text "12.5¢": 1(2) + 2(3) + .(1) + 5(3) + ¢(3) + 4 gaps(4) = 16px OK
 Text "EXPENSIVE": way over, needs fallback
 ```
 
@@ -587,8 +587,8 @@ Total:      32px
 = Available: 22px for date
 
 "January 14": J(3)+a(3)+n(3)+u(3)+a(3)+r(3)+y(3) + space(1) + 1(2)+4(3) + 9 gaps
-            = 27 + 9 = 36px ✗ (too wide!)
-"Jan 14":     J(3)+a(3)+n(3) + space(1) + 1(2)+4(3) + 5 gaps = 15 + 5 = 20px ✓
+            = 27 + 9 = 36px NO (too wide!)
+"Jan 14":     J(3)+a(3)+n(3) + space(1) + 1(2)+4(3) + 5 gaps = 15 + 5 = 20px OK
 ```
 
 ### Worked example C: Auto-fit with progressive shortening
@@ -650,7 +650,8 @@ def compile_with_debug(text: str, available: int) -> dict:
     print(f"  Text: '{text}'")
     print(f"  Computed width: {width}px")
     print(f"  Available: {available}px")
-    print(f"  Margin: {margin}px {'✓' if margin >= 0 else '✗ OVERFLOW'}")
+    status = "OK" if margin >= 0 else "OVERFLOW"
+    print(f"  Margin: {margin}px {status}")
 
     if margin < 0:
         print(f"  Need to cut: {abs(margin)}px")
@@ -686,9 +687,9 @@ and key implementation notes.
 ### Pattern 1: Icon + text (simple)
 
 ```
-┌────────────────────────────────┐
-│[icon]  Text here               │
-└────────────────────────────────┘
++--------------------------------+
+|[icon]  Text here               |
++--------------------------------+
 ```
 
 Used by: `comed_price_display.py`, `solar_display.py`
@@ -706,11 +707,11 @@ Notes: Icon uses ~8px + 1px gap = 9px, leaving 23px for text. Budget pixels, not
 ### Pattern 2: Right-side box
 
 ```
-┌────────────────────────────────┐
-│ Month Day        ┌────┐        │
-│                  │ Tu │        │
-│                  └────┘        │
-└────────────────────────────────┘
++--------------------------------+
+| Month Day        +----+        |
+|                  | Tu |        |
+|                  +----+        |
++--------------------------------+
 ```
 
 Used by: `display_date.py`
@@ -733,10 +734,10 @@ Notes: Anchor the box to the right edge first, then fill remaining space with le
 ### Pattern 3: Progress bar
 
 ```
-┌────────────────────────────────┐
-│[icon]  Value                   │
-│████████░░░░░░░░░░░░░░░░░░░░░░░░│
-└────────────────────────────────┘
++--------------------------------+
+|[icon]  Value                   |
+|########.......................|
++--------------------------------+
 ```
 
 Used by: `display_garmin_connect.py`
@@ -755,11 +756,11 @@ Notes: Progress bar renders at the bottom. Keep values in 0-100 range.
 ### Pattern 4: Compact matchup (sports)
 
 ```
-┌────────────────────────────────┐
-│[icon] LA 3p Ca           ┌───┐ │
-│                          │ B │ │
-│                          └───┘ │
-└────────────────────────────────┘
++--------------------------------+
+|[icon] LA 3p Ca           +---+ |
+|                          | B | |
+|                          +---+ |
++--------------------------------+
 ```
 
 Used by: `sports_schedule.py`

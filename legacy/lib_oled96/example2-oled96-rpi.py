@@ -6,7 +6,7 @@
 
 from lib_oled96 import ssd1306
 from time import sleep
-from PIL import ImageFont, ImageDraw, Image
+from PIL import ImageFont, Image
 font = ImageFont.load_default()
 
 

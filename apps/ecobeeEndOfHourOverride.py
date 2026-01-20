@@ -2,7 +2,6 @@
 
 import os
 import sys
-import pytz
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:

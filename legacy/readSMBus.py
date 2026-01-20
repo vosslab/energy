@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import time
 import smbus
 
@@ -56,4 +55,3 @@ def getUsageList():
 if __name__ == '__main__':
 	usageList = getUsageList()
 	print(usageList)
-

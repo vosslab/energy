@@ -2,7 +2,6 @@
 
 # Standard Library
 import os
-import sys
 import time
 import math
 import json

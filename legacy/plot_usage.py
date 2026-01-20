@@ -12,7 +12,6 @@ from matplotlib import pyplot
 
 def dict2listpairs(biglist, key, addzero=False):
 	mintime = biglist[0]['timepoint']
-	day = None
 	x = []
 	y = []
 	if addzero is True:
@@ -120,5 +119,4 @@ if testmode:
 	print(("<img src='data:image/png;base64,%s'/>"
 		%(figdata.getvalue().encode("base64").strip())))
 if testmode: print("</body></html>")
-
 

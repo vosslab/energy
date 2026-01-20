@@ -171,12 +171,12 @@ Gap: 1px between each character
 
 **Step 2: Allocate the 32px budget**
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ [icon: 8px] [gap: 1px] [content: variable] [box: 7-9px]     │
-│     ^                        ^                    ^         │
-│   optional               fills remaining       optional     │
-│   (left anchor)            space             (right anchor) │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+| [icon: 8px] [gap: 1px] [content: variable] [box: 7-9px]     |
+|     ^                        ^                    ^         |
+|   optional               fills remaining       optional     |
+|   (left anchor)            space             (right anchor) |
++-------------------------------------------------------------+
 
 Total: 32px
 - Icon (if used): ~8px (icons are 8x8, but some have transparent edges)

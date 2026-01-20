@@ -9,7 +9,7 @@ import time
 sys.path.append('/home/pi/energy')
 
 # Lazy loading: import libraries only when needed
-from energylib import comedlib, htmltools, smartReadUsage, solarProduction, ecobeelib
+from energylib import htmltools, smartReadUsage, solarProduction
 
 # Content-Type header
 print("Content-Type: text/html\n")
