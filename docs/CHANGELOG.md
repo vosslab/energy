@@ -3,6 +3,7 @@
 ## 2026-01-20
 - Replace non-ASCII symbols in AWTRIX authoring/spec docs with ASCII-safe diagrams and markers.
 - Fix pyflakes findings by removing unused imports, replacing legacy `file()` calls with `open()`, and updating Python 3 print syntax.
+- Document ASCII-only table and diagram rules in `docs/MARKDOWN_STYLE.md`.
 
 ## 2026-01-16
 - Refresh `README.md` with a standardized doc map and quick start.
