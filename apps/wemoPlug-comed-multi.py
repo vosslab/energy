@@ -171,6 +171,14 @@ def _compute_rates(comlib):
 	return current_rate, predict_rate, cutoff
 
 #======================================
+def _is_always_cheap(comlib):
+	"""
+	Return True when the raw recent price is below the always-cheap threshold.
+	"""
+	recent_rate = comlib.getMostRecentRate()
+	return recent_rate < 1.0, recent_rate
+
+#======================================
 def _decision(now, current_rate, predict_rate, cutoff):
 	"""
 	Decide whether to enable, disable, or hold based on predicted prices.
@@ -274,6 +282,13 @@ if __name__ == '__main__':
 		else:
 			#print "good hour %d"%(hour)
 			pass
+
+		is_always_cheap, recent_rate = _is_always_cheap(comlib)
+		if is_always_cheap:
+			timestr = "%02d:%02d"%(now.hour, now.minute)
+			msg = "%s: charging +enabled ( recent %.2f | always cheap < 1.00 c/kWh )"%(timestr, recent_rate)
+			_apply_action(wemo_plugs, "enable", msg)
+			continue
 
 		current_rate, predict_rate, cutoff = _compute_rates(comlib)
 		action, msg = _decision(now, current_rate, predict_rate, cutoff)
