@@ -26,6 +26,11 @@ Keep documentation concise, scannable, and consistent.
 - Replace checkmarks with `OK`, `YES`, or `[x]` and crosses with `NO`, `FAIL`, or `[ ]`.
 - For progress bars or fills, use `#` and `.` (or `-`) instead of block characters.
 - If the content is tabular, prefer Markdown tables unless alignment in a code block is required.
+- Simple Markdown table example:
+  | Field | Description |
+  | --- | --- |
+  | input | Path to input file |
+  | output | Path to output file |
 
 ## Links
 - Use relative links inside the repo.
