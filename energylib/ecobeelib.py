@@ -76,16 +76,16 @@ class MyEcobee(object):
 		pin_color = "\033[94m"  # ANSI escape code for blue text
 		reset_color = "\033[0m"  # ANSI escape code to reset to default terminal text color
 		message = (
-			"\n"
-			 "1. Please go to ecobee.com, log in to the web portal,\n"
-			 " https://www.ecobee.com/consumerportal/index.html#login\n"
-			 "2. Next and click on the settings icon in the upper right.\n"
-			 "3. Click on the 'My Apps' option in the menu on the left.\n"
-			f"4. In the 'My Apps' widget, paste {pin_color}{ecobee_pin}{reset_color} into the textbox labeled\n"
-			"'Enter your 4 digit pin to install your third-party app,' and then click 'Install App'.\n"
-			"The next screen will display any permissions the app requires \nand will ask you to click "
-			"'Authorize' to add the application.\n\n"
-			"After completing this step, please hit 'Enter' to continue."
+				"\n"
+				"1. Please go to ecobee.com, log in to the web portal,\n"
+				" https://www.ecobee.com/consumerportal/index.html#login\n"
+				"2. Next and click on the settings icon in the upper right.\n"
+				"3. Click on the 'My Apps' option in the menu on the left.\n"
+				f"4. In the 'My Apps' widget, paste {pin_color}{ecobee_pin}{reset_color} into the textbox labeled\n"
+				"'Enter your 4 digit pin to install your third-party app,' and then click 'Install App'.\n"
+				"The next screen will display any permissions the app requires \nand will ask you to click "
+				"'Authorize' to add the application.\n\n"
+				"After completing this step, please hit 'Enter' to continue."
 		)
 		self.logger.info(message)
 		moves.input()
@@ -451,6 +451,4 @@ if __name__ == "__main__":
 
 	#myecobee.sendMessage("Orion is a funny guy")
 	#myecobee.setTemperature(cooltemp=71)
-
-
 

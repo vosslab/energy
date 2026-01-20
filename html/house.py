@@ -30,15 +30,15 @@ print("<a href='fullhouse.py'>Show Full House Display with Graphs</a><br/>")
 #======================================
 # Fetch solar data (assuming this is a potentially slow operation)
 try:
-    solardata = solarProduction.getSolarUsage()
-    solar_data_html = "<h3>Solar Data</h3>" + "".join(
-        f"{key}: {int(solardata[key]['Value'])/1000.:.3f} k{solardata[key]['Unit']}<br/>"
-        for key in solardata if int(solardata[key]['Value']) > 0
-    )
-    print(solar_data_html)
+	solardata = solarProduction.getSolarUsage()
+	solar_data_html = "<h3>Solar Data</h3>" + "".join(
+		f"{key}: {int(solardata[key]['Value'])/1000.:.3f} k{solardata[key]['Unit']}<br/>"
+		for key in solardata if int(solardata[key]['Value']) > 0
+	)
+	print(solar_data_html)
 except Exception as e:
-    print("<h3>Solar Data</h3>Failed to load solar data<br/>")
-    print(f"Error: {str(e)}<br/>")
+	print("<h3>Solar Data</h3>Failed to load solar data<br/>")
+	print(f"Error: {str(e)}<br/>")
 
 
 #======================================

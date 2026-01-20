@@ -25,8 +25,8 @@ badHours = [17, 18]
 badHours = []
 chargingCutoffPrice = 3.99
 wemoIpAddresses = [
- "192.168.2.165",
- "192.168.2.168",
+	"192.168.2.165",
+	"192.168.2.168",
 ]
 
 class ComedSmartWemoPlug(object):
