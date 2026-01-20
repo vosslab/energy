@@ -87,7 +87,7 @@ if __name__ == '__main__':
 	#pyplot.plot(x, y,  '+', color='darkgreen', mew=0, ms=5)
 	pyplot.plot(x, y,  '+', color='darkgreen')
 	pyplot.plot(x2, y2, '-', color='darkblue', mew=0, ms=5, alpha=0.5)
-	pyplot.xticks(numpy.arange(int(min(x)/1.)*1, max(x), 1))	
+	pyplot.xticks(numpy.arange(int(min(x)/1.)*1, max(x), 1))
 	#pyplot.xlim(xmin=0)
 	peakvalue = max(peakvalue, 4)
 	pyplot.ylim(ymin=0, ymax=peakvalue)

@@ -92,7 +92,7 @@ pyplot.figure(figsize=(6.0, 8.0), dpi=100)
 pyplot.ioff()
 pyplot.plot(x, y,  '+', color='darkgreen')
 pyplot.plot(x2, y2, '-', color='darkblue', mew=0, ms=5, alpha=50)
-pyplot.xticks(numpy.arange(int(min(x)/1.)*1, max(x), 1))	
+pyplot.xticks(numpy.arange(int(min(x)/1.)*1, max(x), 1))
 peakvalue = max(peakvalue, 4)
 pyplot.ylim(ymin=0, ymax=peakvalue)
 

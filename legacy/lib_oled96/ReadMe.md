@@ -2,7 +2,7 @@ A python library for I2C 0.96" 128x64 OLED display using SSD1306 chip.
 A common library suiting both Raspberry Pi and Virtual-GPIO.
 
 Library version 0.5 supported python. Version 0.7 (June 2015) supports also python3.
- 
+
 This oled display is the monochrome 4-pin type (I2C), not the SPI ones (identify by more pins).
 Typically about $5 on eBay from LOTS of suppliers. Count the PCB pins - don't necessarily trust the eBay headline!
 There are some "two-colour" ones, but these are simply a different (fixed) colour for the top 16 pixel lines.
@@ -24,7 +24,7 @@ Then Pillow can be installed for python3: "sudo easy_install3 Pillow".
 
 Getting I2C and SMBus working on recent Raspbian:
 Ensure "i2c-dev" is listed in the file /etc/modules.
-Use (new versions) raspi-config utility to turn on I2C functionality. 
+Use (new versions) raspi-config utility to turn on I2C functionality.
 Reboot. Enter "ls /dev" at a terminal, and i2c-1 should be listed as a working device.
 Now install smbus for python:  "sudo apt-get install python-smbus python3-smbus".
 (Note the Raspbian image of 5/5/2015 does not list python3-smbus. Just do a "apt-get update" first.)

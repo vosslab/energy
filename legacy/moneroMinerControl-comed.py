@@ -90,7 +90,7 @@ if __name__ == '__main__':
 	while(True):
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414
-			sleepTime = refreshTime*factor 
+			sleepTime = refreshTime*factor
 			#print "Sleep %d seconds"%(sleepTime)
 			time.sleep(sleepTime)
 		count += 1

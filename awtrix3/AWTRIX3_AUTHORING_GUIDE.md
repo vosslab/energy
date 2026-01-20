@@ -158,7 +158,7 @@ Rule: lifetime >= cron_interval + buffer
 Each example focuses on one idea. Copy, adapt, ship.
 
 **Indentation note:** This repo uses **tabs** for Python indentation (see [../docs/PYTHON_STYLE.md](../docs/PYTHON_STYLE.md)).
-The minimal template above uses tabs. Examples below use spaces for markdown readability—convert to tabs when pasting into code.
+The minimal template above uses tabs. Examples below use spaces for markdown readability-convert to tabs when pasting into code.
 
 ### Example 1: Hello world text app
 

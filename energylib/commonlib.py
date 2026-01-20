@@ -51,12 +51,12 @@ class CommonLib(object):
 		g = re.sub("-", "", g)
 		g = g.lower()
 		return g
-	
+
 	#=======================
 	def compareStrings(self, s1, s2):
 		size = max(len(s1), len(s2))
 		return self.levenshtein(s1, s2)/float(size)
-	
+
 	#=======================
 	def levenshtein(self, s1, s2):
 		if len(s1) < len(s2):
@@ -311,22 +311,22 @@ class CommonLib(object):
 		closecol = "m"
 		clear = opencol + "0" + closecol
 		xterm = 0
-		if os.environ.get("TERM") is not None and os.environ.get("TERM").startswith("xterm"): 
+		if os.environ.get("TERM") is not None and os.environ.get("TERM").startswith("xterm"):
 			xterm = True
 		else:
 			xterm = False
 		b = ''
 		# In xterm, brown comes out as yellow..
-		if xterm and fg == "yellow": 
+		if xterm and fg == "yellow":
 			fg = "brown"
 		f = opencol + colors[fg] + closecol
 		if bg:
-			if bg == "yellow" and xterm: 
+			if bg == "yellow" and xterm:
 				bg = "brown"
-			try: 
+			try:
 				b = colors[bg].replace('3', '4', 1)
 				b = opencol + b + closecol
-			except KeyError: 
+			except KeyError:
 				pass
 		return "%s%s%s%s" % (b, f, text, clear)
 

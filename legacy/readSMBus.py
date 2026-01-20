@@ -56,5 +56,4 @@ def getUsageList():
 if __name__ == '__main__':
 	usageList = getUsageList()
 	print(usageList)
-	
-	
+
