@@ -8,6 +8,7 @@
 - Force enable in `apps/wemoPlug-comed-multi.py` when the raw recent price is below 1.0c.
 - Normalize Python script shebangs to `#!/usr/bin/env python3`, add missing shebangs for CGI scripts, and remove the library shebang from `legacy/lib_oled96/lib_oled96.py`.
 - Fix mixed indentation in `energylib/ecobeelib.py`, `html/house.py`, and `legacy/wemoPlug-comed.py`.
+- Add initial pytest coverage for `apps/` and `energylib/` with skips for IO-bound scripts.
 
 ## 2026-01-16
 - Refresh `README.md` with a standardized doc map and quick start.
