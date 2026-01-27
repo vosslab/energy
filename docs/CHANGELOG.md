@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-01-27
+- Show "???" on the AWTRIX ComEd price display when the latest price sample is older than 20 minutes.
+- Show "???" on the AWTRIX ComEd price display when the newest data is from a previous hour.
+- Add ComEd helpers to report the most recent price timestamp and its age in seconds.
+- Add a ComEd helper to confirm the latest sample is from the current hour.
+
 ## 2026-01-20
 - Replace non-ASCII symbols in AWTRIX authoring/spec docs with ASCII-safe diagrams and markers.
 - Fix pyflakes findings by removing unused imports, replacing legacy `file()` calls with `open()`, and updating Python 3 print syntax.

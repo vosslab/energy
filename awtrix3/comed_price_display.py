@@ -23,6 +23,10 @@ import icon_draw
 from energylib import comedlib
 
 #============================================
+# Treat data older than this as unknown for display purposes.
+STALE_PRICE_SECONDS = 20 * 60
+
+#============================================
 def color_price_awtrix(price: float) -> tuple:
 	"""
 	Convert price into an AWTRIX-compatible RGB color.
@@ -103,26 +107,69 @@ def compile_comed_price_data():
 	Args:
 		price (float): The electricity price in cents.
 	"""
-	price, trend = get_current_price()
+	comed = comedlib.ComedLib()
+	now_seconds = time.time()
+	data = comed.downloadComedJsonData()
+	price = None
+	trend = "none"
+	age_seconds = None
+	is_stale = True
+
+	if not data:
+		print("No ComEd data available")
+	else:
+		age_seconds = comed.getAgeOfLastPriceSeconds(data, now_seconds)
+		if age_seconds is None:
+			print("Unable to determine ComEd data age")
+		else:
+			age_minutes = age_seconds / 60.0
+			print(f"Last ComEd data age: {age_minutes:.1f} minutes")
+
+			is_current_hour = comed.isLastPriceFromCurrentHour(data, now_seconds)
+			if is_current_hour is None:
+				print("Unable to determine last ComEd sample time")
+			elif not is_current_hour:
+				print("ComEd data is from a previous hour")
+			elif age_seconds > STALE_PRICE_SECONDS:
+				print(f"ComEd data is stale (> {STALE_PRICE_SECONDS / 60:.0f} minutes)")
+			else:
+				price = comed.getCurrentComedRateUnSafe(data)
+				print(f"Current Power Price: {price:.2f}¢")
+				recent = comed.getMostRecentRate(data)
+				print(f"Recent  Power Price: {recent:.1f}¢")
+				if recent < price - 0.2:
+					trend = "down"
+				elif recent > price + 0.2:
+					trend = "up"
+				else:
+					trend = "none"
+				print(f"Trend: {trend}")
+				is_stale = False
+
+	if is_stale:
+		if age_seconds is not None:
+			stale_minutes = age_seconds / 60.0
+			print(f"Displaying unknown price (data age {stale_minutes:.1f} minutes)")
+		text_value = "???"
+		awtrix_color = [140, 140, 140]
+		icon_id = icon_draw.awtrix_icons['red x']
+		arrow = arrow_price_awtrix("none")
+	else:
+		text_value = f"{price:.1f}¢"
+		awtrix_color = color_price_awtrix(price)
+		icon_id = icon_price_awtrix(price)
+		arrow = arrow_price_awtrix(trend)
 
 	# AWTRIX API details
-	awtrix_color = color_price_awtrix(price)
-
 	# Use minutes past the hour as a progress bar (0-100%).
 	minutes_past_hour = time.localtime().tm_min
 	# Convert to percentage
 	progress_value = int((minutes_past_hour / 60) * 100)
 
-	# Determine icon (based on pricing level)
-	icon_id = icon_price_awtrix(price)
-
-	# Determine arrow (based on pricing trend)
-	arrow = arrow_price_awtrix(trend)
-
 	# AWTRIX payload: text, icon, color, and drawing commands.
 	data = {
 		"name": "ComedPrice",
-		"text": f"{price:.1f}¢",
+		"text": text_value,
 		"icon": icon_id,
 		"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)

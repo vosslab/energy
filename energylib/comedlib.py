@@ -296,6 +296,77 @@ class ComedLib(object):
 		return ylist[0]
 
 	#======================================
+	def getLastPriceTimestampSeconds(self, data=None):
+		"""
+		Returns the most recent price timestamp in seconds since epoch.
+
+		Args:
+			data (list, optional): Raw JSON data. Defaults to None.
+
+		Returns:
+			float: Most recent timestamp in seconds, or None if unavailable.
+		"""
+		if data is None:
+			data = self.downloadComedJsonData()
+		if not data:
+			return None
+		latest_ms = None
+		for item in data:
+			item_ms = int(item.get("millisUTC", 0))
+			if latest_ms is None or item_ms > latest_ms:
+				latest_ms = item_ms
+		if latest_ms is None:
+			return None
+		latest_seconds = latest_ms / 1000.0
+		return latest_seconds
+
+	#======================================
+	def getAgeOfLastPriceSeconds(self, data=None, now_seconds=None):
+		"""
+		Returns the age of the most recent price sample in seconds.
+
+		Args:
+			data (list, optional): Raw JSON data. Defaults to None.
+			now_seconds (float, optional): Current time in seconds since epoch.
+
+		Returns:
+			float: Age in seconds, or None if unavailable.
+		"""
+		if now_seconds is None:
+			now_seconds = time.time()
+		last_seconds = self.getLastPriceTimestampSeconds(data)
+		if last_seconds is None:
+			return None
+		age_seconds = now_seconds - last_seconds
+		if age_seconds < 0:
+			age_seconds = 0.0
+		return age_seconds
+
+	#======================================
+	def isLastPriceFromCurrentHour(self, data=None, now_seconds=None):
+		"""
+		Returns True when the newest sample is from the current local hour.
+
+		Args:
+			data (list, optional): Raw JSON data. Defaults to None.
+			now_seconds (float, optional): Current time in seconds since epoch.
+
+		Returns:
+			bool: True if the newest sample is in the current hour, False otherwise.
+				Returns None if the newest sample time cannot be determined.
+		"""
+		if now_seconds is None:
+			now_seconds = time.time()
+		last_seconds = self.getLastPriceTimestampSeconds(data)
+		if last_seconds is None:
+			return None
+		last_struct = time.localtime(last_seconds)
+		now_struct = time.localtime(now_seconds)
+		last_hour_key = (last_struct.tm_year, last_struct.tm_mon, last_struct.tm_mday, last_struct.tm_hour)
+		now_hour_key = (now_struct.tm_year, now_struct.tm_mon, now_struct.tm_mday, now_struct.tm_hour)
+		return last_hour_key == now_hour_key
+
+	#======================================
 	def getPredictedRate(self, data=None):
 		"""
 		Predicts the future rate based on the current trend using linear regression.
