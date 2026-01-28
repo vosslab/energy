@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import math
+import argparse
 import numpy
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
@@ -12,9 +13,29 @@ if REPO_ROOT not in sys.path:
 from energylib import comedlib
 from energylib import commonlib
 
-#comedurl = "https://hourlypricing.comed.com/api?type=5minutefeed"
+#============================================
+def parse_args():
+	"""
+	Parse command-line arguments.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Display ComEd hourly pricing data with optional plot"
+	)
+	parser.add_argument(
+		'-p', '--plot', dest='show_plot', action='store_true',
+		help="Show matplotlib plot of prices"
+	)
+	parser.add_argument(
+		'-n', '--no-plot', dest='show_plot', action='store_false',
+		help="Do not show plot (text only)"
+	)
+	parser.set_defaults(show_plot=True)
+	args = parser.parse_args()
+	return args
 
+#============================================
 if __name__ == '__main__':
+	args = parse_args()
 	CL = commonlib.CommonLib()
 	comlib = comedlib.ComedLib()
 	comedurl = comlib.getUrl()
@@ -82,21 +103,22 @@ if __name__ == '__main__':
 		y2.append(yp)
 	median, std = comlib.getMedianComedRate()
 
-	from matplotlib import pyplot
-	#pyplot.xkcd()
-	#pyplot.plot(x, y,  '+', color='darkgreen', mew=0, ms=5)
-	pyplot.plot(x, y,  '+', color='darkgreen')
-	pyplot.plot(x2, y2, '-', color='darkblue', mew=0, ms=5, alpha=0.5)
-	pyplot.xticks(numpy.arange(int(min(x)/1.)*1, max(x), 1))
-	#pyplot.xlim(xmin=0)
-	peakvalue = max(peakvalue, 4)
-	pyplot.ylim(ymin=0, ymax=peakvalue)
+	if args.show_plot is True:
+		from matplotlib import pyplot
+		#pyplot.xkcd()
+		#pyplot.plot(x, y,  '+', color='darkgreen', mew=0, ms=5)
+		pyplot.plot(x, y,  '+', color='darkgreen')
+		pyplot.plot(x2, y2, '-', color='darkblue', mew=0, ms=5, alpha=0.5)
+		pyplot.xticks(numpy.arange(int(min(x)/1.)*1, max(x), 1))
+		#pyplot.xlim(xmin=0)
+		peakvalue = max(peakvalue, 4)
+		pyplot.ylim(ymin=0, ymax=peakvalue)
 
-	ax = pyplot.gca()
-	ax.xaxis.grid() # vertical lines
-	ax.yaxis.grid() # horizontal lines
+		ax = pyplot.gca()
+		ax.xaxis.grid() # vertical lines
+		ax.yaxis.grid() # horizontal lines
 
-	pyplot.xlabel('Time')
-	pyplot.ylabel('Cents per kW hr')
-	pyplot.show()
-	pyplot.clf()
+		pyplot.xlabel('Time')
+		pyplot.ylabel('Cents per kW hr')
+		pyplot.show()
+		pyplot.clf()

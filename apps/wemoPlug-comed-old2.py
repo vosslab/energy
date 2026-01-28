@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import math
+import argparse
 import pywemo
 import random
 import datetime
@@ -20,21 +21,45 @@ CL = commonlib.CommonLib()
 # add initial comment to log file
 # keep track of length of time charged or off
 
+#============================================
+def parse_args():
+	"""
+	Parse command-line arguments.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Control WeMo plug based on ComEd pricing"
+	)
+	parser.add_argument(
+		'-i', '--wemo-ip', dest='wemo_ip', type=str, default="192.168.2.166",
+		help="WeMo plug IP address"
+	)
+	parser.add_argument(
+		'-r', '--refresh-seconds', dest='refresh_seconds', type=int, default=180,
+		help="Seconds between pricing refresh checks"
+	)
+	parser.add_argument(
+		'-l', '--lower-bound', dest='lower_bound', type=float, default=2.8,
+		help="Always start charge below this price (cents/kWh)"
+	)
+	parser.add_argument(
+		'-u', '--upper-bound', dest='upper_bound', type=float, default=8.2,
+		help="Always stop charge above this price (cents/kWh)"
+	)
+	parser.add_argument(
+		'-a', '--cutoff-adjust', dest='cutoff_adjust', type=float, default=0.1,
+		help="Adjustment to cutoff price (cents/kWh)"
+	)
+	args = parser.parse_args()
+	return args
+
+#============================================
 #badHours = [5, 6, 17, 18]
 #badHours = [17, 18]
 badHours = []
-chargingCutoffPrice = 3.99
-#wemoIpAddress = "192.168.2.165" #insight1
-wemoIpAddress = "192.168.2.166" #insight2
-#always start charge below this value
-lower_bound = 2.8
-#always stop  charge above this value
-upper_bound = 8.2
-#wemoIpAddress = "192.168.2.168" #plug6
-cutoff_adjust = 0.1
 
 class ComedSmartWemoPlug(object):
-	def __init__(self):
+	def __init__(self, wemo_ip):
+		self.address = wemo_ip
 		self.depth = 0
 		self.connectToWemo()
 		self.comlib = comedlib.ComedLib()
@@ -43,7 +68,6 @@ class ComedSmartWemoPlug(object):
 
 	#======================================
 	def connectToWemo(self):
-		self.address = wemoIpAddress
 		self.port = pywemo.ouimeaux_device.probe_wemo(self.address)
 		#self.wemoUrl = 'http://%s:%i/setup.xml' % (self.address, self.port)
 		self.wemoUrl = pywemo.setup_url_for_address(self.address)
@@ -123,10 +147,14 @@ class ComedSmartWemoPlug(object):
 
 #======================================
 if __name__ == '__main__':
+	args = parse_args()
 	count = 0
 	last_hour = -2
-	refreshTime = 180
-	wemoplug = ComedSmartWemoPlug()
+	refreshTime = args.refresh_seconds
+	lower_bound = args.lower_bound
+	upper_bound = args.upper_bound
+	cutoff_adjust = args.cutoff_adjust
+	wemoplug = ComedSmartWemoPlug(args.wemo_ip)
 	while(True):
 		if count > 0:
 			factor = (math.sqrt(random.random()) + math.sqrt(random.random()))/1.414

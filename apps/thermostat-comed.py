@@ -4,6 +4,7 @@ import os
 import sys
 import math
 import time
+import argparse
 import numpy
 import datetime
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -13,19 +14,45 @@ if REPO_ROOT not in sys.path:
 from energylib import comedlib
 from energylib import ecobeelib
 
+#============================================
+def parse_args():
+	"""
+	Parse command-line arguments.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Automated ecobee thermostat control based on ComEd pricing"
+	)
+	parser.add_argument(
+		'-c', '--cooltemp', dest='cooltemp', type=float, default=70.1,
+		help="Target cool temperature in degrees Fahrenheit"
+	)
+	parser.add_argument(
+		'-H', '--hightemp', dest='hightemp', type=float, default=86.1,
+		help="High temperature threshold for disabling A/C"
+	)
+	parser.add_argument(
+		'-d', '--debug', dest='debug', action='store_true',
+		help="Enable debug output"
+	)
+	parser.add_argument(
+		'-u', '--use-humid', dest='use_humid', action='store_true',
+		help="Use humidity adjustment for temperature"
+	)
+	parser.add_argument(
+		'--no-humid', dest='use_humid', action='store_false',
+		help="Do not use humidity adjustment"
+	)
+	parser.set_defaults(debug=True, use_humid=True)
+	args = parser.parse_args()
+	return args
+
+#============================================
 class ThermoStat(object):
-	def __init__(self):
-		self.debug = True
-		self.use_humid = True
-		self.hightemp = 86.1
-		#vacation override
-		self.cooltemp = 71.1
-		# neil preference
-		self.cooltemp = 69.1
-		# neil-heather compromise
-		self.cooltemp = 70.1
-		# super vacation override
-		#self.cooltemp = 80.1
+	def __init__(self, args):
+		self.debug = args.debug
+		self.use_humid = args.use_humid
+		self.hightemp = args.hightemp
+		self.cooltemp = args.cooltemp
 		self.comlib = comedlib.ComedLib()
 		self.comlib.msg = self.debug
 		self.current_rate = None
@@ -172,7 +199,9 @@ class ThermoStat(object):
 
 
 
+#============================================
 if __name__ == "__main__":
+	args = parse_args()
 
 	print("=====================================================")
 	print(time.asctime())
@@ -183,7 +212,7 @@ if __name__ == "__main__":
 		print("only run program between 6am and 8:59pm => exit")
 		sys.exit(0)
 
-	thermstat = ThermoStat()
+	thermstat = ThermoStat(args)
 	if thermstat.checkUserOverride() is True:
 		print("user override in effect => exit")
 		sys.exit(0)
@@ -223,7 +252,7 @@ if __name__ == "__main__":
 
 	predict_rate = thermstat.predict_rate
 	del thermstat
-	thermstat = ThermoStat()
+	thermstat = ThermoStat(args)
 	if thermstat.checkUserOverride() is True:
 		print("user override in effect => exit")
 		sys.exit(0)

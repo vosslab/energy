@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-01-28
+- Add argparse support to all apps/*.py scripts for consistent command-line interfaces.
+- Update `apps/ecobeeEndOfHourOverride.py` to support both --heat and --cool flags via mutually exclusive group.
+- Add argparse to `apps/thermostat-comed.py` with configurable cooltemp, hightemp, debug, and humidity settings.
+- Add argparse to `apps/wemoPlug-comed-old2.py` with configurable WeMo IP, refresh timing, and price bounds.
+- Add argparse to `apps/checkPrices-comed.py` with --plot/--no-plot flags to control matplotlib display.
 - Display previous hour's price during first 15 minutes of new hour when current hour data is not yet available, with orange progress bar to distinguish from current data.
 - Reserve "???" display for actual system downtime (data older than 20 minutes or unavailable beyond the 15-minute grace period).
 - Change AWTRIX ComEd price display progress bar to show time since last data update (0-60 minutes mapped to 0-100%) instead of minutes past the hour.
