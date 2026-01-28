@@ -189,10 +189,17 @@ def compile_comed_price_data():
 			progress_color = awtrix_color
 
 	# AWTRIX API details
-	# Use minutes past the hour as a progress bar (0-100%).
-	minutes_past_hour = time.localtime().tm_min
-	# Convert to percentage
-	progress_value = int((minutes_past_hour / 60) * 100)
+	# Progress bar represents time since last data update (0-60 minutes = 0-100%).
+	if age_seconds is not None:
+		age_minutes = age_seconds / 60.0
+		# Cap at 60 minutes for display purposes
+		progress_value = int(min(age_minutes / 60.0, 1.0) * 100)
+		print(f"Progress bar: {age_minutes:.1f} minutes since last update ({progress_value}%)")
+	else:
+		# Fallback to minutes past hour if age unavailable
+		minutes_past_hour = time.localtime().tm_min
+		progress_value = int((minutes_past_hour / 60) * 100)
+		print(f"Progress bar: using minutes past hour fallback ({progress_value}%)")
 
 	# AWTRIX payload: text, icon, color, and drawing commands.
 	data = {
