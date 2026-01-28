@@ -35,7 +35,7 @@ teams:
     mode: league
     espn_team_id: ""   # Not used in league mode
     short_name: NFL
-    enabled: true
+    enabled: false
     show_matchup: true
     active_months: [1, 2, 9, 10, 11, 12]
     # In league mode, show_matchup renders a single-line layout like: [LA] 7H [Ca]
