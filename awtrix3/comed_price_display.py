@@ -114,6 +114,7 @@ def compile_comed_price_data():
 	trend = "none"
 	age_seconds = None
 	is_stale = True
+	using_previous_hour = False
 
 	if not data:
 		print("No ComEd data available")
@@ -129,7 +130,26 @@ def compile_comed_price_data():
 			if is_current_hour is None:
 				print("Unable to determine last ComEd sample time")
 			elif not is_current_hour:
-				print("ComEd data is from a previous hour")
+				# Data is from previous hour
+				# Check if we're in the first 15 minutes of the current hour
+				minutes_past_hour = time.localtime(now_seconds).tm_min
+				if minutes_past_hour <= 15:
+					# Show previous hour data with indicator
+					price = comed.getCurrentComedRateUnSafe(data)
+					print(f"Previous Hour Price: {price:.2f}¢ (showing until minute 15)")
+					recent = comed.getMostRecentRate(data)
+					print(f"Recent  Power Price: {recent:.1f}¢")
+					if recent < price - 0.2:
+						trend = "down"
+					elif recent > price + 0.2:
+						trend = "up"
+					else:
+						trend = "none"
+					print(f"Trend: {trend}")
+					is_stale = False
+					using_previous_hour = True
+				else:
+					print("ComEd data is from a previous hour (past minute 15)")
 			elif age_seconds > STALE_PRICE_SECONDS:
 				print(f"ComEd data is stale (> {STALE_PRICE_SECONDS / 60:.0f} minutes)")
 			else:
@@ -154,11 +174,19 @@ def compile_comed_price_data():
 		awtrix_color = [140, 140, 140]
 		icon_id = icon_draw.awtrix_icons['red x']
 		arrow = arrow_price_awtrix("none")
+		progress_color = [140, 140, 140]
 	else:
 		text_value = f"{price:.1f}¢"
 		awtrix_color = color_price_awtrix(price)
 		icon_id = icon_price_awtrix(price)
 		arrow = arrow_price_awtrix(trend)
+
+		if using_previous_hour:
+			# Use orange progress bar to indicate old data
+			progress_color = [255, 165, 0]
+		else:
+			# Use normal color-coded progress bar
+			progress_color = awtrix_color
 
 	# AWTRIX API details
 	# Use minutes past the hour as a progress bar (0-100%).
@@ -173,7 +201,7 @@ def compile_comed_price_data():
 		"icon": icon_id,
 		"color": awtrix_color,  # Dynamic RGB color
 		"progress": progress_value,  # Progress bar (minutes past the hour)
-		"progressC": awtrix_color,
+		"progressC": progress_color,
 		"repeat": 20,
 		"draw": arrow,
 		"center": False,  # Disable text centering
