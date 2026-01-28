@@ -113,8 +113,8 @@ def main():
 	send_to_awtrix(comed_data_dict)
 
 	# Fetch sports schedule data (next game for enabled teams)
-	sports_data = sports_schedule.compile_sports_schedule_apps()
-	send_to_awtrix(sports_data)
+	#sports_data = sports_schedule.compile_sports_schedule_apps()
+	#send_to_awtrix(sports_data)
 
 	# Introduce a small delay to avoid overwhelming the AWTRIX API
 	time.sleep(1.0 + random.random())
