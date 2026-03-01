@@ -85,6 +85,10 @@ class ComedSmartWemoPlug(object):
 		print(CL.colorString(msg, "cyan"))
 
 	#======================================
+	def getState(self):
+		return self.device.get_state(force_update=True)
+
+	#======================================
 	def connectToWemo(self):
 		self._debug(f"connecting to WeMo plug at {self.address}")
 		time.sleep(random.random())
@@ -96,14 +100,14 @@ class ComedSmartWemoPlug(object):
 		self._debug(f"WeMo device object {self.device}")
 		if self.debug is True:
 			time.sleep(random.random())
-			state = self.device.get_state()
+			state = self.getState()
 			self._debug(f"WeMo state response {self.address} = {state}")
 		self.connected = True
 
 	#======================================
 	def enable(self):
 		self.depth += 1
-		if self.device.get_state() == 0:
+		if self.getState() == 0:
 			mystr = f"turning ON wemo plug, start charging ({self.address})"
 			print(CL.colorString(mystr, "green"))
 			self.device.on()
@@ -113,10 +117,10 @@ class ComedSmartWemoPlug(object):
 			#print "charging already active"
 			pass
 		time.sleep(5)
-		if self.device.get_state() in (1, 8):
+		if self.getState() in (1, 8):
 			self.depth = 0
 			return
-		print(f"state = {self.device.get_state()}")
+		print(f"state = {self.getState()}")
 		print(CL.colorString("ERROR: starting charging", "red"))
 		if self.depth > 10:
 			sys.exit(1)
@@ -127,8 +131,8 @@ class ComedSmartWemoPlug(object):
 	#======================================
 	def disable(self):
 		self.depth += 1
-		if self.device.get_state() in (1, 8):
-			mystr = f"turning OFF wemo plug, stop charging (state = {self.device.get_state()}, {self.address})"
+		if self.getState() in (1, 8):
+			mystr = f"turning OFF wemo plug, stop charging (state = {self.getState()}, {self.address})"
 			print(CL.colorString(mystr, "red"))
 			self.device.off()
 			time.sleep(5)
@@ -137,10 +141,10 @@ class ComedSmartWemoPlug(object):
 			#print "charging already disabled"
 			pass
 		# get state of device
-		if self.device.get_state() == 0:
+		if self.getState() == 0:
 			self.depth = 0
 			return
-		print(f"state = {self.device.get_state()}")
+		print(f"state = {self.getState()}")
 		print(CL.colorString("ERROR: turning off charging", "red"))
 		time.sleep(0.2 * self.depth)
 		if self.depth > 10:
@@ -255,6 +259,10 @@ if __name__ == '__main__':
 			#print "Sleep %d seconds"%(sleepTime)
 			time.sleep(sleepTime)
 		count += 1
+		# reconnect every ~15 min to guard against stale TCP connections
+		if count % 5 == 0:
+			for plug in wemo_plugs:
+				plug.connectToWemo()
 		now = datetime.datetime.now()
 		hour = now.hour
 		if hour != last_hour:
