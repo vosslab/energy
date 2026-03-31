@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-03-30
+- Add `run_all_tmux.sh` as a tmux-based alternative to `run_all_screens.sh` for managing long-running energy monitoring sessions.
+
 ## 2026-01-28
 - Add argparse support to all apps/*.py scripts for consistent command-line interfaces.
 - Update `apps/ecobeeEndOfHourOverride.py` to support both --heat and --cool flags via mutually exclusive group.

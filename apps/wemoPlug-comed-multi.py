@@ -39,9 +39,9 @@ wemoIpAddresses = [
 # Always start charge below this value.
 lower_bound = 2.8
 # Always stop charge above this value.
-upper_bound = 8.2
+upper_bound = 7.2
 # Small bias to make the cutoff slightly more permissive or strict.
-cutoff_adjust = 0.1
+cutoff_adjust = -0.8
 # Deadband around the cutoff to reduce churn.
 buffer_rate = 0.5
 
