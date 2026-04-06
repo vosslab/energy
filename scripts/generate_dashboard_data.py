@@ -283,11 +283,8 @@ def main():
 		comed_page += f"    <h3>Current time:</h3> {time.asctime()}\n    <br/>\n"
 		comed_page += htmltools.htmlComedData()
 		comed_page += "\n</body>\n</html>"
-		# Write HTML atomically (not JSON, but same pattern)
-		tmp_path = comed_html_path + ".tmp"
-		with open(tmp_path, "w") as f:
+		with open(comed_html_path, "w") as f:
 			f.write(comed_page)
-		os.replace(tmp_path, comed_html_path)
 		print(f"[{timestamp}] comed.html: OK")
 	except Exception as e:
 		print(f"[{timestamp}] comed.html: FAILED - {e}")
