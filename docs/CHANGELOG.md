@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-06
+
+### Fixes and Maintenance
+
+- Fixed infinite loop bugs in `energylib/comedlib.py`: `getMostRecentRate()` and `getPredictedRate()` used `while data is None` which would hang forever on network failure. Changed to single attempt with None return.
+- Fixed `getMedianComedRate()` cache check ordering: moved cache check before data download to avoid wasting work on every call after the first.
+- Added None guards to `getCurrentComedRate()` and `getCurrentComedRateUnSafe()` for consistent None-safe behavior across all public methods.
+- Updated delivery rate in `energylib/htmltools.py` equivalent gas cost calculation from stale 3.8c/kWh to current 6.354c/kWh (Winter 2025-26 bill).
+
 ## 2026-03-30
 - Add `run_all_tmux.sh` as a tmux-based alternative to `run_all_screens.sh` for managing long-running energy monitoring sessions.
 

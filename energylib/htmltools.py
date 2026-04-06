@@ -253,8 +253,10 @@ def _generate_status_header_html(comlib, comed_data) -> str:
 	html += "<span style='color: &#35;448844'>24hr Median Rate:"
 	html += f" {colorPrice(median, 1)} &pm; {std:.2f} &cent;</span><br/>"
 
+	# Variable delivery rate from most recent ComEd bill (Winter 2025-26)
+	delivery_cents_per_kwh = 6.354
 	html += "&nbsp;<span style='color: &#35;448844'>Equivalent Gas Rate:"
-	med_gas_equiv = equivalent_gas_cost(median + 3.8)
+	med_gas_equiv = equivalent_gas_cost(median + delivery_cents_per_kwh)
 	std_gas_equiv = equivalent_gas_cost(std)
 	html += f"</span> ${med_gas_equiv:.2f} &pm; {std_gas_equiv:.2f} per gallon<br/>"
 
@@ -262,7 +264,7 @@ def _generate_status_header_html(comlib, comed_data) -> str:
 	html += f" {colorPrice(currentRate, 3)} </span><br/>"
 
 	html += "&nbsp;<span style='color: &#35;444488'>Equivalent Gas Rate:"
-	gas_equiv = equivalent_gas_cost(currentRate + 3.8)
+	gas_equiv = equivalent_gas_cost(currentRate + delivery_cents_per_kwh)
 	html += f"</span> ${gas_equiv:.2f} per gallon<br/>"
 
 	html += "<span style='color: &#35;884444'>Hour Predict Rate:"

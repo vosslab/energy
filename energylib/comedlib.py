@@ -245,6 +245,8 @@ class ComedLib(object):
 		"""
 		if data is None:
 			data = self.downloadComedJsonData()
+		if data is None:
+			return None
 		yvalues = self.parseComedData(data)
 		x2 = sorted(yvalues.keys())
 		key = x2[-1]
@@ -265,6 +267,8 @@ class ComedLib(object):
 		"""
 		if data is None:
 			data = self.downloadComedJsonData()
+		if data is None:
+			return None
 		yvalues = self.parseComedData(data)
 		x2 = sorted(yvalues.keys())
 		key = x2[-1]
@@ -285,8 +289,10 @@ class ComedLib(object):
 		Returns:
 			float: The most recent rate.
 		"""
-		while data is None:
+		if data is None:
 			data = self.downloadComedJsonData()
+		if data is None:
+			return None
 		yvalues = self.parseComedData(data)
 		x2 = list(yvalues.keys())
 		x2.sort()
@@ -377,8 +383,10 @@ class ComedLib(object):
 		Returns:
 			float: Predicted future rate.
 		"""
-		while data is None:
+		if data is None:
 			data = self.downloadComedJsonData()
+		if data is None:
+			return None
 		median, std = self.getMedianComedRate()
 
 		yvalues = self.parseComedData(data)
@@ -505,15 +513,15 @@ class ComedLib(object):
 		Returns:
 			tuple: A tuple containing the median (75th percentile) and the standard deviation of rates.
 		"""
+		# Check if median and standard deviation are cached
+		if hasattr(self, '_median_cache') and data is None:
+			return self._median_cache
+
 		if data is None:
 			data = self.downloadComedJsonData()
 
 		prices = [float(item['price']) for item in data]
 		parray = numpy.array(prices, dtype=numpy.float64)
-
-		# Check if median and standard deviation are cached
-		if hasattr(self, '_median_cache'):
-			return self._median_cache
 
 		# Calculate the 75th percentile and standard deviation
 		median = numpy.percentile(parray, 75)
