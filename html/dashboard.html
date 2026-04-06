@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>House Energy Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-panel: #f8f8f8;
+    --text: #222222;
+    --text-muted: #888888;
+    --border: #cccccc;
+    --table-header-bg: #e8e8e8;
+    --table-row-alt: #f4f4f4;
+    --stale-bg: #fff3cd;
+    --stale-text: #856404;
+    --on-bg: #006400;
+    --off-bg: #8b0000;
+    --chart-grid: rgba(0, 0, 0, 0.1);
+    --chart-text: #666666;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --bg-panel: #2a2a2a;
+      --text: #e0e0e0;
+      --text-muted: #999999;
+      --border: #555555;
+      --table-header-bg: #333333;
+      --table-row-alt: #2f2f2f;
+      --stale-bg: #4a3f00;
+      --stale-text: #ffc107;
+      --on-bg: #228b22;
+      --off-bg: #cc0000;
+      --chart-grid: rgba(255, 255, 255, 0.15);
+      --chart-text: #bbbbbb;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 12px;
+    line-height: 1.4;
+  }
+
+  h1 { margin: 0 0 8px 0; font-size: 1.4em; }
+  h3 { margin: 12px 0 6px 0; font-size: 1.1em; }
+
+  .panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    min-width: 280px;
+    flex: 1;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .panel-header h3 { margin: 0; }
+
+  .timestamp {
+    font-size: 0.75em;
+    color: var(--text-muted);
+  }
+
+  .stale-warning {
+    background: var(--stale-bg);
+    color: var(--stale-text);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: bold;
+  }
+
+  .loading {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 20px 0;
+  }
+
+  .error {
+    color: #cc4444;
+    font-style: italic;
+    padding: 10px 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 0.9em;
+  }
+
+  th, td {
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    text-align: right;
+  }
+
+  th {
+    background: var(--table-header-bg);
+    text-align: center;
+  }
+
+  td:first-child { text-align: center; }
+
+  .row-previous { background: var(--table-row-alt); opacity: 0.7; }
+  .row-past { background: var(--table-row-alt); }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+
+  .status-on { background: var(--on-bg); }
+  .status-off { background: var(--off-bg); }
+
+  .stat-row {
+    margin: 4px 0;
+  }
+
+  .stat-label {
+    display: inline-block;
+    min-width: 160px;
+  }
+
+  .tables-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .chart-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 8px 0;
+  }
+
+  .sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 4px;
+  }
+
+  .sensor-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 4px;
+  }
+
+  a { color: var(--text-muted); }
+  a:hover { color: var(--text); }
+
+  .nav-links {
+    font-size: 0.85em;
+    margin-bottom: 8px;
+  }
+
+  .nav-links a { margin-right: 12px; }
+</style>
+</head>
+<body>
+
+<h1>House Energy Dashboard</h1>
+<div class="nav-links">
+  <a href="comed.html">ComEd Only</a>
+</div>
+
+<div class="panels">
+  <!-- ComEd Panel -->
+  <div class="panel" style="flex: 2; min-width: 500px;">
+    <div class="panel-header">
+      <h3>ComEd Prices</h3>
+      <span id="comed-timestamp" class="timestamp"></span>
+    </div>
+    <div id="comed-content"><div class="loading">Loading ComEd data...</div></div>
+  </div>
+
+  <!-- Ecobee Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Ecobee Thermostat</h3>
+      <span id="ecobee-timestamp" class="timestamp"></span>
+    </div>
+    <div id="ecobee-content"><div class="loading">Loading Ecobee data...</div></div>
+  </div>
+
+  <!-- Solar Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Solar Production</h3>
+      <span id="solar-timestamp" class="timestamp"></span>
+    </div>
+    <div id="solar-content"><div class="loading">Loading solar data...</div></div>
+  </div>
+</div>
+
+<script src="build/dashboard.js"></script>
+</body>
+</html>

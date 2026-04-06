@@ -38,7 +38,8 @@ print_last_tmux_output() {
 }
 
 # Launch sessions
-launch_session gen_html $ENERGY_DIR/html/ "python3 generate_comed_html.py" 150
+# Generates comed.html + dashboard JSON files (replaces separate gen_html session)
+launch_session gen_dashboard $ENERGY_DIR "python3 scripts/generate_dashboard_data.py" 150
 launch_session wemo $ENERGY_DIR "python3 apps/wemoPlug-comed-multi.py" 300
 launch_session awtrix3 $ENERGY_DIR/awtrix3/ "python3 send_price.py" 90
 #launch_session log_energy $ENERGY_DIR "python3 logEnergy.py" 300
@@ -53,7 +54,7 @@ echo "Updated tmux sessions:"
 tmux list-sessions 2>/dev/null || echo "  (no tmux sessions)"
 
 # Show last few lines of session output
-print_last_tmux_output gen_html
+print_last_tmux_output gen_dashboard
 print_last_tmux_output wemo
 print_last_tmux_output awtrix3
 #print_last_tmux_output log_energy

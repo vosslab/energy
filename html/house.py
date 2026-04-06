@@ -24,6 +24,7 @@ print("<body>")
 print(f"<h1>House Energy Usage</h1><h3>Current time:</h3>{time.asctime()}<br/>\n")
 print("<a href='comed.py'>Show Only Comed Prices</a><br/>")
 print("<a href='fullhouse.py'>Show Full House Display with Graphs</a><br/>")
+print("<a href='dashboard.html'>New Dashboard (faster)</a><br/>")
 
 
 #======================================

@@ -2,6 +2,14 @@
 
 ## 2026-04-06
 
+### Additions and New Features
+
+- Add new static HTML + TypeScript energy dashboard (`html/dashboard.html`, `html/dashboard.ts`) with Chart.js price chart, dark mode (system-detected via `prefers-color-scheme`), and independent panels for ComEd/Ecobee/Solar that load in parallel.
+- Add `scripts/generate_dashboard_data.py` to generate JSON data files for the dashboard, replacing Python CGI rendering with cron-generated static JSON.
+- Add `scripts/deploy_dashboard.sh` to copy dashboard static files to web root.
+- Merge `gen_html` and `gen_dashboard` into single `gen_dashboard` tmux session in `run_all_tmux.sh`; `generate_dashboard_data.py` now also writes `comed.html`.
+- Add links to new dashboard from `html/house.py` and `html/fullhouse.py`.
+
 ### Fixes and Maintenance
 
 - Fixed infinite loop bugs in `energylib/comedlib.py`: `getMostRecentRate()` and `getPredictedRate()` used `while data is None` which would hang forever on network failure. Changed to single attempt with None return.

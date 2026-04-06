@@ -23,15 +23,14 @@ class ComedLib(object):
 		"""Initializes the ComedLib object, setting up cache settings and base URL."""
 		self.useCache = True
 		self.debug = False
-		# Use a single shared cache file in /tmp (intentionally shared across users).
-		self.cache_file = "/tmp/comed_cache_file.json"
-		# Ensure the file exists and set permissions
-		# Ensure the file exists and has correct permissions
+		# shared cache file in /tmp, intentionally persistent across apps and instances
+		self.cache_file = "/tmp/comed_cache_file.json"  # nosec B108
+		# ensure the file exists and has correct permissions
 		if not os.path.exists(self.cache_file):
 			with open(self.cache_file, "w") as f:
-				f.write("{}")  # Initialize empty JSON cache
+				f.write("{}")  # initialize empty JSON cache
 			try:
-				os.chmod(self.cache_file, 0o666)  # Allow all users to read/write
+				os.chmod(self.cache_file, 0o666)  # allow all users to read/write
 			except PermissionError:
 				print(f"WARNING: Could not set permissions for {self.cache_file}")
 
@@ -241,7 +240,7 @@ class ComedLib(object):
 			data (list, optional): Raw JSON data as a list of dictionaries. Defaults to None.
 
 		Returns:
-			float: The average rate for the most recent hour.
+			float: The average rate for the most recent hour, or None if data unavailable.
 		"""
 		if data is None:
 			data = self.downloadComedJsonData()
@@ -263,7 +262,7 @@ class ComedLib(object):
 			data (list, optional): Raw JSON data as a list of dictionaries. Defaults to None.
 
 		Returns:
-			float: The average rate for the most recent hour.
+			float: The average rate for the most recent hour, or None if data unavailable.
 		"""
 		if data is None:
 			data = self.downloadComedJsonData()
@@ -287,10 +286,14 @@ class ComedLib(object):
 			data (list, optional): Raw JSON data. Defaults to None.
 
 		Returns:
-			float: The most recent rate.
+			float: The most recent rate, or None if data unavailable.
 		"""
 		if data is None:
-			data = self.downloadComedJsonData()
+			# retry up to 3 times (downloadComedJsonData has its own retries)
+			for _attempt in range(3):
+				data = self.downloadComedJsonData()
+				if data is not None:
+					break
 		if data is None:
 			return None
 		yvalues = self.parseComedData(data)
@@ -381,10 +384,14 @@ class ComedLib(object):
 			data (list, optional): Raw JSON data. Defaults to None.
 
 		Returns:
-			float: Predicted future rate.
+			float: Predicted future rate, or None if data unavailable.
 		"""
 		if data is None:
-			data = self.downloadComedJsonData()
+			# retry up to 3 times (downloadComedJsonData has its own retries)
+			for _attempt in range(3):
+				data = self.downloadComedJsonData()
+				if data is not None:
+					break
 		if data is None:
 			return None
 		median, std = self.getMedianComedRate()
@@ -513,17 +520,19 @@ class ComedLib(object):
 		Returns:
 			tuple: A tuple containing the median (75th percentile) and the standard deviation of rates.
 		"""
-		# Check if median and standard deviation are cached
+		# check cache before downloading or computing
 		if hasattr(self, '_median_cache') and data is None:
 			return self._median_cache
 
 		if data is None:
 			data = self.downloadComedJsonData()
+		if data is None:
+			return (0.0, 0.0)
 
 		prices = [float(item['price']) for item in data]
 		parray = numpy.array(prices, dtype=numpy.float64)
 
-		# Calculate the 75th percentile and standard deviation
+		# calculate the 75th percentile and standard deviation
 		median = numpy.percentile(parray, 75)
 		std = numpy.std(parray)
 		self._median_cache = (median, std)

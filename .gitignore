@@ -1,8 +1,8 @@
 # Byte-compiled / optimized / DLL files
 .DS_Store
+report_*.txt
+_te*.*
 
-*.py[cod]
-*$py.class
 #data files
 *.yml
 *.tgz
@@ -10,9 +10,9 @@
 *.csv
 pyecobee_db*
 
-
-report_shebang.txt
-report_pyflakes.txt
-report_bandit.txt
-report_pyright.txt
-report_ascii_compliance.txt
+html/dashboard.js
+html/build/
+node_modules/
+dist/
+package-lock.json
+.superpowers/
