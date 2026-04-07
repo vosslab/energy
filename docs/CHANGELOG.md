@@ -12,6 +12,7 @@
 
 ### Fixes and Maintenance
 
+- Simplify deploy to flat layout: `dashboard.js` served alongside `dashboard.html` instead of in a `build/` subdirectory. Avoids needing to create directories in `/var/www/html/`.
 - Fixed infinite loop bugs in `energylib/comedlib.py`: `getMostRecentRate()` and `getPredictedRate()` used `while data is None` which would hang forever on network failure. Changed to single attempt with None return.
 - Fixed `getMedianComedRate()` cache check ordering: moved cache check before data download to avoid wasting work on every call after the first.
 - Added None guards to `getCurrentComedRate()` and `getCurrentComedRateUnSafe()` for consistent None-safe behavior across all public methods.
