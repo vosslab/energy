@@ -296,8 +296,7 @@ def _generate_recent_rates_table(comed_data: list) -> str:
 		str: HTML-formatted string for the recent rates table.
 	"""
 	html = ""
-	html += "<table style='border: 1px solid darkblue; border-spacing: 3px; "
-	html += "  display: inline-block; vertical-align: top;'>\n"
+	html += "<table class='rate-table'>\n"
 	html += "<tr><th colspan='2'>Recent Rates</th></tr>\n"
 	html += "<tr><th>Time</th><th>Cost</th></tr>\n"
 
@@ -324,7 +323,7 @@ def _generate_recent_rates_table(comed_data: list) -> str:
 		item = comed_data[i]
 		timestruct = list(time.localtime(int(item['millisUTC']) / 1000.0))
 		rate = float(item['price'])
-		html += "<tr style='background-color: lightgray;'>\n"
+		html += "<tr class='row-past'>\n"
 		html += f"  <td align='center'> {timestruct[3]:d}:{timestruct[4]:02d} </td>\n"
 		html += f"  <td align='right'> {colorPrice(rate, 1)} </td>\n"
 		html += "</tr>\n"
@@ -346,8 +345,7 @@ def _generate_hourly_averages_table(hourlyRates: dict) -> str:
 	Returns:
 		str: HTML-formatted string for the hourly averages table.
 	"""
-	html = "<table style='border: 1px solid darkblue; border-spacing: 3px; "
-	html += "  display: inline-block; vertical-align: top;'>\n"
+	html = "<table class='rate-table'>\n"
 	html += "<tr><th colspan='2'>Hourly Averages</th></tr>\n"
 	html += "<tr><th>Range</th><th>Cost</th></tr>\n"
 
@@ -365,15 +363,15 @@ def _generate_hourly_averages_table(hourlyRates: dict) -> str:
 		averageRate = numpy.array(hourlyRates[hour_key]).mean()
 		hour = int(hour_key)
 
-		# Determine background color for rows after midnight
+		# Adjust hour for rows after midnight
 		if hour < 1:
-			bg_color = "lightgray"
+			row_class = " class='row-past'"
 			hour += 24  # Adjust hour to represent a full 24-hour format
 		else:
-			bg_color = "white"
+			row_class = ""
 
 		# Generate HTML for the row
-		html += f"<tr style='background-color: {bg_color};'>\n"
+		html += f"<tr{row_class}>\n"
 		html += f"  <td align='center'> {hour - 1:d}-{hour:d}:00 </td>\n"
 		html += f"  <td align='right'> {colorPrice(averageRate, 2)} </td>\n"
 		html += "</tr>\n"

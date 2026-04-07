@@ -15,7 +15,7 @@ from requests.auth import HTTPBasicAuth
 import solar_display
 import comed_price_display
 import display_date
-import sports_schedule
+#import sports_schedule
 
 #============================================
 def _get_api_config_path() -> str:

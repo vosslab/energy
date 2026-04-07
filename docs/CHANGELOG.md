@@ -16,6 +16,7 @@
 - Add `scripts/build_dashboard.sh` to compile TypeScript on any system (installs TypeScript locally if needed). Requires `nodejs` and `npm` packages on Debian.
 - Add auto-compile step to `scripts/deploy_dashboard.sh` when `npx` is available; otherwise requires pre-built `dashboard.js`.
 - Add dark mode to generated `comed.html` via `prefers-color-scheme: dark` media query.
+- Fix dark mode table backgrounds in `comed.html`: replaced hardcoded inline `background-color` (white/lightgray) with CSS classes (`rate-table`, `row-past`) so dark mode media query can override them.
 - Fixed infinite loop bugs in `energylib/comedlib.py`: `getMostRecentRate()` and `getPredictedRate()` used `while data is None` which would hang forever on network failure. Changed to single attempt with None return.
 - Fixed `getMedianComedRate()` cache check ordering: moved cache check before data download to avoid wasting work on every call after the first.
 - Added None guards to `getCurrentComedRate()` and `getCurrentComedRateUnSafe()` for consistent None-safe behavior across all public methods.
