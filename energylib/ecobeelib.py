@@ -110,10 +110,16 @@ class MyEcobee(object):
 		self.logger.debug('Reading txt file: {0}'.format(self.defs_file))
 		pyecobee_defs_file_ptr = open(self.defs_file, 'r')
 		fulldata = yaml.safe_load(pyecobee_defs_file_ptr)
+		pyecobee_defs_file_ptr.close()
+		# yaml.safe_load returns None when the file is empty or fully commented out
+		if fulldata is None:
+			raise ValueError(
+				f"No config data in {self.defs_file} "
+				"(file is empty or every line is commented out)"
+			)
 		self.thermostat_name = fulldata['thermostat_name'].strip()
 		self.api_key = fulldata['api_key'].strip()
 		self.thermostat_id = str(fulldata['thermostat_id'])
-		pyecobee_defs_file_ptr.close()
 
 	def openConnection(self):
 		self._load_data()

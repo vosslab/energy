@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-06-10
+
+### Fixes and Maintenance
+
+- Guard `readThermostatDefs()` in `energylib/ecobeelib.py` against an empty or fully commented-out `ecobee_defs.yml`. `yaml.safe_load` returns `None` in that case, which previously produced a cryptic `TypeError: 'NoneType' object is not subscriptable`. Now raises a clear `ValueError` naming the config file. Root cause of the field failure was `/etc/energy/ecobee_defs.yml` having all three lines commented out.
+
 ## 2026-04-06
 
 ### Additions and New Features
