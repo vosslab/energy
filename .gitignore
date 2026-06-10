@@ -16,3 +16,19 @@ node_modules/
 dist/
 package-lock.json
 .superpowers/
+
+# === UNIVERSAL ===
+_temp*.?*
+# === TYPESCRIPT ===
+_site/
+*.tsbuildinfo
+.eslintcache
+.prettiercache
+test-results/
+playwright-report/
+blob-report/
+coverage/
+meta.json
+stats.html
+
+

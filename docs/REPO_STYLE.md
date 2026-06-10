@@ -2,12 +2,54 @@
 
 Repo-wide conventions for this project and related repos.
 
+## Core philosophies
+
+Six principles guide work in this repo. Cite them by name when making judgment calls. This file is the canonical home for all six; sibling docs and `AGENTS.md` should cross-reference, not restate.
+
+- **Long-term over short-term.** Accept a small cost now to avoid larger costs later. Prefer the durable fix over the quick patch, even when the durable fix takes more effort today.
+- **Fix the design, not the symptom.** When something behaves wrong, fix the design that allowed the problem. Do not add fallbacks, special cases, or broad try/except blocks just to hide the symptom.
+- **Prompt positively.** Tell the model what to do, not what to avoid. Small LMs can confuse negative prompting with positive instructions, which can lead to poor code and seriously flawed results.     Prefer direct instructions like "use explicit key access" over negative ones, like "do not use dict.get()"
+- **Atomic task decomposition.** Break hard problems into the smallest independently completable tasks. Each task should have one owner, one clear outcome, and one verification step.
+- **Fresh subagent per task.** Give each independent task to a new subagent with a self-contained prompt. Reusing a subagent across tasks carries stale context, encourages drift, and weakens independent judgment.
+- **Finish the obvious.** Continue while the next safe step is defined by the plan, implied by the task, or required to verify the work. Obvious follow-on work is part of the task, not a bonus. Stop only at a real blocker, risky action, or change to the user's requested outcome.
+
 ## Repository structure
 - Prefer small, single-purpose scripts at the repo root.
 - Create topic folders only when a collection needs grouping.
 - Avoid deep nesting; keep paths short.
 - Keep `README.md` and `AGENTS.md` at the repo root.
 - Determine REPO_ROOT with `git rev-parse --show-toplevel`, not by deriving paths from the current working directory.
+
+## Project type marker
+
+Every repo carries `REPO_TYPE` at the repo root: one lowercase token plus newline. Tokens: `python`, `typescript`, `rust`, `other`. Missing marker triggers detection via `tools/detect_repo_type.py`; if detection is unavailable or ambiguous, falls back to `LANG_UNKNOWN`. Files gated by `ROUTING_OVERRIDES` (language- or `requires_repo_file`-tagged) do not ship to `LANG_UNKNOWN` repos; universal walker-routed files (`docs/`, `tests/`, `devel/`) still ship. The propagator (`propagate_style_guides.py` entry script + `propagate/` package: `repo.read_repo_type` reads the marker, `files.compute_propagation_plan` dispatches overlays) routes files by repo type; `reset_repo.py` writes the marker during bootstrap. `REPO_TYPE` is maintained after bootstrap; it controls future propagation behavior, not just initial scaffolding. Note: `other`-typed repos no longer receive `docs/PYTHON_STYLE.md`, as this historical exception was removed when `ROUTING_OVERRIDES` replaced the legacy language-file manifest.
+
+## AGENTS.md files
+
+Keep `AGENTS.md` files concise and operational. They should usually be around
+100-150 lines and focus on specific tasks, workflows, and constraints.
+Do not use `AGENTS.md` for long philosophical discussions or duplicated style
+guidance. Put canonical explanations in the appropriate `docs/*.md` file, then
+link to that file from `AGENTS.md`.
+Concise `AGENTS.md` files help coding agents perform better because the
+instructions are easier to scan, prioritize, and follow.
+
+## README.md and GitHub About descriptions
+
+- The first paragraph of `README.md` is the source text for the GitHub About description.
+- The first paragraph must remain readable as raw Markdown source text.
+- Repository About descriptions must stay under 250 characters.
+- Agents edit only the first paragraph of `README.md`; the user copies that text into the GitHub About field.
+- Write a clear, searchable hook that helps readers quickly understand the repository.
+- Lead with the repository purpose and the main user benefit.
+- Include one distinguishing detail if space allows.
+- Prefer concrete nouns and plain language.
+- Leave workflow steps, setup instructions, framework lists, and detailed claims for the rest of `README.md`.
+- The first paragraph must be pure prose. Do not use badges, Markdown links, images, code spans, or raw URLs.
+- Avoid repeating information already obvious, do not include repo name.
+
+Preferred structure:
+`[What it is] + [who/use case] + [distinctive detail]`
 
 ## Naming
 - Use SCREAMING_SNAKE_CASE for Markdown docs filenames, with the .md extension
@@ -32,10 +74,7 @@ Repo-wide conventions for this project and related repos.
 - Error report must include: the command run and full stderr, plus a short next step: close other Git processes, remove a stale lock only if no process holds it, or fix `.git` permissions.
 
 ## Pytest failure triage
-- If you are unsure whether a failing pytest result is pre-existing or introduced by your current work, assume it is new first.
-- Reason: we try not to commit code with known failing tests, so a fresh failure is usually related to current uncommitted changes.
-- If uncertainty remains, inspect `git diff` and check whether the suspicious lines are part of current uncommitted edits.
-- Never use `git stash` as a diagnostic step for this.
+- For pytest test-writing rules, commands, and failure triage, see [PYTEST_STYLE.md](PYTEST_STYLE.md).
 
 ## Changelog rotation
 - Rotate `docs/CHANGELOG.md` when it reaches about 1000 lines (`wc -l docs/CHANGELOG.md`).
@@ -43,6 +82,8 @@ Repo-wide conventions for this project and related repos.
 - Keep the last two date-heading day blocks in active `docs/CHANGELOG.md` and move older day blocks to archive files.
 - "Last two days" means the two most recent `## YYYY-MM-DD` headings present in the changelog, not a rolling 48-hour window; dates may be non-consecutive.
 - Use archive filenames in the form `docs/CHANGELOG-YYYY-MM[a-z].md` (for example `docs/CHANGELOG-2026-02a.md`), choosing the next letter for additional rotations in the same month.
+- When an archived range spans multiple months, name the archive after the **most recent month included** (the YYYY-MM closest to the active changelog), not the earliest. Example: a rotation moving 2026-01-23 through 2026-04-14 into one file becomes `docs/CHANGELOG-2026-04a.md`. This keeps the most recent archive sortable next to the still-active file.
+- Date headings appear in **exactly one file**. A `## YYYY-MM-DD` heading must never exist in both the active changelog and an archive (or in two archives). Before rotating, check the boundary date against the existing newest archive; if it already lives there, drop it from the active file rather than copying it across.
 - Preserve reverse-chronological order within each file after rotation.
 - Each day block (`## YYYY-MM-DD`) should include the same subsection headings, in this order:
   - `### Additions and New Features`
@@ -54,6 +95,22 @@ Repo-wide conventions for this project and related repos.
 - Keep section order stable so entries stay easy to scan over time.
 - Categories are not required when they would be empty, but every changelog entry must belong to one category.
 - Changelog entries are never removed, but they may be rephrased for accuracy and clarity.
+- Legacy archives that use the older `CHANGELOG_ARCHIVE_NN.md` form must be renamed to the documented `CHANGELOG-YYYY-MM[a-z].md` form. The new name follows the most-recent-month-in-range rule above (use the most recent `## YYYY-MM-DD` heading inside the archive). Use `git mv` so history is preserved. Only one archive naming style should exist in the repo at any time.
+- Automation: [devel/rotate_changelog.py](../devel/rotate_changelog.py) enforces this rotation policy (keeps the two newest day blocks, archives the rest into `docs/CHANGELOG-YYYY-MM[a-z].md`, refuses to clobber boundary dates). [devel/query_changelog.py](../devel/query_changelog.py) searches the active changelog and archives by date range, category, keyword, or source. [devel/commit_changelog.py](../devel/commit_changelog.py) drafts the seed commit message from changelog entries that are absent from the prior version of `docs/CHANGELOG.md` (identified by the SHA of the last commit that touched that file), keyed on `(date, title)` so same-day second commits do not re-emit already-shipped bullets. All three share [devel/changelog_lib.py](../devel/changelog_lib.py) (parser/serializer, git helpers, console + prompt helpers).
+
+## Active plans folder organization
+- Working planning artifacts under `docs/active_plans/` are filed into a closed set of subdirectories by kind.
+- The five subdirectories are the closed set; adding a new category requires editing this section first.
+  - `docs/active_plans/active/` for in-flight plans currently being acted on.
+  - `docs/active_plans/audits/` for diagnostic and audit reports.
+  - `docs/active_plans/reports/` for status reports and visual-acceptance reports.
+  - `docs/active_plans/decisions/` for decision records and clarifications.
+  - `docs/active_plans/workstreams/` for agent workstream artifacts.
+- Forward-only by default: new files go directly into the matching subdirectory at creation time.
+- Existing root-level files under `docs/active_plans/` stay in place; do not relocate them without an explicit, one-time sweep approved by the user.
+- Topic-tag filename prefixes are retained inside each subdirectory (for example `no_crop_*`, `css_native_*`) so related artifacts cluster by name.
+- Use snake_case filenames for these working docs, not SCREAMING_SNAKE_CASE; the all-caps rule covers durable `docs/*.md` reference docs, not active-plans scratch.
+- When a plan is complete and no longer being acted on, close it by moving the file with `git mv` to `docs/archive/` so history is preserved.
 
 ## Versioning
 - Prefer `pyproject.toml` as the single source of truth when the repo is a single Python package with a single `pyproject.toml`.
@@ -71,9 +128,11 @@ Repo-wide conventions for this project and related repos.
 - Add a shebang for executable scripts and keep them runnable directly.
 - For repo-local Python commands, use:
   - `source source_me.sh && python ...`
+- For pytest commands, use:
+  - `pytest tests/`
 - Avoid hard-coded interpreter paths in routine command examples.
 - Document shared helpers and modules in `docs/USAGE.md` when used across scripts.
-- Use `tests/test_pyflakes_code_lint.py` and `tests/test_ascii_compliance.py` for repo-wide lint checks, with `tests/check_ascii_compliance.py` for single-file ASCII/ISO-8859-1 checks and `tests/fix_ascii_compliance.py` for single-file fixes.
+- Use `tests/test_pyflakes_code_lint.py` and `tests/test_ascii_compliance.py` for repo-wide lint checks, with `tests/check_ascii_compliance.py` for single-file ASCII/ISO-8859-1 checks and `tests/fix_ascii_compliance.py` for single-file fixes. `tests/test_markdown_links.py` is the repo-wide check that every local Markdown link is GitHub-browsable and well formed.
 - For smoke tests, reuse stable output folder names (for example `output_smoke/`) instead of creating one-off output directory names; reusing/overwriting avoids repeated delete-approval prompts.
 - In test scripts that need the repository root, import and use the shared `tests/git_file_utils.py` module:
   ```python
@@ -105,7 +164,7 @@ Repo-wide conventions for this project and related repos.
 - Choose clear, descriptive names.
 - Keep well-known root-level docs (for example VERSION, README.md, AGENTS.md).
 - I prefer to use social media links instead of hard coding my email in repos. For example, Neil Voss, https://bsky.app/profile/neilvosslab.bsky.social
-- When referencing files, use Markdown links so users can click through. Markdown links are created using the syntax [link text](URL), where "link text" is the clickable text that appears in the document, and "URL" is the web address or file path the link points to. This allows users to navigate between different content easily. Use file-path link text so readers know the exact filename (good: [docs/MARKDOWN_STYLE.md](docs/MARKDOWN_STYLE.md), bad: [Style Guide for Markdown](docs/MARKDOWN_STYLE.md)). Only include a backticked path when the link text is not the path.
+- When referencing files, use Markdown links so users can click through. Markdown links are created using the syntax `[link text](URL)`, where "link text" is the clickable text that appears in the document, and "URL" is the web address or file path the link points to. This allows users to navigate between different content easily. Use file-path link text so readers know the exact filename (good: `[docs/MARKDOWN_STYLE.md](docs/MARKDOWN_STYLE.md)`, bad: `[Style Guide for Markdown](docs/MARKDOWN_STYLE.md)`). Only include a backticked path when the link text is not the path.
 
 
 ### Recommended common docs
@@ -127,7 +186,9 @@ Repo-wide conventions for this project and related repos.
 
 ### Centrally maintained docs, do not edit locally
 - `docs/AUTHORS.md`: primary maintainers and notable contributors
+- `docs/CLAUDE_HOOK_USAGE_GUIDE.md`: generated hook behavior reference, not a repo style source of truth. If repo style differs from hook examples, update repo style docs and recommend a hook rule update upstream.
 - `docs/MARKDOWN_STYLE.md`: Markdown writing rules and formatting conventions for this repo.
+- `docs/PYTEST_STYLE.md`: pytest test-writing rules, commands, fixtures, and failure triage.
 - `docs/PYTHON_STYLE.md`: Python formatting, linting, and project-specific conventions.
 - `docs/REPO_STYLE.md`: repo-level organization, conventions, and file placement rules.
 
