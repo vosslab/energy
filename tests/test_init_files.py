@@ -7,7 +7,7 @@ import pytest
 import git_file_utils
 
 REPO_ROOT = git_file_utils.get_repo_root()
-SKIP_DIRS = {".git", ".venv", "__pycache__", "old_shell_folder"}
+SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
 REPORT_NAME = "report_init.txt"
 _MIN_SUBSTANTIVE_LINES = 20
 _MIN_CONTENT_CHARS = 100

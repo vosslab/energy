@@ -58,7 +58,7 @@ EXTENSIONS = {
 	".rs",
 	".swift",
 }
-SKIP_DIRS = {".git", ".venv", "old_shell_folder"}
+SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
 SKIP_FILES = {
 	os.path.join("CODEX", "skills", ".system", "skill-creator", "SKILL.md"),
 }

@@ -1,17 +1,17 @@
-
 #!/usr/bin/env python3
 
 # Standard Library
 import os
 import sys
 import time
+import colorsys
 import argparse
 
 # PIP3 modules
 import yaml
 import numpy
-import colorsys
 import requests
+import requests.auth
 
 # Local Repo Modules
 # Ensure energylib is importable when running this file directly.
@@ -22,9 +22,6 @@ if REPO_ROOT not in sys.path:
 import icon_draw
 from energylib import comedlib
 
-#============================================
-# Treat data older than this as unknown for display purposes.
-STALE_PRICE_SECONDS = 20 * 60
 
 #============================================
 def color_price_awtrix(price: float) -> tuple:
@@ -78,38 +75,24 @@ def arrow_price_awtrix(trend: str) -> list:
 	return mid_arrow
 
 #============================================
-def get_current_price() -> float:
+def compile_comed_price_data(data=None, now_seconds=None):
 	"""
-	Gets the current electricity price from ComEd API.
-
-	Returns:
-		float: Current price in cents.
-	"""
-	comed = comedlib.ComedLib()
-	price = comed.getCurrentComedRateUnSafe()
-	print(f"Current Power Price: {price:.2f}¢")
-	recent = comed.getMostRecentRate()
-	print(f"Recent  Power Price: {recent:.1f}¢")
-	if recent < price - 0.2:
-		trend = "down"
-	elif recent > price + 0.2:
-		trend = "up"
-	else:
-		trend = "none"
-	print(f"Trend: {trend}")
-	return price, trend
-
-#============================================
-def compile_comed_price_data():
-	"""
-	Compile the electricity price to a data dict
+	Compile the electricity price to a data dict.
 
 	Args:
-		price (float): The electricity price in cents.
+		data: ComEd JSON data list; if None, downloads from the API.
+		now_seconds: Current time as Unix timestamp; if None, uses time.time().
+
+	Returns:
+		dict: AWTRIX payload with keys text, icon, color, progress, progressC, draw, etc.
 	"""
 	comed = comedlib.ComedLib()
-	now_seconds = time.time()
-	data = comed.downloadComedJsonData()
+	# Both None preserves production behavior: live download + current time.
+	if now_seconds is None:
+		now_seconds = time.time()
+	if data is None:
+		data = comed.downloadComedJsonData()
+
 	price = None
 	trend = "none"
 	age_seconds = None
@@ -117,75 +100,54 @@ def compile_comed_price_data():
 	using_previous_hour = False
 
 	if not data:
+		# No data available from the API
 		print("No ComEd data available")
-	else:
+	elif not comed.isPriceDataFresh(data, now_seconds):
+		# Data exists but is too old; age used only for the stale-age print below
 		age_seconds = comed.getAgeOfLastPriceSeconds(data, now_seconds)
-		if age_seconds is None:
-			print("Unable to determine ComEd data age")
-		else:
-			age_minutes = age_seconds / 60.0
-			print(f"Last ComEd data age: {age_minutes:.1f} minutes")
-
-			is_current_hour = comed.isLastPriceFromCurrentHour(data, now_seconds)
-			if is_current_hour is None:
-				print("Unable to determine last ComEd sample time")
-			elif not is_current_hour:
-				# Data is from previous hour
-				# Check if we're in the first 15 minutes of the current hour
-				minutes_past_hour = time.localtime(now_seconds).tm_min
-				if minutes_past_hour <= 15:
-					# Show previous hour data with indicator
-					price = comed.getCurrentComedRateUnSafe(data)
-					print(f"Previous Hour Price: {price:.2f}¢ (showing until minute 15)")
-					recent = comed.getMostRecentRate(data)
-					print(f"Recent  Power Price: {recent:.1f}¢")
-					if recent < price - 0.2:
-						trend = "down"
-					elif recent > price + 0.2:
-						trend = "up"
-					else:
-						trend = "none"
-					print(f"Trend: {trend}")
-					is_stale = False
-					using_previous_hour = True
-				else:
-					print("ComEd data is from a previous hour (past minute 15)")
-			elif age_seconds > STALE_PRICE_SECONDS:
-				print(f"ComEd data is stale (> {STALE_PRICE_SECONDS / 60:.0f} minutes)")
-			else:
-				price = comed.getCurrentComedRateUnSafe(data)
-				print(f"Current Power Price: {price:.2f}¢")
-				recent = comed.getMostRecentRate(data)
-				print(f"Recent  Power Price: {recent:.1f}¢")
-				if recent < price - 0.2:
-					trend = "down"
-				elif recent > price + 0.2:
-					trend = "up"
-				else:
-					trend = "none"
-				print(f"Trend: {trend}")
-				is_stale = False
-
-	if is_stale:
 		if age_seconds is not None:
 			stale_minutes = age_seconds / 60.0
-			print(f"Displaying unknown price (data age {stale_minutes:.1f} minutes)")
+			print(f"ComEd data is stale (data age {stale_minutes:.1f} minutes)")
+		else:
+			print("ComEd data is stale (age undeterminable)")
+	else:
+		# Data is fresh; determine whether it is from the current or previous clock hour
+		is_current_hour = comed.isLastPriceFromCurrentHour(data, now_seconds)
+		price = comed.getCurrentComedRateUnSafe(data)
+		recent = comed.getMostRecentRate(data)
+		print(f"Current Power Price: {price:.2f}c")
+		print(f"Recent  Power Price: {recent:.1f}c")
+		if recent < price - 0.2:
+			trend = "down"
+		elif recent > price + 0.2:
+			trend = "up"
+		else:
+			trend = "none"
+		print(f"Trend: {trend}")
+		is_stale = False
+		# When the fresh sample is from the prior clock hour, show an orange bar
+		using_previous_hour = (is_current_hour is False)
+		if using_previous_hour:
+			print("Previous hour price (fresh but prior clock hour)")
+
+	if is_stale:
+		# Display unknown indicator; recompute age for the progress bar
+		age_seconds = comed.getAgeOfLastPriceSeconds(data, now_seconds)
 		text_value = "???"
 		awtrix_color = [140, 140, 140]
 		icon_id = icon_draw.awtrix_icons['red x']
 		arrow = arrow_price_awtrix("none")
 		progress_color = [140, 140, 140]
 	else:
-		text_value = f"{price:.1f}¢"
+		text_value = f"{price:.1f}c"
 		awtrix_color = color_price_awtrix(price)
 		icon_id = icon_price_awtrix(price)
 		arrow = arrow_price_awtrix(trend)
-
 		if using_previous_hour:
-			# Use orange progress bar to indicate old data
+			# Orange progress bar indicates data is from the previous clock hour
 			progress_color = [255, 165, 0]
 		else:
-			# Use normal color-coded progress bar
+			# Normal color-coded progress bar
 			progress_color = awtrix_color
 
 	# AWTRIX API details
@@ -196,8 +158,8 @@ def compile_comed_price_data():
 		progress_value = int(min(age_minutes / 60.0, 1.0) * 100)
 		print(f"Progress bar: {age_minutes:.1f} minutes since last update ({progress_value}%)")
 	else:
-		# Fallback to minutes past hour if age unavailable
-		minutes_past_hour = time.localtime().tm_min
+		# Fallback to minutes past hour if age is unavailable
+		minutes_past_hour = time.localtime(now_seconds).tm_min
 		progress_value = int((minutes_past_hour / 60) * 100)
 		print(f"Progress bar: using minutes past hour fallback ({progress_value}%)")
 
@@ -247,8 +209,6 @@ def send_to_awtrix(app_data: dict) -> bool:
 		print("No data to send")
 		return False
 
-	from requests.auth import HTTPBasicAuth
-
 	config = get_api_config()
 	ip = config["ip"]
 	username = config["username"]
@@ -258,7 +218,8 @@ def send_to_awtrix(app_data: dict) -> bool:
 	url = f"http://{ip}/api/custom?name={app_name}"
 
 	print(f"Sending to AWTRIX at {ip}...")
-	response = requests.post(url, json=app_data, auth=HTTPBasicAuth(username, password))
+	auth = requests.auth.HTTPBasicAuth(username, password)
+	response = requests.post(url, json=app_data, auth=auth)
 
 	if response.status_code == 200:
 		print(f"  Sent successfully: {app_data.get('text', '')}")

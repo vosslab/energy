@@ -12,6 +12,10 @@ import numpy
 import requests
 from scipy import stats
 
+# Age threshold in seconds after which ComEd price data is considered stale.
+# 20 minutes matches the ComEd 5-minute feed cadence with a generous buffer.
+STALE_PRICE_SECONDS = 20 * 60
+
 #======================================
 #======================================
 class ComedLib(object):
@@ -305,7 +309,7 @@ class ComedLib(object):
 		return ylist[0]
 
 	#======================================
-	def getLastPriceTimestampSeconds(self, data=None):
+	def getLastPriceTimestampSeconds(self, data=None) -> float | None:
 		"""
 		Returns the most recent price timestamp in seconds since epoch.
 
@@ -321,7 +325,10 @@ class ComedLib(object):
 			return None
 		latest_ms = None
 		for item in data:
-			item_ms = int(item.get("millisUTC", 0))
+			# skip items that are missing the millisUTC key entirely
+			if "millisUTC" not in item:
+				continue
+			item_ms = int(item["millisUTC"])
 			if latest_ms is None or item_ms > latest_ms:
 				latest_ms = item_ms
 		if latest_ms is None:
@@ -330,7 +337,7 @@ class ComedLib(object):
 		return latest_seconds
 
 	#======================================
-	def getAgeOfLastPriceSeconds(self, data=None, now_seconds=None):
+	def getAgeOfLastPriceSeconds(self, data=None, now_seconds=None) -> float | None:
 		"""
 		Returns the age of the most recent price sample in seconds.
 
@@ -352,7 +359,7 @@ class ComedLib(object):
 		return age_seconds
 
 	#======================================
-	def isLastPriceFromCurrentHour(self, data=None, now_seconds=None):
+	def isLastPriceFromCurrentHour(self, data=None, now_seconds=None) -> bool | None:
 		"""
 		Returns True when the newest sample is from the current local hour.
 
@@ -374,6 +381,70 @@ class ComedLib(object):
 		last_hour_key = (last_struct.tm_year, last_struct.tm_mon, last_struct.tm_mday, last_struct.tm_hour)
 		now_hour_key = (now_struct.tm_year, now_struct.tm_mon, now_struct.tm_mday, now_struct.tm_hour)
 		return last_hour_key == now_hour_key
+
+	#======================================
+	def isPriceDataFresh(self, data=None, now_seconds=None) -> bool:
+		"""
+		Returns True when the most recent price sample is within the stale window.
+
+		A strict boolean predicate: returns True only when a valid newest sample exists
+		and its age is within STALE_PRICE_SECONDS. Returns False for missing data,
+		undeterminable age, or age beyond the window. Never returns None.
+
+		Args:
+			data (list, optional): Raw JSON data as a list of dicts. Defaults to None.
+			now_seconds (float, optional): Current time in seconds since epoch. Defaults to None.
+
+		Returns:
+			bool: True if the most recent sample age <= STALE_PRICE_SECONDS, False otherwise.
+		"""
+		age = self.getAgeOfLastPriceSeconds(data, now_seconds)
+		if age is None:
+			# Cannot determine age; treat as stale for safety
+			return False
+		return age <= STALE_PRICE_SECONDS
+
+	#======================================
+	def formatCliStatusLines(self, data, now_seconds) -> list[str]:
+		"""
+		Builds the diagnostic CLI status lines from injected data and timestamp.
+
+		When the price data is stale, returns placeholder lines with '???' for rate
+		values and 'Unknown' for house usage status. When fresh, formats rates as
+		numeric strings and computes the on/off threshold comparison.
+
+		Args:
+			data (list): Raw JSON data as a list of dicts.
+			now_seconds (float): Current time in seconds since epoch.
+
+		Returns:
+			list[str]: Diagnostic lines ready for printing, one per entry.
+		"""
+		lines = []
+		if not self.isPriceDataFresh(data, now_seconds):
+			# Feed is stale; show placeholder values to avoid reporting a frozen price
+			lines.append("Hour Current Rate   ???")
+			lines.append("Hour Predicted Rate ???")
+			lines.append("Reasonable Cutoff   n/a (stale)")
+			lines.append("House Usage Status  Unknown")
+			return lines
+
+		# Feed is fresh; compute and format the real values
+		currrate = self.getCurrentComedRate(data)
+		predictrate = self.getPredictedRate(data)
+		cutoffrate = self.getReasonableCutOff()
+
+		lines.append(f"Hour Current Rate   {currrate:.3f}c")
+		lines.append(f"Hour Predicted Rate {predictrate:.3f}c")
+		lines.append(f"Reasonable Cutoff   {cutoffrate:.3f}c")
+
+		# Determine on/off status based on current rate vs cutoff
+		if currrate > cutoffrate:
+			lines.append("House Usage Status  OFF")
+		else:
+			lines.append("House Usage Status  on")
+
+		return lines
 
 	#======================================
 	def getPredictedRate(self, data=None):
@@ -554,27 +625,18 @@ if __name__ == '__main__':
 	comlib = ComedLib()
 	comlib.debug = True  # Enable debugging output
 
-	# Calculate and print the 24-hour median rate
-	medrate, std = comlib.getMedianComedRate()
+	# Download data once and capture a single reference timestamp
+	data = comlib.downloadComedJsonData()
+	now_seconds = time.time()
+
+	# Calculate and print the 24-hour median rate (not time-sensitive; always shown)
+	medrate, std = comlib.getMedianComedRate(data)
 	print(f"24hr Median Rate    {medrate:.3f}c +- {std:.3f}c")
 
-	# Calculate and print the current rate
-	currrate = comlib.getCurrentComedRate()
-	print(f"Hour Current Rate   {currrate:.3f}c")
-
-	# Calculate and print the predicted future rate
-	predictrate = comlib.getPredictedRate()
-	print(f"Hour Predicted Rate {predictrate:.3f}c")
-
-	# Calculate and print the reasonable cutoff
-	cutoffrate = comlib.getReasonableCutOff()
-	print(f"Reasonable Cutoff   {cutoffrate:.3f}c")
-
-	# Determine and print the house usage status based on the current rate and cutoff
-	if currrate > cutoffrate:
-		print("House Usage Status  OFF")
-	else:
-		print("House Usage Status  on")
+	# Build and print the freshness-gated diagnostic lines
+	status_lines = comlib.formatCliStatusLines(data, now_seconds)
+	for line in status_lines:
+		print(line)
 
 	# Measure end time and print run-time duration
 	end_time = time.time()

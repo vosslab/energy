@@ -6,6 +6,16 @@ SCOPE_ENV = "REPO_HYGIENE_SCOPE"
 FAST_ENV = "FAST_REPO_HYGIENE"
 SKIP_ENV = "SKIP_REPO_HYGIENE"
 
+# Canonical set of directory names to exclude from all repo-wide hygiene scans.
+# Add new entries here; the individual lint tests import this constant.
+HYGIENE_SKIP_DIRS: frozenset[str] = frozenset({
+	".git",
+	".venv",
+	"__pycache__",
+	"legacy",
+	"old_shell_folder",
+})
+
 
 #============================================
 def get_repo_root() -> str:

@@ -12,7 +12,7 @@ REPO_ROOT = git_file_utils.get_repo_root()
 ERROR_RE = re.compile(r":[0-9]+:[0-9]+:")
 ERROR_SAMPLE_COUNT = 5
 CHUNK_SIZE = 200
-SKIP_DIRS = {".git", ".venv", "old_shell_folder"}
+SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
 # Show the full summary report when this many files have errors
 SUMMARY_THRESHOLD = 4
 _PYFLAKES_READY = False

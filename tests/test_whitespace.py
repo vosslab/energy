@@ -27,7 +27,7 @@ EXTENSIONS = {
 	".htm",
 	".css",
 }
-SKIP_DIRS = {".git", ".venv", "old_shell_folder"}
+SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
 
 
 #============================================

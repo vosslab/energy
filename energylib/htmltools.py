@@ -240,48 +240,77 @@ def _generate_status_header_html(comlib, comed_data) -> str:
 	Returns:
 		str: HTML-formatted string containing the status header information.
 	"""
-	# Get median and standard deviation of electricity rates
+	# Check freshness once; stale data must not be passed to colorPrice or equivalent_gas_cost
+	price_is_fresh = comlib.isPriceDataFresh(comed_data)
+
+	# Get median and standard deviation of electricity rates (not time-sensitive; always render)
 	median, std = comlib.getMedianComedRate(comed_data)
-	# Get the current electricity rate
-	currentRate = comlib.getCurrentComedRateUnSafe(comed_data)
-	# Get the predicted electricity rate and cutoff rate for usage
-	predictRate = comlib.getPredictedRate(comed_data)
+	# Get the cutoff rate (static; always render)
 	cutoffRate = comlib.getReasonableCutOff()
+
+	# Variable delivery rate from most recent ComEd bill (Winter 2025-26)
+	delivery_cents_per_kwh = 6.354
 
 	# Generate the HTML content
 	html = ""
 	html += "<span style='color: &#35;448844'>24hr Median Rate:"
 	html += f" {colorPrice(median, 1)} &pm; {std:.2f} &cent;</span><br/>"
 
-	# Variable delivery rate from most recent ComEd bill (Winter 2025-26)
-	delivery_cents_per_kwh = 6.354
+	# Median-derived gas equivalent is not time-sensitive; always render
 	html += "&nbsp;<span style='color: &#35;448844'>Equivalent Gas Rate:"
 	med_gas_equiv = equivalent_gas_cost(median + delivery_cents_per_kwh)
 	std_gas_equiv = equivalent_gas_cost(std)
 	html += f"</span> ${med_gas_equiv:.2f} &pm; {std_gas_equiv:.2f} per gallon<br/>"
 
-	html += "<span style='color: &#35;444488'>Hour Current Rate:"
-	html += f" {colorPrice(currentRate, 3)} </span><br/>"
+	if price_is_fresh:
+		# Data is current: fetch live rates and render with colorPrice
+		currentRate = comlib.getCurrentComedRateUnSafe(comed_data)
+		predictRate = comlib.getPredictedRate(comed_data)
 
-	html += "&nbsp;<span style='color: &#35;444488'>Equivalent Gas Rate:"
-	gas_equiv = equivalent_gas_cost(currentRate + delivery_cents_per_kwh)
-	html += f"</span> ${gas_equiv:.2f} per gallon<br/>"
+		html += "<span style='color: &#35;444488'>Hour Current Rate:"
+		html += f" {colorPrice(currentRate, 3)} </span><br/>"
 
-	html += "<span style='color: &#35;884444'>Hour Predict Rate:"
-	html += f" {colorPrice(predictRate, 3)} </span><br/>"
+		# Current-rate gas equivalent depends on a numeric currentRate; only render when fresh
+		html += "&nbsp;<span style='color: &#35;444488'>Equivalent Gas Rate:"
+		gas_equiv = equivalent_gas_cost(currentRate + delivery_cents_per_kwh)
+		html += f"</span> ${gas_equiv:.2f} per gallon<br/>"
 
-	html += "<span style='color: &#35;448844'>Usage CutOff Rate:"
-	html += f" {colorPrice(cutoffRate, 3)} </span><br/>"
+		html += "<span style='color: &#35;884444'>Hour Predict Rate:"
+		html += f" {colorPrice(predictRate, 3)} </span><br/>"
 
-	# Display house usage status (ON/OFF) based on predicted vs. cutoff rates
-	html += "House Usage Status:\n"
-	html += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
-	if predictRate < cutoffRate:
-		html += "<td padding=10 bgcolor='darkgreen'><span style='color: white'><b>*ON*</b>\n"
+		html += "<span style='color: &#35;448844'>Usage CutOff Rate:"
+		html += f" {colorPrice(cutoffRate, 3)} </span><br/>"
+
+		# Display house usage status (ON/OFF) based on predicted vs. cutoff rates
+		html += "House Usage Status:\n"
+		html += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
+		if predictRate < cutoffRate:
+			html += "<td padding=10 bgcolor='darkgreen'><span style='color: white'><b>*ON*</b>\n"
+		else:
+			html += "<td padding=10 bgcolor='darkred'><span style='color: white'><b>.OFF.</b>\n"
+		html += "</span></td></tr></table>"
+		html += "<br/>\n"
 	else:
-		html += "<td padding=10 bgcolor='darkred'><span style='color: white'><b>.OFF.</b>\n"
-	html += "</span></td></tr></table>"
-	html += "<br/>\n"
+		# Data is stale: render ??? for time-sensitive rates; never call colorPrice on a None rate
+		html += "<span style='color: &#35;444488'>Hour Current Rate:"
+		html += " ???</span><br/>"
+
+		# Current-rate gas equivalent omitted when stale (no numeric rate available)
+		html += "&nbsp;<span style='color: &#35;444488'>Equivalent Gas Rate:"
+		html += "</span> ???<br/>"
+
+		html += "<span style='color: &#35;884444'>Hour Predict Rate:"
+		html += " ???</span><br/>"
+
+		html += "<span style='color: &#35;448844'>Usage CutOff Rate:"
+		html += f" {colorPrice(cutoffRate, 3)} </span><br/>"
+
+		# House usage status is unknown when price data is stale
+		html += "House Usage Status:\n"
+		html += "<table style='display:inline-block; border: 1px solid lightgray; vertical-align:middle;'><tr>\n"
+		html += "<td padding=10 bgcolor='gray'><span style='color: white'><b>Unknown</b>\n"
+		html += "</span></td></tr></table>"
+		html += "<br/>\n"
 
 	return html
 

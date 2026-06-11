@@ -4,13 +4,22 @@
 # docs/PLAYWRIGHT_USAGE.md and docs/E2E_TESTS.md.
 collect_ignore = ["e2e", "playwright"]
 
+# Re-export the canonical skip-dirs set so callers can reference it here.
+# The authoritative definition lives in git_file_utils.HYGIENE_SKIP_DIRS.
+# Lint tests import git_file_utils directly and use that name.
+
 import os
 import sys
 
 import pytest
 
+import git_file_utils
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# Canonical skip-dirs set: single source of truth lives in git_file_utils.
+# Reference it here so callers that import conftest can also reach it.
+HYGIENE_SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
+
+REPO_ROOT = git_file_utils.get_repo_root()
 SKIP_ENV = "SKIP_REPO_HYGIENE"
 
 if REPO_ROOT not in sys.path:

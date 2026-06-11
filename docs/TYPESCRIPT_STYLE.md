@@ -188,7 +188,7 @@ import { writeReport } from "./write_report";
 * For real projects, use a normal test framework and keep tests in a `tests/` folder.
 * Keep tests small and deterministic.
 * Avoid network calls, random behavior, and time-based logic unless mocked.
-* Browser tests live under `tests/playwright/` (see [PLAYWRIGHT_USAGE.md](PLAYWRIGHT_USAGE.md)). Pure Node unit tests via `node --test tests/test_*.mjs`. TS hygiene tests under `tests/test_typescript_*.py` enforce tsc, package.json schema, tsconfig canonical fields, and ESLint flat-config presence. ESLint correctness is gated by `check_codebase.sh` step 3 directly; no separate pytest wrapper.
+* Browser tests live under `tests/playwright/` (see `PLAYWRIGHT_USAGE.md`). Pure Node unit tests via `node --test tests/test_*.mjs`. TS hygiene tests under `tests/test_typescript_*.py` enforce tsc, package.json schema, tsconfig canonical fields, and ESLint flat-config presence. ESLint correctness is gated by `check_codebase.sh` step 3 directly; no separate pytest wrapper.
 
 ## FORMATTERS AND LINTERS
 

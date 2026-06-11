@@ -29,18 +29,21 @@ disable charging based on ComEd pricing.
 3. Apply `cutoff_adjust`.
 
 ## Decision flow
-1. **Long disable (late-hour spike)**
+1. **Stale feed (fail safe)**
+   - If `comlib.isPriceDataFresh(data, now_seconds)` is False (newest sample older than the freshness window):
+   - Disable all plugs immediately and skip the price decision.
+2. **Long disable (late-hour spike)**
    - If `predicted > 2 * cutoff` and current minute > 20:
    - Disable all plugs and sleep until the next hour.
-2. **Force enable (cheap)**
+3. **Force enable (cheap)**
    - If `predicted < lower_bound`: enable all plugs.
-3. **Disable (expensive)**
+4. **Disable (expensive)**
    - If `predicted > cutoff + buffer_rate`: disable all plugs.
-4. **Disable (hard ceiling)**
+5. **Disable (hard ceiling)**
    - If `predicted > upper_bound`: disable all plugs.
-5. **Enable (below cutoff)**
+6. **Enable (below cutoff)**
    - If `predicted < cutoff - buffer_rate`: enable all plugs.
-6. **Hold**
+7. **Hold**
    - Otherwise, log and leave current state unchanged.
 
 ## Hourly guardrails

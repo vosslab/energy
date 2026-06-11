@@ -65,8 +65,11 @@ function tempColor(temp: number): string {
 	return `rgb(${r}, ${g}, ${b})`;
 }
 
-// Format a price with color
-function colorPriceHtml(price: number, precision: number = 1): string {
+// Format a price with color; returns ??? for null/undefined (stale feed)
+function colorPriceHtml(price: number | null | undefined, precision: number = 1): string {
+	if (price === null || price === undefined) {
+		return `<span style="color: gray">???</span>`;
+	}
 	const color = priceColor(price);
 	return `<span style="color: ${color}">${price.toFixed(precision)}&cent;</span>`;
 }
@@ -150,9 +153,10 @@ interface ComedData {
 	generated_at: string;
 	median_rate: number;
 	median_std: number;
-	current_rate: number;
-	predicted_rate: number;
+	current_rate: number | null;
+	predicted_rate: number | null;
 	cutoff_rate: number;
+	stale?: boolean;
 	recent_samples: ComedSample[];
 	previous_samples: ComedSample[];
 	hourly_averages: HourlyAvg[];
@@ -167,20 +171,24 @@ function renderComed(data: ComedData): void {
 	let html = "";
 
 	// Status header
+	// When current_rate or predicted_rate is null (stale feed), guard all derived values
+	const priceStale = data.stale === true || data.current_rate === null || data.predicted_rate === null;
 	const medGas = equivalentGasCost(data.median_rate + DELIVERY_CENTS_PER_KWH);
 	const stdGas = equivalentGasCost(data.median_std);
-	const curGas = equivalentGasCost(data.current_rate + DELIVERY_CENTS_PER_KWH);
-	const isOn = data.predicted_rate < data.cutoff_rate;
+	// Only compute gas-equivalent and house status when rates are available
+	const curGasStr = priceStale ? "???" : `$${equivalentGasCost(data.current_rate! + DELIVERY_CENTS_PER_KWH).toFixed(2)}`;
+	const isOn: boolean | null = priceStale ? null : (data.predicted_rate! < data.cutoff_rate);
 
 	html += `<div class="stat-row"><span class="stat-label">24hr Median Rate:</span> ${colorPriceHtml(data.median_rate)} &plusmn; ${data.median_std.toFixed(2)}&cent;</div>`;
 	html += `<div class="stat-row"><span class="stat-label">&nbsp;Equivalent Gas Rate:</span> $${medGas.toFixed(2)} &plusmn; $${stdGas.toFixed(2)} per gallon</div>`;
 	html += `<div class="stat-row"><span class="stat-label">Hour Current Rate:</span> ${colorPriceHtml(data.current_rate, 3)}</div>`;
-	html += `<div class="stat-row"><span class="stat-label">&nbsp;Equivalent Gas Rate:</span> $${curGas.toFixed(2)} per gallon</div>`;
+	html += `<div class="stat-row"><span class="stat-label">&nbsp;Equivalent Gas Rate:</span> ${curGasStr} per gallon</div>`;
 	html += `<div class="stat-row"><span class="stat-label">Hour Predict Rate:</span> ${colorPriceHtml(data.predicted_rate, 3)}</div>`;
 	html += `<div class="stat-row"><span class="stat-label">Usage CutOff Rate:</span> ${colorPriceHtml(data.cutoff_rate, 3)}</div>`;
 
-	const badgeClass = isOn ? "status-on" : "status-off";
-	const badgeText = isOn ? "*ON*" : ".OFF.";
+	// House status is Unknown when the feed is stale
+	const badgeClass = priceStale ? "status-off" : (isOn ? "status-on" : "status-off");
+	const badgeText = priceStale ? "Unknown" : (isOn ? "*ON*" : ".OFF.");
 	html += `<div class="stat-row">House Usage Status: <span class="status-badge ${badgeClass}">${badgeText}</span></div>`;
 
 	// Tables side by side

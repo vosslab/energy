@@ -1,9 +1,8 @@
 # Energy automation scripts
 
-This repo contains scripts and shared libraries for home energy automation, including
-ComEd pricing, Ecobee thermostat control, WeMo plug control, AWTRIX display tiles, solar
-production tracking, battery arbitrage, and CGI dashboards for a self-hosted setup where
-you manage device credentials and local network access.
+Scripts and shared libraries for home power automation: ComEd electricity pricing,
+Ecobee thermostat control, WeMo plug switching, AWTRIX display tiles, solar production
+tracking, battery arbitrage, and self-hosted CGI dashboards.
 
 ## Documentation
 

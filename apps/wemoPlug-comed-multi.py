@@ -160,12 +160,17 @@ class ComedSmartWemoPlug(object):
 		f.close()
 
 #======================================
-def _compute_rates(comlib):
+def _compute_rates(comlib, data):
 	"""
 	Compute current and predicted rates, then derive a bounded cutoff.
+
+	Args:
+		comlib: ComedLib instance.
+		data (list): Pre-fetched raw JSON data snapshot (same as used for freshness check).
 	"""
-	current_rate = comlib.getCurrentComedRate()
-	predict_rate = comlib.getPredictedRate()
+	# Pass the shared data snapshot so all three calls use the same download
+	current_rate = comlib.getCurrentComedRate(data)
+	predict_rate = comlib.getPredictedRate(data)
 	cutoff = comlib.getReasonableCutOff()
 	if cutoff < lower_bound:
 		cutoff = lower_bound
@@ -175,12 +180,52 @@ def _compute_rates(comlib):
 	return current_rate, predict_rate, cutoff
 
 #======================================
-def _is_always_cheap(comlib):
+def _is_always_cheap(comlib, data):
 	"""
 	Return True when the raw recent price is below the always-cheap threshold.
+
+	Args:
+		comlib: ComedLib instance.
+		data (list): Pre-fetched raw JSON data snapshot (same as used for freshness check).
 	"""
-	recent_rate = comlib.getMostRecentRate()
+	# Pass the shared data snapshot to avoid a redundant download
+	recent_rate = comlib.getMostRecentRate(data)
 	return recent_rate < 1.0, recent_rate
+
+#======================================
+def choose_action(comlib, data, now_seconds, now):
+	"""
+	Pure helper: given a data snapshot and timestamp, return (action, msg).
+
+	Checks freshness first. When stale, returns ("disable", stale_msg) immediately
+	without touching _is_always_cheap, _compute_rates, or _decision.
+	When fresh, runs the normal always-cheap / rates / decision path.
+
+	Args:
+		comlib: ComedLib instance.
+		data (list): Pre-fetched raw JSON data snapshot.
+		now_seconds (float): Current time in seconds since epoch (for freshness check).
+		now (datetime.datetime): Current local datetime (for timestr in messages).
+
+	Returns:
+		tuple: (action_str, message_str)
+	"""
+	timestr = "%02d:%02d"%(now.hour, now.minute)
+	# Freshness gate: if price data is stale, disable all plugs (fail safe off)
+	if not comlib.isPriceDataFresh(data, now_seconds):
+		stale_msg = f"{timestr}: stale ComEd price, disable (fail safe off)"
+		return "disable", stale_msg
+
+	# Fresh path: check always-cheap threshold first
+	is_cheap, recent_rate = _is_always_cheap(comlib, data)
+	if is_cheap:
+		msg = "%s: charging +enabled ( recent %.2f | always cheap < 1.00 c/kWh )"%(timestr, recent_rate)
+		return "enable", msg
+
+	# Normal price-driven decision
+	current_rate, predict_rate, cutoff = _compute_rates(comlib, data)
+	action, msg = _decision(now, current_rate, predict_rate, cutoff)
+	return action, msg
 
 #======================================
 def _decision(now, current_rate, predict_rate, cutoff):
@@ -291,15 +336,12 @@ if __name__ == '__main__':
 			#print "good hour %d"%(hour)
 			pass
 
-		is_always_cheap, recent_rate = _is_always_cheap(comlib)
-		if is_always_cheap:
-			timestr = "%02d:%02d"%(now.hour, now.minute)
-			msg = "%s: charging +enabled ( recent %.2f | always cheap < 1.00 c/kWh )"%(timestr, recent_rate)
-			_apply_action(wemo_plugs, "enable", msg)
-			continue
+		# Fetch price data once per iteration; pass to all helpers for a consistent snapshot
+		data = comlib.downloadComedJsonData()
+		now_seconds = time.time()
 
-		current_rate, predict_rate, cutoff = _compute_rates(comlib)
-		action, msg = _decision(now, current_rate, predict_rate, cutoff)
+		# Delegate all freshness + decision logic to the pure helper
+		action, msg = choose_action(comlib, data, now_seconds, now)
 		_apply_action(wemo_plugs, action, msg)
 
 		if action == "disable_long":

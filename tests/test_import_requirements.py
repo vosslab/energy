@@ -11,7 +11,7 @@ FAST_ENV = "FAST_REPO_HYGIENE"
 SKIP_ENV = "SKIP_REPO_HYGIENE"
 CHECK_OPTIONAL_IMPORTS_ENV = "CHECK_OPTIONAL_IMPORTS"
 REPO_ROOT = git_file_utils.get_repo_root()
-SKIP_DIRS = {".git", ".venv", "__pycache__", "old_shell_folder"}
+SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
 REPORT_NAME = "report_import_requirements.txt"
 REQUIREMENT_FILES = (
 	"pip_requirements.txt",

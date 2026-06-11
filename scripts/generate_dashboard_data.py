@@ -64,10 +64,18 @@ def generate_comed_data() -> dict:
 	if comed_data is None:
 		raise RuntimeError("ComEd data download returned None")
 
+	# Check freshness before computing display rates
+	fresh = comlib.isPriceDataFresh(comed_data)
+
 	# Compute rates
 	median, std = comlib.getMedianComedRate(comed_data)
-	current_rate = comlib.getCurrentComedRateUnSafe(comed_data)
-	predicted_rate = comlib.getPredictedRate(comed_data)
+	# When the feed is stale, current and predicted rates are set to None (null in JSON)
+	if fresh:
+		current_rate = comlib.getCurrentComedRateUnSafe(comed_data)
+		predicted_rate = comlib.getPredictedRate(comed_data)
+	else:
+		current_rate = None
+		predicted_rate = None
 	cutoff_rate = comlib.getReasonableCutOff()
 
 	# Recent samples (newest first from API)
@@ -122,12 +130,17 @@ def generate_comed_data() -> dict:
 			"price": round(price, 2),
 		})
 
+	# Round rates only when fresh; stale rates are None (null in JSON)
+	current_rate_value = round(float(current_rate), 3) if current_rate is not None else None
+	predicted_rate_value = round(float(predicted_rate), 3) if predicted_rate is not None else None
+
 	result = {
 		"generated_at": datetime.datetime.now().isoformat(timespec='seconds'),
+		"stale": not fresh,
 		"median_rate": round(float(median), 3),
 		"median_std": round(float(std), 3),
-		"current_rate": round(float(current_rate), 3),
-		"predicted_rate": round(float(predicted_rate), 3),
+		"current_rate": current_rate_value,
+		"predicted_rate": predicted_rate_value,
 		"cutoff_rate": round(float(cutoff_rate), 3),
 		"recent_samples": recent_samples,
 		"previous_samples": previous_samples,
@@ -257,7 +270,9 @@ def main():
 		comed = generate_comed_data()
 		comed_path = os.path.join(args.output_dir, "comed.json")
 		write_json_atomic(comed_path, comed)
-		print(f"[{timestamp}] comed.json: OK (current={comed['current_rate']:.1f}c, median={comed['median_rate']:.1f}c)")
+		# Guard current_rate: it is None when the feed is stale (current_rate is set to None upstream)
+		rate_str = f"{comed['current_rate']:.1f}c" if comed['current_rate'] is not None else "stale"
+		print(f"[{timestamp}] comed.json: OK (current={rate_str}, median={comed['median_rate']:.1f}c)")
 	except Exception as e:
 		print(f"[{timestamp}] comed.json: FAILED - {e}")
 

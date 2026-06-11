@@ -2,9 +2,31 @@
 
 ## 2026-06-10
 
+### Additions and New Features
+
+- Add canonical `HYGIENE_SKIP_DIRS` frozenset to `tests/git_file_utils.py` containing `.git`, `.venv`, `__pycache__`, `legacy`, and `old_shell_folder`. All repo-wide hygiene lint tests (`test_pyflakes_code_lint.py`, `test_ascii_compliance.py`, `test_whitespace.py`, `test_import_dot.py`, `test_import_star.py`, `test_init_files.py`, `test_import_requirements.py`, `test_indentation.py`) now reference this constant instead of each maintaining their own local copy.
+- Reference `HYGIENE_SKIP_DIRS` from `tests/conftest.py` as `HYGIENE_SKIP_DIRS` so the skip-dirs set is visible to callers that inspect conftest.
+- `test_indentation.py` now uses a shared `path_has_skip_dir()` helper (using `SKIP_DIRS`) instead of an ad-hoc `startswith("old_shell_folder/")` check.
+
 ### Fixes and Maintenance
 
+- Port stale-price logic from generated `html/dashboard.js` into the TypeScript source `html/dashboard.ts` so the fix survives future builds: widen `ComedData.current_rate` and `predicted_rate` to `number | null`, add optional `stale?: boolean` field, update `colorPriceHtml` signature to `number | null | undefined` returning a gray `???` span when null, and add `priceStale` gate in `renderComed` guarding gas-equivalent display and the House Usage Status badge (`Unknown` when stale). Rebuilt via `scripts/build_dashboard.sh`; both `html/build/dashboard.js` and `html/dashboard.js` regenerated from source. `html/dashboard.js` is git-ignored (generated).
+
+- Fix `tests/test_comed_freshness.py`: replace three hardcoded `8.5` assertions with `therm.STALE_FALLBACK_PRICE_CENTS` so the test does not assert a tunable constant directly. Add `pytest.importorskip("yaml", "numpy", "requests")` guards before `import comed_price_display` so missing awtrix3 deps skip collection cleanly. Add `pytest.importorskip("pywemo")` at the top of `test_wemo_choose_action_disables_when_stale` so environments without pywemo skip the test rather than erroring. pyflakes clean; 11 tests pass.
+- Audit `awtrix3/comed_price_display.py`: remove leading blank line so shebang is on line 1; move `import colorsys` from PIP3 block to Standard Library block; move `from requests.auth import HTTPBasicAuth` in-function import to module-level as `import requests.auth` (used as `requests.auth.HTTPBasicAuth`); delete dead function `get_current_price()` (unreferenced, also contained non-ASCII cent sign). pyflakes clean; 11 tests pass.
+- Fix `getLastPriceTimestampSeconds` in `energylib/comedlib.py`: replace `item.get("millisUTC", 0)` with an explicit `"millisUTC" not in item` / `continue` guard so items missing the key are skipped rather than silently treated as epoch 0. All-missing data now returns `None`, causing `isPriceDataFresh` to return `False` (stale) as intended.
+- Add return type annotations `-> float | None` to `getLastPriceTimestampSeconds` and `getAgeOfLastPriceSeconds`, and `-> bool | None` to `isLastPriceFromCurrentHour` in `energylib/comedlib.py` for consistency with the newer `isPriceDataFresh` and `formatCliStatusLines` methods.
+- Fix TypeError in `scripts/generate_dashboard_data.py` log line: `comed['current_rate']` is intentionally None when the feed is stale, causing `:.1f` to raise TypeError inside the try/except, making the log print FAILED on every stale cycle. Guard with `rate_str = f"{comed['current_rate']:.1f}c" if comed['current_rate'] is not None else "stale"`.
 - Guard `readThermostatDefs()` in `energylib/ecobeelib.py` against an empty or fully commented-out `ecobee_defs.yml`. `yaml.safe_load` returns `None` in that case, which previously produced a cryptic `TypeError: 'NoneType' object is not subscriptable`. Now raises a clear `ValueError` naming the config file. Root cause of the field failure was `/etc/energy/ecobee_defs.yml` having all three lines commented out.
+- Fix ComEd stale-price reporting: the 5-minute price feed froze at 2:10pm and consumers reported the frozen price as current roughly 7 hours later. Root cause was that freshness was inferred per consumer (the awtrix3 display used a clock-minute check `minutes_past_hour <= 15`, while other consumers had no staleness guard at all).
+- Add a single freshness authority in `energylib/comedlib.py`: module constant `STALE_PRICE_SECONDS` (20 min), a strict-boolean `isPriceDataFresh(data, now_seconds)`, and `formatCliStatusLines()` so the CLI prints `???` / `Unknown` when the feed is stale. No getter return contracts changed.
+- Make the awtrix3 display age-first in `awtrix3/comed_price_display.py`: `compile_comed_price_data(data=None, now_seconds=None)` now checks `isPriceDataFresh` first and deletes the minute-only branch that showed stale data as a "previous hour" price. A stale feed shows `???`; a fresh prior-hour sample keeps the orange progress bar.
+- Show `???` / `Unknown` in display consumers when the feed is stale: `energylib/htmltools.py` (the `comed.html` status header) and `scripts/generate_dashboard_data.py` plus `html/dashboard.js`. The `api/comed.json` payload now emits `current_rate` and `predicted_rate` as null with `stale: true`, and the renderer shows `???` and `Unknown`.
+- Fail safe in control consumers when the feed is stale: `apps/wemoPlug-comed-multi.py` disables all plugs (fail safe off), and `apps/thermostat-comed.py` substitutes an app-local `STALE_FALLBACK_PRICE_CENTS = 8.5` and runs the normal price decision to conserve energy.
+
+### Developer Tests and Notes
+
+- Add `tests/test_comed_freshness.py` with deterministic coverage of `getAgeOfLastPriceSeconds` (newest-pick, ms-to-s conversion, missing `millisUTC` treated as stale), `isPriceDataFresh`, the awtrix3 gate (stale shows `???`; prior-hour shows the orange bar), the CLI helper, and the control-app stale behavior.
 
 ## 2026-04-06
 
@@ -124,7 +146,7 @@
 - Add WeMo connection diagnostics to the multi-plug controller.
 
 ## 2025-12-20
-- Add [docs/FILES.md](docs/FILES.md) with a per-file guide for the repo.
+- Add [FILES.md](FILES.md) with a per-file guide for the repo.
 - Move PECMAC125A tooling, SMBus logger, and miner scripts into `legacy/`.
 - Add `apps/`, `energylib/`, and `plots/` directories with compatibility wrappers.
 - Move usage plotting and usage readers into `legacy/`.
@@ -134,8 +156,8 @@
 - Remove compatibility wrappers and update imports to use `energylib` directly.
 - Update app and plot entrypoints to resolve `energylib` from the repo root.
 - Point `run_all_screens.sh` at the `apps/` entrypoints.
-- Add [pip_requirements.txt](pip_requirements.txt) and `Brewfile` for repo dependencies.
-- Comment out legacy-only Python dependencies in [pip_requirements.txt](pip_requirements.txt).
+- Add [pip_requirements.txt](../pip_requirements.txt) and `Brewfile` for repo dependencies.
+- Comment out legacy-only Python dependencies in [pip_requirements.txt](../pip_requirements.txt).
 - Add clarifying comments across the `awtrix3/` scripts.
 - Improve AWTRIX date spacing and add subtle weekday/month color accents.
 - Update AWTRIX weekday color palette to the provided day-specific colors.
@@ -146,7 +168,7 @@
 - Move legacy WeMo scripts to `legacy/`.
 - Add ComEd library comments and replace `sys.exit()` with exceptions.
 - Make ComEd cache writes atomic to prevent partial reads.
-- Fix regex escape warnings in [energylib/commonlib.py](energylib/commonlib.py).
+- Fix regex escape warnings in [energylib/commonlib.py](../energylib/commonlib.py).
 - Add commentary on the multi-plug WeMo decision logic.
-- Add [docs/wemoPlug-comed-multi.md](docs/wemoPlug-comed-multi.md) documenting the decision flow.
+- Add [wemoPlug-comed-multi.md](wemoPlug-comed-multi.md) documenting the decision flow.
 - Move documentation guides into `docs/`.

@@ -14,6 +14,38 @@ if REPO_ROOT not in sys.path:
 from energylib import comedlib
 from energylib import ecobeelib
 
+# Conservative high price assumed when the ComEd feed is stale.
+# Used only as a fallback; the normal cutoff logic then conserves energy.
+STALE_FALLBACK_PRICE_CENTS = 8.5
+
+#============================================
+def get_comed_rates(comlib, data, now_seconds):
+	"""
+	Return (current_rate, predict_rate, recent_rate) from a single data snapshot.
+
+	When the feed is stale, all three rates are set to STALE_FALLBACK_PRICE_CENTS
+	so the existing price-driven decision conserves energy through the cutoff logic.
+	When fresh, rates are fetched from the passed data snapshot.
+
+	Args:
+		comlib: ComedLib instance used to call rate getters and freshness check.
+		data (list): Raw JSON data snapshot from downloadComedJsonData().
+		now_seconds (float): Current time in seconds since epoch (from time.time()).
+
+	Returns:
+		tuple: (current_rate, predict_rate, recent_rate) as floats.
+	"""
+	if not comlib.isPriceDataFresh(data, now_seconds):
+		# Feed is stale; assume conservative high price to activate conservation path
+		print(f"stale ComEd price, assuming {STALE_FALLBACK_PRICE_CENTS}c")
+		fallback = STALE_FALLBACK_PRICE_CENTS
+		return fallback, fallback, fallback
+	# Feed is fresh; read all three rates from the same data snapshot
+	current_rate = comlib.getCurrentComedRate(data)
+	predict_rate = comlib.getPredictedRate(data)
+	recent_rate = comlib.getMostRecentRate(data)
+	return current_rate, predict_rate, recent_rate
+
 #============================================
 def parse_args():
 	"""
@@ -69,11 +101,16 @@ class ThermoStat(object):
 		#print(("Current Cool Setting: {0:.1f}F".format(self.coolsetting)))
 
 	def getRates(self):
-		self.current_rate = self.comlib.getCurrentComedRate()
-		self.median, self.std = self.comlib.getMedianComedRate()
+		# Fetch data once so freshness check and rate reads use the same snapshot
+		data = self.comlib.downloadComedJsonData()
+		now_seconds = time.time()
+		# Use the pure helper to get rates; substitutes fallback price when stale
+		self.current_rate, self.predict_rate, self.recent_rate = get_comed_rates(
+			self.comlib, data, now_seconds
+		)
+		# Median/cutoff are derived from the full dataset and not price-time-sensitive
+		self.median, self.std = self.comlib.getMedianComedRate(data)
 		self.cutoff = self.comlib.getReasonableCutOff()
-		self.predict_rate = self.comlib.getPredictedRate()
-		self.recent_rate = self.comlib.getMostRecentRate()
 
 	def showRates(self):
 		if self.current_rate is None:
@@ -148,6 +185,7 @@ class ThermoStat(object):
 		return adjustTemp
 
 	def turnOnEcobee(self):
+		now = datetime.datetime.now()
 		print("||Request: Turn ON air conditioner")
 		#adjust for humidity
 		adjustTemp = self.getHumidAdjustedCoolTemp()

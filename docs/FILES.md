@@ -29,7 +29,7 @@ High-level purpose of each file and folder in this repo.
   end time.
 - [../apps/thermostat-comed.py](../apps/thermostat-comed.py) adjusts Ecobee cooling based
   on ComEd prices and humidity.
-- [../apps/wemoPlug-comed-old2.py](../apps/wemoPlug-comed-old2.py) WeMo controller using
+- [legacy/wemoPlug-comed-old2.py](../legacy/wemoPlug-comed-old2.py) WeMo controller using
   updated `pywemo` calls.
 - [../apps/wemoPlug-comed-multi.py](../apps/wemoPlug-comed-multi.py) multi-plug WeMo
   controller using the old2 pricing logic.
@@ -83,6 +83,15 @@ High-level purpose of each file and folder in this repo.
 - [../html/house.py](../html/house.py) CGI page combining solar, usage, Ecobee, and ComEd
   data.
 - [../html/test.py](../html/test.py) legacy CGI test script.
+
+## Scripts directory
+- [../scripts/generate_dashboard_data.py](../scripts/generate_dashboard_data.py) downloads ComEd
+  data and writes `api/comed.json` and `comed.html` on a schedule, flagging stale feeds with null
+  rates.
+- [../scripts/build_dashboard.sh](../scripts/build_dashboard.sh) compiles
+  [../html/dashboard.ts](../html/dashboard.ts) to JavaScript via `npx tsc`.
+- [../scripts/deploy_dashboard.sh](../scripts/deploy_dashboard.sh) deploys the built dashboard
+  assets.
 
 ## Legacy lib_oled96 directory
 - [../legacy/lib_oled96/lib_oled96.py](../legacy/lib_oled96/lib_oled96.py) I2C OLED driver

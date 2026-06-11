@@ -6,6 +6,26 @@ import pytest
 import git_file_utils
 
 REPO_ROOT = pathlib.Path(git_file_utils.get_repo_root())
+# Use the canonical skip-dirs set from git_file_utils.
+SKIP_DIRS = git_file_utils.HYGIENE_SKIP_DIRS
+
+
+#============================================
+def path_has_skip_dir(rel_path: str) -> bool:
+	"""
+	Check whether a relative path includes a skipped directory segment.
+
+	Args:
+		rel_path: Path relative to the repo root.
+
+	Returns:
+		bool: True when any path segment matches a skip-dir entry.
+	"""
+	parts = pathlib.PurePosixPath(rel_path).parts
+	for part in parts:
+		if part in SKIP_DIRS:
+			return True
+	return False
 
 
 #============================================
@@ -22,7 +42,7 @@ def list_tracked_python_files() -> list[pathlib.Path]:
 		patterns=["*.py"],
 		error_message="Failed to list tracked Python files.",
 	):
-		if line.startswith("old_shell_folder/"):
+		if path_has_skip_dir(line):
 			continue
 		path = REPO_ROOT / line
 		if not path.exists():

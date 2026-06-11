@@ -7,11 +7,12 @@
 - [../awtrix3/](../awtrix3/): AWTRIX 3 tile scripts, configs, and authoring docs.
 - [../battery_arbitrage/](../battery_arbitrage/): BLE battery reader and arbitrage scaffolding.
 - [../devel/](../devel/): Developer helpers (for example, changelog tooling).
-- [../docs/](../docs/): Repository documentation.
+- [docs/](.): Repository documentation.
 - [../energylib/](../energylib/): Shared Python modules for pricing, device APIs, and helpers.
 - [../html/](../html/): CGI scripts for local dashboards.
 - [../legacy/](../legacy/): Historical scripts retained for reference.
 - [../plots/](../plots/): Pricing plot utilities.
+- [../scripts/](../scripts/): Dashboard data generation, build, and deploy scripts.
 - [../tests/](../tests/): Lint and ASCII compliance helpers.
 - [../Brewfile](../Brewfile): Homebrew dependency manifest.
 - [../pip_requirements.txt](../pip_requirements.txt): Python dependency manifest.
@@ -24,9 +25,9 @@
 - [../awtrix3/](../awtrix3/): Tile generators such as
   [../awtrix3/display_date.py](../awtrix3/display_date.py), sender
   [../awtrix3/send_price.py](../awtrix3/send_price.py), and YAML configs
-  [../awtrix3/api.yml](../awtrix3/api.yml),
+  `awtrix3/api.yml`,
   [../awtrix3/sports_teams.yaml](../awtrix3/sports_teams.yaml), and
-  [../awtrix3/garmin_login.yml](../awtrix3/garmin_login.yml).
+  `awtrix3/garmin_login.yml`.
 - [../battery_arbitrage/](../battery_arbitrage/): BLE reader
   [../battery_arbitrage/battery_info.py](../battery_arbitrage/battery_info.py) and
   arbitrage entry point
@@ -41,8 +42,8 @@
 
 ## Generated artifacts
 - [../.gitignore](../.gitignore) excludes logs, CSV outputs, YAML configs, and temporary
-  artifacts such as [../ascii_compliance.txt](../ascii_compliance.txt) and
-  [../pyflakes.txt](../pyflakes.txt).
+  artifacts such as `ascii_compliance.txt` and
+  `pyflakes.txt`.
 - Runtime outputs such as `*.csv` logs and cache files are expected to be generated
   outside the repo or ignored by git.
 
@@ -58,6 +59,6 @@
 - New shared Python logic: [../energylib/](../energylib/).
 - New device automation scripts: [../apps/](../apps/).
 - New AWTRIX tiles or integrations: [../awtrix3/](../awtrix3/).
-- New dashboards: [../html/](../html/) or [../plots/](../plots/).
-- New documentation: [../docs/](../docs/) using ALL CAPS filenames.
+- New dashboards: [../html/](../html/), [../plots/](../plots/), or [../scripts/](../scripts/).
+- New documentation: [docs/](.) using ALL CAPS filenames.
 - New tests or lint helpers: [../tests/](../tests/).
