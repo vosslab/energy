@@ -25,6 +25,12 @@
   script meets the source line limit without changing its layouts or CLI.
 - Remove stale documentation links and the unused `bluepy` dependency after battery arbitrage
   was removed in favor of its separate repository.
+- Refresh [CODE_ARCHITECTURE.md](CODE_ARCHITECTURE.md) and [FILE_STRUCTURE.md](FILE_STRUCTURE.md)
+  from current entry points, manifests, launchers, and build scripts. Document the sports module
+  split, dashboard JSON/build/deploy flow, disabled sports delivery in the main AWTRIX sender,
+  runtime outputs, updated test gates, and deployment checks that still need live verification.
+- Verify the fixes on Debian Python 3.11.2: the full test suite passes with 1,283 tests passed,
+  six skipped hardware-dependent modules, and one existing AWTRIX guide line-limit warning.
 
 ## 2026-06-10
 

@@ -6,7 +6,7 @@ High-level purpose of each file and folder in this repo.
 - [../AGENTS.md](../AGENTS.md) describes local instructions for contributors.
 - [../README.md](../README.md) summarizes the repo purpose and quick start.
 - [CHANGELOG.md](CHANGELOG.md) tracks notable repo changes.
-- [../LICENSE](../LICENSE) defines the project license.
+- [../LICENSE.GPL-3.0](../LICENSE.GPL-3.0) defines the project license.
 - [CODE_ARCHITECTURE.md](CODE_ARCHITECTURE.md) summarizes components and data flow.
 - [FILE_STRUCTURE.md](FILE_STRUCTURE.md) documents the repo layout and conventions.
 - [INSTALL.md](INSTALL.md) lists dependency manifests and requirements.
