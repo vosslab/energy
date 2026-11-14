@@ -7,14 +7,14 @@ maintained in the energy repo.
 ## Current diff (battery-control vs energy)
 
 Only difference is the cache file initialization:
-- **energy**: has `os.chmod(self.cache_file, 0o666)` with PermissionError catch
+- **energy**: has `os.chmod(self.cache_file, 0o600)` with PermissionError catch
 - **battery-control**: simplified to just create the file, plus `# nosec B108`
 
-The chmod is useful for multi-user systems. The nosec comment suppresses
-bandit security warnings about the hardcoded /tmp path.
+The chmod restricts newly initialized cache files to their owner. The nosec
+comment suppresses bandit warnings about the hardcoded /tmp path.
 
-**Recommended**: merge both -- keep the chmod with PermissionError catch
-AND the nosec comment.
+Keep the owner-only permissions and PermissionError catch when syncing copies.
+Do not restore the former world-writable `0o666` permissions.
 
 ## Bugs fixed in battery-control copy (ported upstream 2026-04-06)
 

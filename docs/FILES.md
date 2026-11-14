@@ -67,14 +67,6 @@ High-level purpose of each file and folder in this repo.
 - [../awtrix3/sun_location.py](../awtrix3/sun_location.py) estimates sunrise/sunset and
   daylight percentage.
 
-## Battery arbitrage directory
-- [../battery_arbitrage/battery_info.py](../battery_arbitrage/battery_info.py) reads
-  Ecoworthy battery data over BLE.
-- [../battery_arbitrage/main_arbitrage.py](../battery_arbitrage/main_arbitrage.py) decides
-  charge or discharge from pricing.
-- [../battery_arbitrage/test_code.py](../battery_arbitrage/test_code.py) exercises BLE
-  battery queries for debugging.
-
 ## HTML directory
 - [../html/comed.py](../html/comed.py) CGI page showing ComEd pricing and links.
 - [../html/fullhouse.py](../html/fullhouse.py) CGI page with solar, usage, and price plot.

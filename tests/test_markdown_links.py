@@ -1,15 +1,30 @@
+# This file is vendored. Local changes can and will be overwritten by propagation.
+
+# Standard Library
 import os
 import re
+import stat
+import time
 import random
+import unittest.mock
 
-import git_file_utils
+# PIP3 modules
+import pytest
 
-REPO_ROOT = git_file_utils.get_repo_root()
-REPORT_NAME = "report_markdown_links.txt"
+# local repo modules
+import file_utils
+
+REPO_ROOT = file_utils.get_repo_root()
+REPORT_NAME = file_utils.report_name(__file__)
 ERROR_SAMPLE_COUNT = 5
+RECENT_UNTRACKED_MAX_AGE_SECONDS = 86_400
+
+HEADER = "Markdown link errors detected:"
 
 # Inline link and image: optional leading !, [text](url), url ends at ) or space.
 LINK_RE = re.compile(r"!?\[([^\]]*)\]\(\s*([^)\s]+)[^)]*\)")
+REFERENCE_DEFINITION_RE = re.compile(r"^\s*\[([^\]^]+)\]:\s*<?([^\s>]+)>?")
+REFERENCE_LINK_RE = re.compile(r"!?\[([^\]]+)\]\[([^\]]*)\]")
 # Inline code span, used to mask out example links inside backticks.
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 # Windows absolute path: drive letter then slash or backslash.
@@ -22,6 +37,50 @@ SCHEME_RE = re.compile(r"^([a-z][a-z0-9+.\-]+):", re.IGNORECASE)
 # Leading-slash links whose first segment is one of these are filesystem
 # paths, not repo-root-relative GitHub links.
 SYSTEM_ROOTS = {"home", "Users", "root", "private", "tmp", "var"}
+
+# Module-level dict of repo-relative POSIX key -> list of violation lines.
+# Populated by the autouse collect_report fixture before any test runs.
+VIOLATIONS_BY_FILE: dict[str, list[str]] = {}
+
+
+#============================================
+def creation_timestamp(file_stat: os.stat_result) -> float:
+	"""
+	Return a file's creation timestamp with a portable fallback.
+
+	macOS exposes st_birthtime. Platforms without it use st_ctime, which is the
+	closest portable metadata timestamp available from os.stat.
+	"""
+	birthtime = getattr(file_stat, "st_birthtime", None)
+	if isinstance(birthtime, (int, float)):
+		return birthtime
+	return file_stat.st_ctime
+
+
+#============================================
+def is_recent_regular_file(file_stat: os.stat_result, now: float) -> bool:
+	"""Return whether a regular file is younger than the 24-hour allowance."""
+	if not stat.S_ISREG(file_stat.st_mode):
+		return False
+	age = now - creation_timestamp(file_stat)
+	is_recent = 0 <= age < RECENT_UNTRACKED_MAX_AGE_SECONDS
+	return is_recent
+
+
+#============================================
+def recent_untracked_paths(repo_root: str, now: float) -> set[str]:
+	"""Return nonignored untracked regular files inside the repo younger than 24 hours."""
+	repo_root_abs = os.path.abspath(repo_root)
+	recent_paths = set()
+	for rel_path in file_utils.list_untracked_files(repo_root_abs):
+		candidate = os.path.abspath(os.path.join(repo_root_abs, rel_path))
+		# ASVS 5.3.2: validate every Git-reported path remains beneath the repo.
+		if os.path.commonpath((repo_root_abs, candidate)) != repo_root_abs:
+			continue
+		file_stat = os.stat(candidate, follow_symlinks=False)
+		if is_recent_regular_file(file_stat, now):
+			recent_paths.add(to_posix(os.path.relpath(candidate, repo_root_abs)))
+	return recent_paths
 
 
 #============================================
@@ -83,6 +142,36 @@ def parse_links(masked_line: str) -> list[tuple[str, str]]:
 		link_text = match.group(1)
 		url = match.group(2).strip()
 		links.append((link_text, url))
+	return links
+
+
+#============================================
+def document_links(text: str) -> list[tuple[int, str, str]]:
+	"""Collect inline and defined reference links outside code regions.
+
+	Both Markdown and Djot support explicit and empty reference labels.
+	Definitions are checked even when unused; missing-label syntax remains the
+	parser's responsibility. This lightweight check is not a renderer.
+	"""
+	lines = strip_code_regions(text)
+	definitions = {}
+	links = []
+	for line_number, line in lines:
+		match = REFERENCE_DEFINITION_RE.match(line)
+		if match:
+			label, url = match.groups()
+			definitions[' '.join(label.split()).casefold()] = url
+			links.append((line_number, '', url))
+	for line_number, line in lines:
+		if REFERENCE_DEFINITION_RE.match(line):
+			continue
+		for label, url in parse_links(line):
+			links.append((line_number, label, url))
+		for match in REFERENCE_LINK_RE.finditer(line):
+			label, reference = match.groups()
+			key = ' '.join((reference or label).split()).casefold()
+			if key in definitions:
+				links.append((line_number, label, definitions[key]))
 	return links
 
 
@@ -209,7 +298,7 @@ def check_path_like_text(
 	# Allow one optional layer of backticks around the visible text.
 	if len(text) > 1 and text.startswith("`") and text.endswith("`"):
 		text = text[1:-1]
-	if ".md" not in text and "/" not in text:
+	if ".md" not in text and ".djot" not in text and "/" not in text:
 		return ""
 	# Normalize trailing slashes so [tests/] vs target `tests` compares equal.
 	text_norm = text.rstrip("/")
@@ -230,6 +319,7 @@ def check_local_link(
 	file_dir: str,
 	tracked_set: set,
 	tracked_dirs: set,
+	recent_untracked_set: set,
 	link_text: str,
 	url: str,
 ) -> str:
@@ -254,17 +344,22 @@ def check_local_link(
 	target = resolve_target(repo_root, file_dir, url_no_anchor)
 	rel_from_root = os.path.relpath(target, repo_root)
 
-	# Repo containment: the target must live inside REPO_ROOT.
+	# ASVS 5.3.2: document-provided paths must remain inside REPO_ROOT.
 	if rel_from_root == ".." or rel_from_root.startswith(".." + os.sep):
 		return (
 			f"local link [{link_text}]({url}) escapes repository "
 			f"and will not work on GitHub"
 		)
 
-	# Existence: the target must be a tracked file or a tracked directory
-	# (GitHub renders dir links as a directory listing). Untracked files 404.
+	# Existence: tracked files/directories are durable. A nonignored untracked
+	# regular file receives a 24-hour working-tree allowance so newly authored
+	# documentation can link together before the human stages it.
 	rel_posix = to_posix(rel_from_root)
-	if rel_posix not in tracked_set and rel_posix not in tracked_dirs:
+	if (
+		rel_posix not in tracked_set
+		and rel_posix not in tracked_dirs
+		and rel_posix not in recent_untracked_set
+	):
 		return f"local link [{link_text}]({url}) target not found: {rel_posix}"
 
 	# Redundant traversal: the URL uses ".." but a ..-free path exists.
@@ -303,6 +398,7 @@ def scan_file(
 	repo_root: str,
 	tracked_set: set,
 	tracked_dirs: set,
+	recent_untracked_set: set,
 	md_path: str,
 ) -> list[str]:
 	"""
@@ -312,6 +408,7 @@ def scan_file(
 		repo_root: Absolute path to the repository root.
 		tracked_set: Set of tracked repo-relative paths.
 		tracked_dirs: Set of tracked-directory repo-relative paths.
+		recent_untracked_set: Set of recently created untracked repo-relative paths.
 		md_path: Repo-relative path to the markdown file.
 
 	Returns:
@@ -323,50 +420,30 @@ def scan_file(
 		text = handle.read()
 
 	issues = []
-	for line_number, masked_line in strip_code_regions(text):
-		for link_text, url in parse_links(masked_line):
-			if classify_url(url) != "local":
-				continue
-			message = check_local_link(
-				repo_root,
-				file_dir,
-				tracked_set,
-				tracked_dirs,
-				link_text,
-				url,
-			)
-			if message:
-				issues.append(f"{md_path}:{line_number}: {message}")
+	for line_number, link_text, url in document_links(text):
+		if classify_url(url) != "local":
+			continue
+		message = check_local_link(
+			repo_root, file_dir, tracked_set, tracked_dirs,
+			recent_untracked_set, link_text, url,
+		)
+		if message:
+			issues.append(f"{md_path}:{line_number}: {message}")
 	return issues
 
 
 #============================================
-def gather_all(repo_root: str) -> list[str]:
+def print_issue_samples(all_issues: list[str]) -> None:
 	"""
-	List all tracked markdown files.
-	"""
-	return git_file_utils.list_tracked_files(repo_root, ["*.md"])
+	Print diagnostic samples of link issues to stdout.
 
+	Prints the first, a random selection, and the last few issues, plus a
+	per-file issue count summary. Used for human-readable console output when
+	violations are found; does not write any files.
 
-#============================================
-def gather_changed(repo_root: str) -> list[str]:
+	Args:
+		all_issues: List of "path:line: message" issue strings.
 	"""
-	List changed markdown files.
-	"""
-	changed = git_file_utils.list_changed_files(repo_root)
-	return [path for path in changed if path.endswith(".md")]
-
-
-#============================================
-def report_issues(all_issues: list[str]) -> None:
-	"""
-	Write the report file and print samples, then fail.
-	"""
-	report_path = os.path.join(REPO_ROOT, REPORT_NAME)
-	with open(report_path, "w", encoding="utf-8") as handle:
-		for line in all_issues:
-			handle.write(f"{line}\n")
-
 	print("")
 	print(f"First {ERROR_SAMPLE_COUNT} errors")
 	for line in all_issues[:ERROR_SAMPLE_COUNT]:
@@ -387,7 +464,7 @@ def report_issues(all_issues: list[str]) -> None:
 	print("-------------------------")
 
 	# Count issues per file for a quick overview.
-	file_counts = {}
+	file_counts: dict[str, int] = {}
 	for line in all_issues:
 		file_path = line.split(":", 1)[0]
 		file_counts[file_path] = file_counts.get(file_path, 0) + 1
@@ -400,35 +477,157 @@ def report_issues(all_issues: list[str]) -> None:
 		f"Found {len(all_issues)} markdown link errors written to "
 		f"REPO_ROOT/{REPORT_NAME}"
 	)
-	raise AssertionError("Markdown link errors detected.")
 
 
 #============================================
-def test_markdown_links() -> None:
+def collect_violations(
+	files: list[str],
+	recent_untracked_set: set[str],
+) -> dict[str, list[str]]:
 	"""
-	Check every local markdown link is GitHub-browsable and well formed.
+	Scan every markdown file and distribute issues into a violations dict.
+
+	Builds tracked_set and tracked_dirs once from git, then scans each file.
+	Each markdown file's issues are keyed by its repo-relative POSIX path.
+	Files with no issues are omitted. Uses a closure approach: tracked_set
+	and tracked_dirs are whole-repo context computed once here, then passed
+	into scan_file for each file. all_issues is preserved flat for
+	print_issue_samples; per-file distribution is a dict comprehension.
+
+	Args:
+		files: Absolute paths to markdown files to scan.
+		recent_untracked_set: Set of recently created untracked repo-relative paths.
+
+	Returns:
+		dict[str, list[str]]: Repo-relative POSIX key -> list of issue strings.
 	"""
-	files = git_file_utils.collect_files(REPO_ROOT, gather_all, gather_changed)
+	# Convert absolute paths to repo-relative POSIX strings for scan_file.
+	rel_files = sorted(to_posix(os.path.relpath(abs_path, REPO_ROOT)) for abs_path in files)
 
-	# Delete any stale report before running.
-	report_path = os.path.join(REPO_ROOT, REPORT_NAME)
-	if os.path.exists(report_path):
-		os.remove(report_path)
-
-	if not files:
-		print("No files matched the requested scope.")
-		print("No errors found!!!")
-		return
-
-	tracked_set = set(git_file_utils.list_tracked_files(REPO_ROOT))
+	# Build whole-repo context once -- never per file.
+	tracked_set = set(file_utils.list_tracked_files(REPO_ROOT))
 	tracked_dirs = build_tracked_dirs(tracked_set)
 
-	all_issues = []
-	for md_path in sorted(files):
-		all_issues.extend(scan_file(REPO_ROOT, tracked_set, tracked_dirs, md_path))
+	violations: dict[str, list[str]] = {}
+	all_issues: list[str] = []
+	for md_path in rel_files:
+		issues = scan_file(
+			REPO_ROOT, tracked_set, tracked_dirs, recent_untracked_set, md_path,
+		)
+		all_issues.extend(issues)
+		if issues:
+			violations[md_path] = issues
 
-	if not all_issues:
-		print("No errors found!!!")
-		return
+	if all_issues:
+		print_issue_samples(all_issues)
 
-	report_issues(all_issues)
+	return violations
+
+
+#============================================
+# Compute one timestamp for both source and target classification in this run.
+# Tests inject their own fixed value into is_recent_regular_file().
+SCAN_NOW = time.time()
+RECENT_UNTRACKED_PATHS = recent_untracked_paths(REPO_ROOT, SCAN_NOW)
+TRACKED_MARKDOWN_FILES = file_utils.discover_files(
+	extensions=(".md",), test_key="markdown_links",
+)
+RECENT_MARKDOWN_FILES = [
+	os.path.join(REPO_ROOT, path)
+	for path in RECENT_UNTRACKED_PATHS
+	if os.path.splitext(path)[1].lower() == ".md"
+]
+FILES = sorted(set(TRACKED_MARKDOWN_FILES + RECENT_MARKDOWN_FILES))
+
+
+#============================================
+def test_recent_untracked_age_boundary_uses_fixed_time() -> None:
+	"""A file just under 24 hours is recent; exactly 24 hours old is not."""
+	now = 1_000_000.0
+	recent_stat = unittest.mock.Mock(
+		st_mode=stat.S_IFREG | 0o644,
+		st_birthtime=now - RECENT_UNTRACKED_MAX_AGE_SECONDS + 1,
+		st_ctime=now,
+	)
+	old_stat = unittest.mock.Mock(
+		st_mode=stat.S_IFREG | 0o644,
+		st_birthtime=now - RECENT_UNTRACKED_MAX_AGE_SECONDS,
+		st_ctime=now,
+	)
+	assert is_recent_regular_file(recent_stat, now) is True
+	assert is_recent_regular_file(old_stat, now) is False
+
+
+#============================================
+def test_recent_untracked_age_falls_back_to_ctime() -> None:
+	"""Platforms without birth time classify against ctime."""
+	now = 1_000_000.0
+	file_stat = os.stat_result((stat.S_IFREG | 0o644,) + (0,) * 8 + (now - 1,))
+	assert is_recent_regular_file(file_stat, now) is True
+
+
+#============================================
+def test_recent_untracked_target_is_available_but_ignored_target_is_not() -> None:
+	"""Only candidates admitted by nonignored discovery can satisfy a local link."""
+	repo_root = "/repo"
+	file_dir = "/repo/docs"
+	allowed = check_local_link(
+		repo_root, file_dir, set(), set(), {"docs/draft.md"}, "draft", "draft.md",
+	)
+	ignored = check_local_link(
+		repo_root, file_dir, set(), set(), set(), "ignored", "ignored.md",
+	)
+	assert allowed == ""
+	assert "target not found: docs/ignored.md" in ignored
+
+
+#============================================
+def test_untracked_discovery_applies_standard_ignores(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	"""The Git candidate query excludes ignored files without staging them."""
+	commands = []
+
+	def record_git(_root: str, command: list[str], _message: str) -> str:
+		commands.append(command)
+		return "docs/draft.md\0"
+
+	monkeypatch.setattr(file_utils, "_run_git", record_git)
+	paths = file_utils.list_untracked_files("/repo")
+	assert paths == ["docs/draft.md"]
+	assert commands == [["git", "ls-files", "--others", "--exclude-standard", "-z"]]
+
+
+#============================================
+@pytest.fixture(scope="module", autouse=True)
+def collect_report() -> None:
+	"""
+	Autouse fixture: clear stale reports, populate VIOLATIONS_BY_FILE, write report.
+
+	Runs the guarded once-per-process cleanup first, rebuilds the module-level
+	violations dict by scanning all markdown files (tracked_set and tracked_dirs
+	are built once in collect_violations), then writes the report only when there
+	are violations. Cleanup owns removal of clean-run reports, so a clean module
+	writes nothing.
+	"""
+	# Once-per-process guarded cleanup of repo-root report_*.txt (no-op after first call).
+	file_utils.clear_stale_reports()
+	# Clear any state left from a previous collection in the same process.
+	VIOLATIONS_BY_FILE.clear()
+	VIOLATIONS_BY_FILE.update(collect_violations(FILES, RECENT_UNTRACKED_PATHS))
+	lines = file_utils.format_violation_report(HEADER, VIOLATIONS_BY_FILE)
+	# Write only when there are violations; cleanup already removed stale reports.
+	if lines:
+		file_utils.write_report_lines(REPORT_NAME, lines)
+
+
+#============================================
+@pytest.mark.parametrize("path", FILES, ids=file_utils.rel_id)
+def test_markdown_links(path: str) -> None:
+	"""Check every local markdown link is GitHub-browsable and well formed."""
+	rel = to_posix(os.path.relpath(path, REPO_ROOT))
+	# Python evaluates an assert's message expression ONLY when the assert fails,
+	# so format_violation_assert_message runs on the failing path only -- not per pass.
+	assert rel not in VIOLATIONS_BY_FILE, file_utils.format_violation_assert_message(
+		rel, VIOLATIONS_BY_FILE.get(rel, []), REPORT_NAME
+	)

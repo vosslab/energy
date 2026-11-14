@@ -1,0 +1,358 @@
+# This file is vendored. Local changes can and will be overwritten by propagation.
+
+"""Enforce a maintainable line-count limit for tracked source files."""
+
+# Standard Library
+import os
+import pathlib
+import warnings
+
+# PIP3 modules
+import pytest
+
+# local repo modules
+import file_utils
+
+
+LINE_LIMIT = 1000
+WARNING_MINIMUM = 900
+OVERRIDE_LIST = "tests/source_file_line_limit_overrides.txt"
+
+# Authored code, templates, queries, and documentation. Generic text/data,
+# generated artifacts, configuration, notebooks, and binary formats stay out.
+SOURCE_EXTENSIONS = frozenset({
+	".ac", ".adoc", ".am", ".asm", ".asciidoc",
+	".bash", ".bat", ".bnf",
+	".c", ".cc", ".cgi", ".cjs", ".clj", ".cljs", ".cljc", ".cmake",
+	".cmd", ".coffee", ".cpp", ".cs", ".css", ".cts", ".cxx",
+	".dart", ".dockerfile",
+	".el", ".ep", ".erl", ".ex", ".exs",
+	".f", ".f03", ".f08", ".f90", ".f95", ".fish", ".fs", ".fsx",
+	".go", ".gradle", ".groovy",
+	".h", ".hpp", ".hrl", ".hs", ".htm", ".html", ".hxx",
+	".i", ".inc",
+	".java", ".jl", ".js", ".jst", ".jsx",
+	".kt", ".kts",
+	".less", ".lhs", ".lisp", ".lua",
+	".m", ".markdown", ".maxima", ".md", ".mjs", ".ml", ".mli", ".mm", ".mts",
+	".nim", ".nix",
+	".pas", ".pg", ".pgml", ".php", ".pl", ".pm", ".pod", ".proto", ".ps1", ".py",
+	".qmd", ".qml",
+	".r", ".rb", ".rkt", ".rmd", ".rs", ".rst",
+	".sass", ".scala", ".scm", ".scss", ".sh", ".sol", ".sql", ".svelte", ".swift",
+	".t", ".tcl", ".tcss", ".tex", ".tf", ".ts", ".tsx",
+	".v", ".vb", ".vhd", ".vhdl", ".vue",
+	".zig", ".zsh",
+})
+
+# Common source/build filenames without a useful source extension.
+SOURCE_FILENAMES = frozenset({
+	"brewfile",
+	"cmakelists.txt",
+	"dockerfile",
+	"gemfile",
+	"jenkinsfile",
+	"justfile",
+	"makefile",
+	"meson.build",
+	"pkgbuild",
+	"rakefile",
+	"sconscript",
+	"sconstruct",
+	"vagrantfile",
+})
+
+# Planning and archived Markdown are working/history records rather than
+# maintained source modules. Match the directory pair anywhere in a tracked
+# path so this template's meta/docs tree follows the same shipped policy.
+EXCLUDED_MARKDOWN_TREES = frozenset({
+	("docs", "active_plans"),
+	("docs", "archive"),
+})
+
+REPORT_NAME = file_utils.report_name(__file__)
+WARNING_REPORT_NAME = REPORT_NAME.replace(".txt", "_warnings.txt")
+HEADER = "Source file line-limit violations:"
+WARNING_HEADER = "Source files approaching the line limit:"
+VIOLATIONS_BY_FILE: dict[str, list[str]] = {}
+WARNINGS_BY_FILE: dict[str, list[str]] = {}
+
+
+#============================================
+def load_override_paths(repo_root: str | None = None) -> frozenset[str]:
+	"""
+	Load manager-approved exact paths that are outside the line-limit policy.
+
+	The optional list contains one repo-relative POSIX path per non-comment
+	line. Missing files are normal because most repos need no overrides.
+
+	Args:
+		repo_root: Repository root. Defaults to the active Git repository root.
+
+	Returns:
+		frozenset[str]: Exact repo-relative paths approved for exclusion.
+	"""
+	if repo_root is None:
+		repo_root = file_utils.get_repo_root()
+	list_path = os.path.join(repo_root, OVERRIDE_LIST)
+	if not os.path.isfile(list_path):
+		return frozenset()
+	overrides = set()
+	with open(list_path, "r", encoding="utf-8") as handle:
+		for line_number, raw_line in enumerate(handle, start=1):
+			entry = raw_line.strip()
+			if not entry or entry.startswith("#"):
+				continue
+			parts = entry.split("/")
+			invalid = entry.startswith("/") or "\\" in entry or ".." in parts
+			invalid = invalid or any(character in entry for character in "*?[]")
+			if invalid:
+				raise ValueError(
+					f"{OVERRIDE_LIST}:{line_number}: expected an exact repo-relative POSIX path"
+				)
+			overrides.add(entry)
+	result = frozenset(overrides)
+	return result
+
+
+OVERRIDE_PATHS = load_override_paths()
+
+
+#============================================
+def is_excluded_markdown_tree(rel: str) -> bool:
+	"""Return whether Markdown lives below a planning or archive docs tree."""
+	path = pathlib.PurePosixPath(rel)
+	if path.suffix.lower() != ".md":
+		return False
+	parts = path.parts
+	for index in range(len(parts) - 1):
+		directory_pair = (parts[index], parts[index + 1])
+		if directory_pair in EXCLUDED_MARKDOWN_TREES:
+			return True
+	return False
+
+
+#============================================
+def is_source_file(
+	rel: str,
+	override_paths: frozenset[str] | None = None,
+) -> bool:
+	"""
+	Select authored source files by extension or conventional filename.
+
+	Args:
+		rel: Repo-relative POSIX path.
+		override_paths: Exact manager-approved paths. Defaults to the active
+			repository's optional override list.
+
+	Returns:
+		bool: True when the path is an authored source file covered by the gate.
+	"""
+	if override_paths is None:
+		override_paths = OVERRIDE_PATHS
+	basename = os.path.basename(rel).lower()
+	extension = os.path.splitext(basename)[1]
+	is_source = basename in SOURCE_FILENAMES or extension in SOURCE_EXTENSIONS
+	if rel in override_paths or is_excluded_markdown_tree(rel):
+		return False
+	return is_source
+
+
+FILES = file_utils.discover_files(
+	extra_filter=is_source_file,
+	test_key="source_file_line_limit",
+)
+
+
+#============================================
+def count_file_lines(path: str) -> int:
+	"""
+	Count physical lines without decoding the source file.
+
+	Args:
+		path: Absolute path to a source file.
+
+	Returns:
+		int: Physical line count, including a final line without a newline.
+	"""
+	with open(path, "rb") as handle:
+		line_count = sum(1 for _line in handle)
+	return line_count
+
+
+#============================================
+def violations_for_line_count(rel: str, line_count: int) -> list[str]:
+	"""
+	Return a violation when a source file reaches the exclusive limit.
+
+	Args:
+		rel: Repo-relative POSIX path used in the violation message.
+		line_count: Physical line count for the file.
+
+	Returns:
+		list[str]: One violation at 1000 or more lines, otherwise an empty list.
+	"""
+	if line_count < LINE_LIMIT:
+		return []
+	message = (
+		f"{rel}: {line_count} lines. Split this file into cohesive modules by responsibility; "
+		"trimming to 999 lines defers the problem to the next edit."
+	)
+	return [message]
+
+
+#============================================
+def is_rotation_managed(rel: str) -> bool:
+	"""Return whether the changelog rotation policy manages this Markdown file."""
+	path = pathlib.PurePosixPath(rel)
+	if not path.parts or path.parts[0] != "docs":
+		return False
+	name = path.name
+	return name == "CHANGELOG.md" or (name.startswith("CHANGELOG-") and name.endswith(".md"))
+
+
+#============================================
+def warnings_for_line_count(rel: str, line_count: int) -> list[str]:
+	"""Return one advisory for a source file in the 900-999 line band."""
+	if line_count < WARNING_MINIMUM or line_count >= LINE_LIMIT or is_rotation_managed(rel):
+		return []
+	remaining = LINE_LIMIT - line_count
+	message = (
+		f"{rel}: {line_count} lines, within {remaining} of the {LINE_LIMIT}-line limit. "
+		"Plan a cohesive split now."
+	)
+	return [message]
+
+
+#============================================
+def check_file(rel: str) -> list[str]:
+	"""
+	Check one source file against the exclusive line limit.
+
+	Args:
+		rel: Repo-relative POSIX path to check.
+
+	Returns:
+		list[str]: One formatted violation when the file is too long, otherwise empty.
+	"""
+	abs_path = os.path.join(file_utils.get_repo_root(), rel)
+	line_count = count_file_lines(abs_path)
+	violations = violations_for_line_count(rel, line_count)
+	return violations
+
+
+#============================================
+def check_file_warning(rel: str) -> list[str]:
+	"""Check one source file for a non-blocking near-limit advisory."""
+	abs_path = os.path.join(file_utils.get_repo_root(), rel)
+	line_count = count_file_lines(abs_path)
+	advisories = warnings_for_line_count(rel, line_count)
+	return advisories
+
+
+#============================================
+@pytest.fixture(scope="module", autouse=True)
+def collect_report() -> None:
+	"""Collect all line-limit violations and write the complete report when dirty."""
+	file_utils.clear_stale_reports()
+	VIOLATIONS_BY_FILE.clear()
+	VIOLATIONS_BY_FILE.update(file_utils.collect_file_violations(FILES, check_file))
+	WARNINGS_BY_FILE.clear()
+	WARNINGS_BY_FILE.update(file_utils.collect_file_violations(FILES, check_file_warning))
+	lines = file_utils.format_violation_report(HEADER, VIOLATIONS_BY_FILE)
+	if lines:
+		file_utils.write_report_lines(REPORT_NAME, lines)
+	warning_lines = file_utils.format_violation_report(WARNING_HEADER, WARNINGS_BY_FILE)
+	if warning_lines:
+		file_utils.write_report_lines(WARNING_REPORT_NAME, warning_lines)
+
+
+#============================================
+@pytest.mark.parametrize(
+	("line_count", "should_fail"),
+	((999, False), (1000, True)),
+	ids=("999-lines-ok", "1000-lines-fails"),
+)
+def test_source_file_line_limit_boundary(line_count: int, should_fail: bool) -> None:
+	"""Pin the requested exclusive boundary: 999 passes and 1000 fails."""
+	violations = violations_for_line_count("sample.py", line_count)
+	assert bool(violations) is should_fail
+
+
+#============================================
+@pytest.mark.parametrize(
+	("line_count", "should_warn"),
+	((899, False), (900, True), (999, True)),
+	ids=("899-lines-silent", "900-lines-warns", "999-lines-warns"),
+)
+def test_source_file_line_limit_warning_boundary(
+	line_count: int, should_warn: bool,
+) -> None:
+	"""Warn only within the non-blocking 900-999 line band."""
+	advisories = warnings_for_line_count("sample.py", line_count)
+	assert bool(advisories) is should_warn
+
+
+#============================================
+def test_source_file_line_limit_warning_exempts_rotated_changelog() -> None:
+	"""Leave rotation-managed changelog files out of the advisory band."""
+	assert not warnings_for_line_count("docs/CHANGELOG-2026-08a.md", 950)
+
+
+#============================================
+def test_source_file_line_limit_override_list(tmp_path: pathlib.Path) -> None:
+	"""Load an exact manager-approved path while ignoring comments and blanks."""
+	tests_dir = tmp_path / "tests"
+	tests_dir.mkdir()
+	list_path = tests_dir / "source_file_line_limit_overrides.txt"
+	list_path.write_text(
+		"# Downloaded normative specification\n\ndocs/QTI_v3_SPEC.md\n",
+		encoding="utf-8",
+	)
+	overrides = load_override_paths(str(tmp_path))
+	assert not is_source_file("docs/QTI_v3_SPEC.md", overrides)
+
+
+#============================================
+def test_source_file_line_limit_override_requires_exact_paths(
+	tmp_path: pathlib.Path,
+) -> None:
+	"""Require every repo-owned override to identify one exact path."""
+	tests_dir = tmp_path / "tests"
+	tests_dir.mkdir()
+	list_path = tests_dir / "source_file_line_limit_overrides.txt"
+	list_path.write_text("docs/archive/*.md\n", encoding="utf-8")
+	with pytest.raises(ValueError, match="expected an exact repo-relative POSIX path"):
+		load_override_paths(str(tmp_path))
+
+
+#============================================
+@pytest.mark.parametrize(
+	("path", "expected"),
+	(
+		("docs/active_plans/implementation.md", False),
+		("docs/active_plans/active/milestone.md", False),
+		("meta/docs/active_plans/audit/report.md", False),
+		("docs/archive/old_plan.md", False),
+		("meta/docs/archive/old_plan.md", False),
+		("docs/archive/example.py", True),
+		("docs/REFERENCE.md", True),
+	),
+)
+def test_source_file_line_limit_document_tree_selection(
+	path: str, expected: bool,
+) -> None:
+	"""Exclude planning/archive Markdown while retaining other authored source."""
+	assert is_source_file(path, frozenset()) is expected
+
+
+#============================================
+@pytest.mark.parametrize("path", FILES, ids=file_utils.rel_id)
+def test_source_file_line_limit(path: str) -> None:
+	"""Fail when a tracked authored source file contains 1000 or more lines."""
+	rel = file_utils.rel_to_root(path)
+	assert rel not in VIOLATIONS_BY_FILE, file_utils.format_violation_assert_message(
+		rel, VIOLATIONS_BY_FILE.get(rel, []), REPORT_NAME
+	)
+	if rel in WARNINGS_BY_FILE:
+		warnings.warn(WARNINGS_BY_FILE[rel][0], UserWarning)

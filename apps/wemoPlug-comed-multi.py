@@ -75,6 +75,7 @@ class ComedSmartWemoPlug(object):
 		self.depth = 0
 		self.debug = debug_wemo
 		self.connected = False
+		self.device = None
 		self.connectToWemo()
 		return
 
@@ -86,28 +87,43 @@ class ComedSmartWemoPlug(object):
 
 	#======================================
 	def getState(self):
+		if not self.connected:
+			self.connectToWemo()
+		if not self.connected:
+			return None
 		return self.device.get_state(force_update=True)
 
 	#======================================
 	def connectToWemo(self):
+		# Clear stale handles before discovery; a failed probe is retryable.
+		self.connected = False
+		self.device = None
 		self._debug(f"connecting to WeMo plug at {self.address}")
 		time.sleep(random.random())
-		self.port = pywemo.ouimeaux_device.probe_wemo(self.address)
-		self._debug(f"WeMo probe success {self.address}:{self.port}")
 		self.wemoUrl = pywemo.setup_url_for_address(self.address)
+		if self.wemoUrl is None:
+			print(f"WeMo unavailable at {self.address}: discovery failed; will retry")
+			return
 		self._debug(f"WeMo description url {self.wemoUrl}")
 		self.device = pywemo.discovery.device_from_description(self.wemoUrl)
 		self._debug(f"WeMo device object {self.device}")
+		if self.device is None:
+			print(f"WeMo unavailable at {self.address}: description failed; will retry")
+			return
+		self.connected = True
 		if self.debug is True:
 			time.sleep(random.random())
 			state = self.getState()
 			self._debug(f"WeMo state response {self.address} = {state}")
-		self.connected = True
 
 	#======================================
 	def enable(self):
+		state = self.getState()
+		if state is None:
+			self.depth = 0
+			return
 		self.depth += 1
-		if self.getState() == 0:
+		if state == 0:
 			mystr = f"turning ON wemo plug, start charging ({self.address})"
 			print(CL.colorString(mystr, "green"))
 			self.device.on()
@@ -130,8 +146,12 @@ class ComedSmartWemoPlug(object):
 
 	#======================================
 	def disable(self):
+		state = self.getState()
+		if state is None:
+			self.depth = 0
+			return
 		self.depth += 1
-		if self.getState() in (1, 8):
+		if state in (1, 8):
 			mystr = f"turning OFF wemo plug, stop charging (state = {self.getState()}, {self.address})"
 			print(CL.colorString(mystr, "red"))
 			self.device.off()

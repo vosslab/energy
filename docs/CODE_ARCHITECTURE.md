@@ -10,8 +10,6 @@ Supporting scripts generate plots and CGI pages for local dashboards.
 - [../energylib/](../energylib/): Shared Python modules for pricing, device APIs, and helpers.
 - [../apps/](../apps/): Operational scripts that read pricing data and control devices.
 - [../awtrix3/](../awtrix3/): AWTRIX 3 tile generators and senders, plus YAML config.
-- [../battery_arbitrage/](../battery_arbitrage/): BLE battery query utilities and arbitrage
-  scaffolding.
 - [../html/](../html/): CGI scripts for local web dashboards.
 - [../scripts/](../scripts/): Dashboard data generation, build, and deploy scripts.
 - [../plots/](../plots/): Plotting utilities for pricing visualization.

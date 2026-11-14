@@ -5,7 +5,6 @@
 - [../README.md](../README.md): Repo overview, quick start, and documentation links.
 - [../apps/](../apps/): Operational scripts that control devices using pricing data.
 - [../awtrix3/](../awtrix3/): AWTRIX 3 tile scripts, configs, and authoring docs.
-- [../battery_arbitrage/](../battery_arbitrage/): BLE battery reader and arbitrage scaffolding.
 - [../devel/](../devel/): Developer helpers (for example, changelog tooling).
 - [docs/](.): Repository documentation.
 - [../energylib/](../energylib/): Shared Python modules for pricing, device APIs, and helpers.
@@ -28,10 +27,6 @@
   `awtrix3/api.yml`,
   [../awtrix3/sports_teams.yaml](../awtrix3/sports_teams.yaml), and
   `awtrix3/garmin_login.yml`.
-- [../battery_arbitrage/](../battery_arbitrage/): BLE reader
-  [../battery_arbitrage/battery_info.py](../battery_arbitrage/battery_info.py) and
-  arbitrage entry point
-  [../battery_arbitrage/main_arbitrage.py](../battery_arbitrage/main_arbitrage.py).
 - [../energylib/](../energylib/): Core modules
   [../energylib/comedlib.py](../energylib/comedlib.py),
   [../energylib/ecobeelib.py](../energylib/ecobeelib.py), and

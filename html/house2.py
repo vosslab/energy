@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Traceback manager for CGI scripts
 import cgitb
 cgitb.enable()

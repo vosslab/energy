@@ -196,7 +196,7 @@ class CommonLib(object):
 		f = open(filename, 'rb')
 		#this next library is deprecated in python 2.6+, need to use hashlib
 		import hashlib
-		m = hashlib.md5()
+		m = hashlib.md5(usedforsecurity=False)
 		while True:
 			d = f.read(8096)
 			if not d:
@@ -216,7 +216,7 @@ class CommonLib(object):
 		f = open(filename, 'rb')
 		#this next library is deprecated in python 2.6+, need to use hashlib
 		import hashlib
-		m = hashlib.md5()
+		m = hashlib.md5(usedforsecurity=False)
 		for i in range(9):
 			d = f.read(8096)
 			if not d:

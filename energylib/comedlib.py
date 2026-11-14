@@ -34,7 +34,7 @@ class ComedLib(object):
 			with open(self.cache_file, "w") as f:
 				f.write("{}")  # initialize empty JSON cache
 			try:
-				os.chmod(self.cache_file, 0o666)  # allow all users to read/write
+				os.chmod(self.cache_file, 0o600)  # only the cache owner may read/write
 			except PermissionError:
 				print(f"WARNING: Could not set permissions for {self.cache_file}")
 

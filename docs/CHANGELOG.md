@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-11-13
+
+### Fixes and Maintenance
+
+- Fix WeMo discovery failures passing a missing URL to pywemo and then reading state from
+  a missing device. Clear stale handles on reconnect, mark connections ready only after
+  discovery succeeds, and retry unavailable plugs on the next control action while other
+  plugs continue. Remove the redundant discovery probe.
+- Replace the hardware-only WeMo test skip with mocked regression coverage for unavailable
+  URLs, failed descriptions, recovery, and continued control of other plugs.
+- Validate the WeMo regression tests, ComEd freshness tests, and repository pyflakes checks
+  with Debian's `/usr/bin/python3` (Python 3.11.2): all 81 tests pass.
+- Synchronized shared style guides, tests, and repository support files from the starter template.
+- Fix new Bandit findings: initialize the ComEd cache with owner-only permissions, mark MD5
+  file checksums as non-security uses, and restrict Ecobee pickle globals to the types needed
+  for existing credentials, including a constrained scope-enum lookup. Add offline tests for
+  credential round trips and rejection of arbitrary globals and attribute lookups.
+- Remove shebangs and executable bits from the four flagged HTML scripts. Add main guards to
+  the ComEd plot script, remove its unused variables, and make the AWTRIX ComEd display
+  executable.
+- Split sports configuration and API fetching into
+  [../awtrix3/sports_schedule_sources.py](../awtrix3/sports_schedule_sources.py) so the display
+  script meets the source line limit without changing its layouts or CLI.
+- Remove stale documentation links and the unused `bluepy` dependency after battery arbitrage
+  was removed in favor of its separate repository.
+
 ## 2026-06-10
 
 ### Additions and New Features

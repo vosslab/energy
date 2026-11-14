@@ -1,56 +1,73 @@
 #!/usr/bin/env bash
-# dist_clean.sh - wipe build artifacts, tool caches, and dependency installs.
-#
-# Universal across repo types (python, typescript, rust). Patterns that do
-# not exist in a given repo are silently skipped via `nullglob` + an
-# existence check, so no false-positive output.
-#
-# After this runs you may need to reinstall language-specific dependencies
-# before the usual gates work again:
-#   typescript: npm install
-#   python:     pip install -r pip_requirements.txt -r pip_requirements-dev.txt
-#   rust:       cargo build (recompiles dependencies on next invocation)
+# This file is vendored. Local changes can and will be overwritten by propagation.
+
+# Deep clean: build/test output, caches, and dependency installs.
+# Run ./devel/clean_build.sh instead to retain dependencies between builds.
 set -euo pipefail
-shopt -s globstar nullglob
 cd "$(git rev-parse --show-toplevel)"
 
 DELETED=()
 
-# delete_if_exists <path...>
-# Removes each path that exists (file, dir, or symlink) and records it.
-# Unmatched globs expand to nothing under nullglob, so missing entries
-# silently no-op and are not reported.
-delete_if_exists() {
-	local p
-	for p in "$@"; do
-		if [ -e "$p" ] || [ -L "$p" ]; then
-			rm -rf "$p"
-			DELETED+=("$p")
-		fi
+delete_path() {
+	local p="$1"
+	if [ -e "$p" ] || [ -L "$p" ]; then
+		rm -rf "$p"
+		DELETED+=("$p")
+	fi
+}
+
+delete_paths() {
+	local path
+	for path in "$@"; do
+		delete_path "$path"
 	done
 }
 
-# Generic build outputs (any language).
-delete_if_exists dist dist-single _site build out
+delete_find_matches() {
+	local match
+	while IFS= read -r -d '' match; do
+		rm -rf "$match"
+		DELETED+=("${match#./}")
+	done < <(find . "$@" -print0)
+}
 
-# TypeScript / JS build artifacts and bundler metadata.
-delete_if_exists _bundle.js meta.json stats.html
-delete_if_exists **/*.tsbuildinfo
+delete_paths dist dist-single dist_browser_test dist_wasm generated _site build out
+delete_paths _bundle.js meta.json stats.html node_modules .cache .eslintcache
+delete_paths .prettiercache .nyc_output .build .swiftpm DerivedData test-results
+delete_paths playwright-report blob-report coverage cover_db .turbo .next .svelte-kit
+delete_paths .vite .parcel-cache env .tox .nox .hypothesis .coverage htmlcov
+delete_paths .dmypy.json .pytype .eggs sdist wheelhouse pip-wheel-metadata .installed.cfg
+delete_paths blib _build Build Build.bat MYMETA.json MYMETA.yml Makefile.old pm_to_blib
+delete_paths local/lib/perl5 CMakeCache.txt CMakeFiles cmake_install.cmake
+delete_paths compile_commands.json autom4te.cache target
+delete_find_matches -type f -name '*.tsbuildinfo'
+delete_find_matches -type d -name '*.xcresult'
+delete_find_matches -type d -name 'xcuserdata'
+delete_find_matches -type f -path '*/xcshareddata/swiftpm/Package.resolved'
+delete_find_matches -type d -path './Packages/*/.build'
+delete_find_matches -type d -path './Packages/*/.swiftpm'
+delete_find_matches -type f -path './Packages/*/Package.resolved'
+delete_find_matches -type d -name '.venv'
+delete_find_matches -type d -name 'venv'
+delete_find_matches -type d -name '__pycache__'
+delete_find_matches -type d -name '.pytest_cache'
+delete_find_matches -type d -name '.mypy_cache'
+delete_find_matches -type d -name '.ruff_cache'
+delete_find_matches -type f -name '.coverage.*'
+delete_find_matches -type d -name '*.egg-info'
+delete_find_matches -type f -name '*.egg'
+delete_find_matches -type d -name CMakeFiles
+delete_find_matches -type f -name CMakeCache.txt
+delete_find_matches -type f \( -name '*.o' -o -name '*.obj' -o -name '*.a' -o -name '*.so' -o -name '*.dylib' \)
 
-# JS dependency installs and lockfile (forces clean reinstall on next npm install).
-delete_if_exists node_modules package-lock.json
-
-# JS/TS tool caches.
-delete_if_exists .cache .eslintcache .prettiercache .nyc_output
-
-# Test outputs (Playwright, coverage).
-delete_if_exists test-results playwright-report blob-report coverage
-
-# Python bytecode and tool caches (any depth).
-delete_if_exists **/__pycache__ **/.pytest_cache **/.mypy_cache **/.ruff_cache
-
-# Rust build outputs.
-delete_if_exists target
+# Only remove nested target directories when Cargo identifies them as build output.
+while IFS= read -r -d '' match; do
+	parent="$(dirname "$match")"
+	if [ -f "$parent/Cargo.toml" ] || [ -f "$match/CACHEDIR.TAG" ] || [ -f "$match/.rustc_info.json" ]; then
+		rm -rf "$match"
+		DELETED+=("${match#./}")
+	fi
+done < <(find . -mindepth 2 -type d -name target -print0)
 
 if [ "${#DELETED[@]}" -eq 0 ]; then
 	echo "Nothing to clean."

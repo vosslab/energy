@@ -1,4 +1,3 @@
-bluepy  # BLE battery reader (battery_arbitrage)
 ephem  # Solar sunrise/sunset calculations
 garminconnect  # Garmin Connect client
 matplotlib  # ComEd and usage plots

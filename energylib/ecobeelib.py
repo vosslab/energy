@@ -11,6 +11,34 @@ import pyecobee
 import datetime
 from six import moves
 
+
+#============================================
+def _restore_scope_member(scope_type: object, name: str) -> object:
+	"""Restore the enum member used by older Ecobee credential pickles."""
+	if scope_type is not pyecobee.Scope or name not in ("SMART_READ", "SMART_WRITE", "EMS"):
+		raise pickle.UnpicklingError("Unsupported Ecobee scope member")
+	return getattr(pyecobee.Scope, name)
+
+
+#============================================
+class _EcobeeUnpickler(pickle.Unpickler):
+	"""Read existing credentials while rejecting arbitrary pickle globals."""
+
+	def find_class(self, module: str, name: str) -> object:
+		# Only these types occur in the persisted service and its UTC expiry times.
+		allowed = {
+			("pyecobee.service", "EcobeeService"): pyecobee.EcobeeService,
+			("pyecobee.enumerations", "Scope"): pyecobee.Scope,
+			("datetime", "datetime"): datetime.datetime,
+			("pytz", "_UTC"): pytz._UTC,
+			("builtins", "getattr"): _restore_scope_member,
+		}
+		key = (module, name)
+		if key not in allowed:
+			raise pickle.UnpicklingError(f"Unsupported credential type: {module}.{name}")
+		return allowed[key]
+
+
 class MyEcobee(object):
 	def __init__(self):
 		self.setPyEcobee_Database_File()
@@ -45,7 +73,7 @@ class MyEcobee(object):
 		if os.path.exists(self.db_file) and os.path.getsize(self.db_file) > 0:
 			# Open file in binary read mode
 			with open(self.db_file, 'rb') as file:
-				data = pickle.load(file)
+				data = _EcobeeUnpickler(file).load()
 				self.ecobee_service = data.get(self.thermostat_name)
 
 		if self.ecobee_service is None:

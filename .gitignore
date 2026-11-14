@@ -1,5 +1,29 @@
-# Byte-compiled / optimized / DLL files
+# === UNIVERSAL === [PROPAGATED - LOCAL EDITS OVERWRITTEN]
 .DS_Store
+/node_modules/
+/.env
+/report_*.txt
+/output*/
+/generated/
+/graphify-out/
+_temp*.?*
+/temp/
+/tests/_temp/
+/OTHER_REPOS/
+/LOCAL_ONLY/
+
+# === PYTHON === [PROPAGATED - LOCAL EDITS OVERWRITTEN]
+build/
+dist/
+sdist/
+*.egg
+*.egg-info/
+site/
+
+# -------------------- LOCAL REPOSITORY RULES --------------------
+# ADD YOUR CUSTOM IGNORES BELOW
+# Propagation preserves this section.
+# Byte-compiled / optimized / DLL files
 report_*.txt
 _te*.*
 
@@ -12,23 +36,5 @@ pyecobee_db*
 
 html/dashboard.js
 html/build/
-node_modules/
-dist/
 package-lock.json
 .superpowers/
-
-# === UNIVERSAL ===
-_temp*.?*
-# === TYPESCRIPT ===
-_site/
-*.tsbuildinfo
-.eslintcache
-.prettiercache
-test-results/
-playwright-report/
-blob-report/
-coverage/
-meta.json
-stats.html
-
-
