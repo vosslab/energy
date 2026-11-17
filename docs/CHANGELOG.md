@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17
+
+### Fixes and Maintenance
+
+- Synchronized shared style guides, tests, and repository support files from the starter template.
+
 ## 2026-11-13
 
 ### Fixes and Maintenance
